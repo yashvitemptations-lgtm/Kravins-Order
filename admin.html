@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#050a14">
+<title>Admin Console</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#050a14;--s1:#0a1222;--s2:#0f1a2e;--s3:#152238;--bdr:#1e3152;
+  --acc:#3b82f6;--a2:#60a5fa;--grn:#22c55e;--org:#f97316;--red:#ef4444;
+  --ylw:#eab308;--pur:#a855f7;--txt:#f1f5f9;--mut:#64748b;
+  --f:'Outfit',sans-serif;--m:'JetBrains Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--f);background:var(--bg);color:var(--txt);overflow-x:hidden;min-height:100vh}
+.hdr{background:linear-gradient(135deg,#0a1222,#0f1a2e,#152238);
+  padding:16px 18px 14px;border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:100}
+.htop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.hl{display:flex;align-items:center;gap:11px}
+.av{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 14px rgba(37,99,235,.3)}
+.ht{font-size:17px;font-weight:700}.hst{font-size:11px;color:var(--mut);margin-top:1px}
+.sync{display:flex;align-items:center;gap:5px;background:rgba(34,197,94,.12);
+  border:1px solid rgba(34,197,94,.25);padding:5px 11px;border-radius:18px;
+  font-size:11px;font-weight:600;color:var(--grn);cursor:pointer}
+.sync:active{background:rgba(34,197,94,.18)}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;background:var(--s1);overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--bdr)}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:80px;padding:11px 8px;text-align:center;font-size:11px;
+  font-weight:600;color:var(--mut);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s}
+.tab.on{color:var(--a2);border-bottom-color:var(--acc)}
+.scr{overflow-y:auto;padding-bottom:30px}
+.page{display:none;animation:fadein .3s}.page.on{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.sec{padding:13px 16px 10px}.sl{font-size:9px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--mut);margin-bottom:11px}
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:linear-gradient(135deg,var(--s2),var(--s1));border:1.5px solid var(--bdr);
+  border-radius:13px;padding:14px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:70px;height:70px;
+  border-radius:50%;filter:blur(35px);opacity:.12}
+.kpi.bl::before{background:var(--acc)}.kpi.gr::before{background:var(--grn)}
+.kpi.or::before{background:var(--org)}.kpi.pu::before{background:var(--pur)}
+.kico{font-size:20px;margin-bottom:7px;opacity:.9}
+.kval{font-size:21px;font-weight:800;font-family:var(--m);line-height:1;margin-bottom:3px}
+.klbl{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+/* Salesman Cards */
+.sm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:9px;margin-bottom:12px}
+.smc{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;
+  padding:13px;cursor:pointer;transition:all .2s;position:relative}
+.smc:hover{border-color:var(--acc);transform:translateY(-2px)}
+.smc:active{transform:scale(.98)}
+.smh{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.sma{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--acc),var(--pur));
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
+.smn{font-size:14px;font-weight:700}.sid{font-size:10px;font-family:var(--m);color:var(--a2)}
+.smm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.smi{text-align:center}
+.smv{font-size:14px;font-weight:700;font-family:var(--m);color:var(--a2)}
+.sml{font-size:8px;color:var(--mut);margin-top:2px;text-transform:uppercase}
+/* Orders Table */
+.ot{background:var(--s1);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.oth{background:var(--s2);display:flex;padding:10px 12px;border-bottom:1px solid var(--bdr);
+  font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.oth>div{flex:1;min-width:0}
+.otr{display:flex;padding:11px 12px;border-bottom:1px solid var(--bdr);
+  font-size:12px;cursor:pointer;transition:background .15s}
+.otr:hover{background:var(--s2)}
+.otr:last-child{border-bottom:none}
+.otr>div{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oid{font-family:var(--m);color:var(--a2);font-weight:500;font-size:11px}
+.odate{color:var(--mut);font-size:11px}
+.oamt{font-weight:600;font-family:var(--m);color:var(--grn)}
+.sb{display:inline-block;padding:2px 7px;border-radius:16px;font-size:9px;font-weight:700}
+.sp{background:rgba(234,179,8,.12);color:var(--ylw)}
+.sd{background:rgba(34,197,94,.12);color:var(--grn)}
+/* Filters */
+.fbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.fi{flex:1;min-width:140px;background:var(--s2);border:1.5px solid var(--bdr);
+  border-radius:9px;padding:9px 11px;font-family:var(--f);font-size:12px;
+  color:var(--txt);outline:none;-webkit-appearance:none}
+.fi:focus{border-color:var(--acc)}
+select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath fill='%2364748b' d='M5 7L0 2h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 11px center;padding-right:32px}
+.fbtn{padding:9px 16px;background:var(--s2);border:1.5px solid var(--bdr);
+  border-radius:9px;font-family:var(--f);font-size:11px;font-weight:600;
+  color:var(--mut);cursor:pointer;transition:all .15s}
+.fbtn:hover{border-color:var(--acc);color:var(--a2)}
+/* Party items */
+.pl{background:var(--s1);border:1px solid var(--bdr);border-radius:11px;
+  padding:11px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.pav{width:36px;height:36px;border-radius:9px;background:var(--s2);
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.pnm{font-size:13px;font-weight:600}.pid{font-size:10px;font-family:var(--m);color:var(--a2)}
+.pph{font-size:11px;color:var(--mut);margin-top:2px}
+/* Individual View */
+.back{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;
+  background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;
+  font-size:12px;font-weight:600;color:var(--mut);cursor:pointer;
+  transition:all .15s;margin-bottom:13px}
+.back:hover{border-color:var(--acc);color:var(--a2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+.dcard{background:linear-gradient(135deg,var(--s2),var(--s1));border:1px solid var(--bdr);
+  border-radius:13px;padding:13px;position:relative;overflow:hidden}
+.dcard::before{content:'';position:absolute;top:0;right:0;width:70px;height:70px;
+  border-radius:50%;filter:blur(35px);opacity:.12}
+.dcard.bl::before{background:var(--acc)}.dcard.gr::before{background:var(--grn)}
+.dicon{font-size:22px;margin-bottom:7px;opacity:.9}
+.dval{font-size:22px;font-weight:800;font-family:var(--m);line-height:1;margin-bottom:3px}
+.dcard.bl .dval{color:var(--a2)}.dcard.gr .dval{color:var(--grn)}
+.dlbl{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.pcard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;
+  padding:13px 15px;margin-bottom:9px}
+.ptop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
+.plbl{font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+.ppct{font-size:12px;font-weight:700;font-family:var(--m);padding:2px 7px;
+  border-radius:5px;background:rgba(34,197,94,.12);color:var(--grn)}
+.pamt{font-size:19px;font-weight:800;font-family:var(--m);color:var(--txt);margin-bottom:3px}
+.ptgt{font-size:10px;color:var(--mut)}
+.pbar{height:5px;background:rgba(255,255,255,.05);border-radius:8px;overflow:hidden;margin-top:9px}
+.pfill{height:100%;border-radius:8px;transition:width .5s ease}
+.pfill.bl{background:linear-gradient(90deg,var(--acc),var(--a2))}
+.pfill.gr{background:linear-gradient(90deg,var(--grn),#16a34a)}
+.ccard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;
+  padding:15px;margin-bottom:10px}
+.ctitle{font-size:12px;font-weight:700;margin-bottom:12px;
+  display:flex;align-items:center;justify-content:space-between}
+.cwrap{position:relative;height:190px;display:flex;align-items:center;justify-content:center}
+canvas{max-width:100%;max-height:100%}
+.scard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;padding:13px 15px}
+.stop{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.sico{font-size:20px}
+.snum{font-size:22px;font-weight:800;font-family:var(--m);color:var(--a2)}
+.slbl2{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.sdet{font-size:11px;color:var(--mut)}
+.sdet strong{color:var(--txt);font-weight:600}
+.empty{text-align:center;padding:50px 18px;color:var(--mut);font-size:13px;line-height:1.8}
+.load{text-align:center;padding:40px;color:var(--mut)}
+.spin{display:inline-block;width:26px;height:26px;border:3px solid var(--bdr);
+  border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:9px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-12px);
+  background:var(--s2);border:1px solid var(--bdr);border-radius:10px;
+  padding:9px 17px;font-size:12px;font-weight:500;opacity:0;
+  transition:all .25s;z-index:9998;white-space:nowrap;pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(34,197,94,.4);color:var(--grn)}
+.toast.er{border-color:rgba(239,68,68,.4);color:var(--red)}
+/* Admin modal */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
+  z-index:500;display:none;align-items:flex-end}
+.ov.on{display:flex}
+.mo{background:var(--s1);border-radius:18px 18px 0 0;border-top:1px solid var(--bdr);
+  padding:18px 16px max(env(safe-area-inset-bottom,24px),24px);width:100%;
+  max-height:85dvh;overflow-y:auto;animation:up .2s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mh{width:36px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 14px}
+.mt{font-size:15px;font-weight:700;margin-bottom:12px}
+.mr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px}
+.mr:last-child{border-bottom:none}
+.ml{color:var(--mut)}.mv{font-weight:600;font-family:var(--m)}
+.bs{padding:10px 16px;border:1.5px solid var(--bdr);border-radius:9px;
+  background:var(--s2);font-family:var(--f);font-size:11px;font-weight:600;
+  color:var(--mut);cursor:pointer;transition:all .15s}
+.bs:active{transform:scale(.97)}
+.bs.wa{border-color:rgba(34,197,94,.3);color:var(--grn);background:rgba(34,197,94,.05)}
+.bs.cl{border-color:rgba(239,68,68,.3);color:var(--red);background:rgba(239,68,68,.05)}
+.maction{padding:10px 16px;border-radius:9px;font-family:var(--f);font-size:12px;font-weight:700;
+  cursor:pointer;border:none;flex:1;transition:all .15s}
+.maction:active{transform:scale(.97)}
+.maction.cancel{background:rgba(239,68,68,.15);color:var(--red);border:1.5px solid rgba(239,68,68,.3)}
+.maction.edit{background:rgba(59,130,246,.15);color:var(--a2);border:1.5px solid rgba(59,130,246,.3)}
+.maction.dispatch{background:rgba(34,197,94,.15);color:var(--grn);border:1.5px solid rgba(34,197,94,.3)}
+.kpi{cursor:pointer;transition:all .15s}
+.kpi:hover{border-color:var(--acc);transform:translateY(-1px)}
+.kmod-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bdr);font-size:12px}
+.kmod-row:last-child{border-bottom:none}
+.sc{background:rgba(239,68,68,.12);color:var(--red)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="htop">
+    <div class="hl">
+      <div class="av">⚙️</div>
+      <div>
+        <div class="ht">Admin Console</div>
+        <div class="hst">Company-wide Dashboard</div>
+      </div>
+    </div>
+    <div class="sync" onclick="refresh()">
+      <div class="dot"></div>
+      <span>Refresh</span>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab on" onclick="goTab('overview')">📊 Overview</div>
+    <div class="tab" onclick="goTab('orders')">📦 Orders</div>
+    <div class="tab" onclick="goTab('parties')">🏪 Parties</div>
+  </div>
+</div>
+
+<div class="scr">
+
+<!-- ════════════════ OVERVIEW PAGE ════════════════ -->
+<div class="page on" id="pg-overview">
+  <!-- Company KPIs -->
+  <div class="sec">
+    <div class="sl">Company Performance</div>
+    <div class="kpi-grid">
+      <div class="kpi bl" onclick="showAdminKpi('revenue')">
+        <div class="kico">💰</div>
+        <div class="kval" id="totalRev">₹0</div>
+        <div class="klbl">Total Revenue ▸</div>
+      </div>
+      <div class="kpi gr" onclick="showAdminKpi('orders')">
+        <div class="kico">📦</div>
+        <div class="kval" id="totalOrders">0</div>
+        <div class="klbl">Total Orders ▸</div>
+      </div>
+      <div class="kpi or" onclick="showAdminKpi('today')">
+        <div class="kico">📅</div>
+        <div class="kval" id="todayOrdersKpi">0</div>
+        <div class="klbl">Today's Orders ▸</div>
+      </div>
+      <div class="kpi pu" onclick="showAdminKpi('commission')">
+        <div class="kico">💵</div>
+        <div class="kval" id="totalComm">₹0</div>
+        <div class="klbl">Commission ▸</div>
+      </div>
+      <div class="kpi" style="border-color:var(--bdr)" onclick="showAdminKpi('parties')">
+        <div class="kico">⭐</div>
+        <div class="kval" id="newParties">0</div>
+        <div class="klbl">New Parties ▸</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Salesmen Performance -->
+  <div class="sec">
+    <div class="sl">Salesman Performance · Click to View Details</div>
+    <div class="sm-grid" id="smGrid"></div>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="sec">
+    <div class="sl">Recent Orders</div>
+    <div class="ot">
+      <div class="oth">
+        <div style="flex:0.8">Order ID</div>
+        <div style="flex:1.2">Party</div>
+        <div>Salesman</div>
+        <div style="flex:0.7">Amount</div>
+      </div>
+      <div id="recentOrders"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ INDIVIDUAL SALESMAN VIEW ════════════════ -->
+<div class="page" id="pg-individual">
+  <div class="sec">
+    <div class="back" onclick="goTab('overview')">← Back to Overview</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:19px;font-weight:700" id="indName">Salesman Name</div>
+      <div style="font-size:11px;font-family:var(--m);color:var(--a2);margin-top:2px" id="indId">SM001</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sl">Today's Performance</div>
+    <div class="grid2">
+      <div class="dcard bl">
+        <div class="dicon">💰</div>
+        <div class="dval" id="indTodaySales">₹0</div>
+        <div class="dlbl">Today's Sales</div>
+      </div>
+      <div class="dcard gr">
+        <div class="dicon">🏪</div>
+        <div class="dval" id="indTodayShops">0</div>
+        <div class="dlbl">Shops Served</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sl">Month & Year Performance</div>
+    <div class="grid2">
+      <div class="pcard">
+        <div class="ptop">
+          <div class="plbl">MTD Sales</div>
+          <div class="ppct" id="indMtdPct">0%</div>
+        </div>
+        <div class="pamt" id="indMtdAmt">₹0</div>
+        <div class="ptgt">of <span id="indMtdTgt">₹50,000</span> target</div>
+        <div class="pbar">
+          <div class="pfill bl" id="indMtdBar" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="pcard">
+        <div class="ptop">
+          <div class="plbl">YTD Sales</div>
+          <div class="ppct" id="indYtdPct">0%</div>
+        </div>
+        <div class="pamt" id="indYtdAmt">₹0</div>
+        <div class="ptgt">of <span id="indYtdTgt">₹600K</span> target</div>
+        <div class="pbar">
+          <div class="pfill gr" id="indYtdBar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sl">Product Mix This Month</div>
+    <div class="ccard">
+      <div class="ctitle">
+        <span>Sales by Product</span>
+        <span id="indChartMonth" style="font-size:10px;color:var(--mut);font-weight:500"></span>
+      </div>
+      <div class="cwrap">
+        <canvas id="indChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sl">Coverage & Growth</div>
+    <div class="grid2">
+      <div class="scard">
+        <div class="slbl2">Shops This Month</div>
+        <div class="stop">
+          <div class="sico">🏪</div>
+          <div class="snum" id="indMtdShops">0</div>
+        </div>
+        <div class="sdet">Target: <strong>15 shops</strong></div>
+        <div class="sdet" style="margin-top:3px;color:var(--ylw)" id="indShopGap">—</div>
+      </div>
+      <div class="scard">
+        <div class="slbl2">New Parties Added</div>
+        <div class="stop">
+          <div class="sico">⭐</div>
+          <div class="snum" id="indNewParties">0</div>
+        </div>
+        <div class="sdet">Sales from new: <strong id="indNewSales">₹0</strong></div>
+        <div class="sdet" style="margin-top:3px;color:var(--grn)" id="indNewPct">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ ORDERS PAGE ════════════════ -->
+<div class="page" id="pg-orders">
+  <div class="sec">
+    <div class="sl">Filter Orders</div>
+    <div class="fbar">
+      <input class="fi" type="search" id="osearch" placeholder="Search order ID, party..." oninput="renderOrders()">
+      <select class="fi" id="osmFilter" onchange="renderOrders()">
+        <option value="">All Salesmen</option>
+        <option value="SM001">SM001 · Sunil Bhai</option>
+        <option value="SM002">SM002 · JK Bhai</option>
+        <option value="SM003">SM003 · Satish</option>
+        <option value="SM004">SM004 · Ajay</option>
+        <option value="SM005">SM005 · Jitu Bhai</option>
+      </select>
+      <select class="fi" id="ostatFilter" onchange="renderOrders()">
+        <option value="">All Status</option>
+        <option value="Pending">Pending</option>
+        <option value="Dispatched">Dispatched</option>
+      </select>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sl">All Orders (<span id="ocount">0</span>)</div>
+    <div class="ot">
+      <div class="oth">
+        <div style="flex:0.8">Order ID</div>
+        <div>Date</div>
+        <div style="flex:1.2">Party</div>
+        <div>Salesman</div>
+        <div style="flex:0.7">Amount</div>
+        <div style="flex:0.6">Status</div>
+      </div>
+      <div id="ordersList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ PARTIES PAGE ════════════════ -->
+<div class="page" id="pg-parties">
+  <div class="sec">
+    <div class="sl">Search Parties</div>
+    <input class="fi" type="search" id="psearch" placeholder="Search party name, ID..." oninput="renderParties()" style="width:100%;margin-bottom:12px">
+  </div>
+  <div class="sec">
+    <div class="sl">All Parties (<span id="pcount">0</span>)</div>
+    <div id="partiesList"></div>
+  </div>
+</div>
+
+</div><!-- /scr -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ORDER DETAIL MODAL (Admin) -->
+<div class="ov" id="adminOrderOv" onclick="if(event.target===this)closeAdminOrderModal()">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mt" id="adminMTitle"></div>
+    <div id="adminMBody"></div>
+    <!-- Edit Section -->
+    <div id="adminEditSection" style="display:none;margin-top:10px">
+      <div style="font-size:10px;color:var(--mut);margin-bottom:5px;text-transform:uppercase">Update Status</div>
+      <select id="adminEditStatus" style="width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;padding:10px;font-family:var(--f);font-size:13px;color:var(--txt);outline:none;-webkit-appearance:none;margin-bottom:8px">
+        <option value="Pending">Pending</option>
+        <option value="Dispatched">Dispatched</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+      <div style="font-size:10px;color:var(--mut);margin-bottom:5px;text-transform:uppercase">Notes</div>
+      <textarea id="adminEditNotes" style="width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;padding:10px;font-family:var(--f);font-size:13px;color:var(--txt);outline:none;resize:none;min-height:60px"></textarea>
+      <div style="display:flex;gap:7px;margin-top:10px">
+        <button class="maction dispatch" onclick="adminSaveEdit()">💾 Save</button>
+        <button class="maction cancel" style="flex:0.5" onclick="document.getElementById('adminEditSection').style.display='none'">✕</button>
+      </div>
+    </div>
+    <!-- Cancel Section -->
+    <div id="adminCancelSection" style="display:none;margin-top:10px">
+      <div style="font-size:10px;color:var(--red);margin-bottom:5px;text-transform:uppercase">Cancel Reason</div>
+      <textarea id="adminCancelReason" placeholder="Admin cancellation reason..." style="width:100%;background:var(--s2);border:1.5px solid rgba(239,68,68,.3);border-radius:9px;padding:10px;font-family:var(--f);font-size:13px;color:var(--txt);outline:none;resize:none;min-height:60px"></textarea>
+      <div style="display:flex;gap:7px;margin-top:10px">
+        <button class="maction cancel" onclick="adminConfirmCancel()">⛔ Confirm Cancel</button>
+        <button class="maction edit" style="flex:0.5" onclick="document.getElementById('adminCancelSection').style.display='none'">Back</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:7px;margin-top:13px;flex-wrap:wrap">
+      <button class="maction edit" onclick="document.getElementById('adminEditSection').style.display='block';document.getElementById('adminCancelSection').style.display='none'">✏️ Edit</button>
+      <button class="maction cancel" id="adminCancelMBtn" onclick="document.getElementById('adminCancelSection').style.display='block';document.getElementById('adminEditSection').style.display='none'">⛔ Cancel</button>
+      <button class="bs cl" style="flex:1;padding:12px;font-size:12px" onclick="closeAdminOrderModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- KPI DETAIL MODAL (Admin) -->
+<div class="ov" id="adminKpiOv" onclick="if(event.target===this)document.getElementById('adminKpiOv').classList.remove('on')">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mt" id="adminKpiTitle"></div>
+    <div id="adminKpiBody"></div>
+    <button class="bs cl" style="width:100%;padding:12px;font-size:12px;margin-top:13px" onclick="document.getElementById('adminKpiOv').classList.remove('on')">Close</button>
+  </div>
+</div>
+
+<script>
+// ═══ CONFIG ═══════════════════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbws9XiOvp7ios6yXcIZcK3Hnex3Mm6IK_zdwf4pc2IY7ML9fRarHFgWx4z6BQjZoVmM/exec';
+
+const SALESMEN = [
+  {id:'SM001',name:'Sunil Bhai',terr:'North'},
+  {id:'SM002',name:'JK Bhai',terr:'South'},
+  {id:'SM003',name:'Satish',terr:'East'},
+  {id:'SM004',name:'Ajay',terr:'West'},
+  {id:'SM005',name:'Jitu Bhai',terr:'Central'}
+];
+
+let allOrders = [];
+let allParties = [];
+let allSalesmen = [];
+let currentView = 'overview';
+let currentSmId = null;
+let indChart = null;
+let adminModalOID = null;
+let adminDashData = null;
+
+// ═══ INIT ═════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadData();
+});
+
+// ═══ TAB NAVIGATION ═══════════════════════════════════════════════════
+function goTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => 
+    t.classList.toggle('on', ['overview', 'orders', 'parties'][i] === tab));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  
+  if (tab === 'overview') {
+    document.getElementById('pg-overview').classList.add('on');
+    currentView = 'overview';
+  } else if (tab === 'orders') {
+    document.getElementById('pg-orders').classList.add('on');
+    currentView = 'orders';
+    renderOrders();
+  } else if (tab === 'parties') {
+    document.getElementById('pg-parties').classList.add('on');
+    currentView = 'parties';
+    renderParties();
+  }
+  window.scrollTo({ top: 0 });
+}
+
+function goIndividual(smId) {
+  currentSmId = smId;
+  currentView = 'individual';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.getElementById('pg-individual').classList.add('on');
+  loadIndividual(smId);
+  window.scrollTo({ top: 0 });
+}
+
+// ═══ LOAD DATA ════════════════════════════════════════════════════════
+async function loadData() {
+  try {
+    // Load overview dashboard
+    const r1 = await fetch(`${SCRIPT_URL}?action=dashboard&t=${Date.now()}`);
+    const dash = await r1.json();
+    
+    if (dash.ok) {
+      renderOverview(dash);
+      allSalesmen = dash.salesmen || [];
+    }
+    
+    // Load all orders
+    const r2 = await fetch(`${SCRIPT_URL}?action=orders&t=${Date.now()}`);
+    const ord = await r2.json();
+    if (ord.ok) allOrders = ord.orders || [];
+    
+    // Load parties
+    const r3 = await fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`);
+    const par = await r3.json();
+    if (par.ok) allParties = par.parties || [];
+    
+  } catch (e) {
+    console.error('Load error:', e);
+    toast('⚠️ Could not load data', 'er');
+  }
+}
+
+function refresh() {
+  toast('🔄 Refreshing...', 'ok');
+  loadData();
+  if (currentView === 'individual' && currentSmId) {
+    setTimeout(() => loadIndividual(currentSmId), 300);
+  }
+}
+
+// ═══ RENDER OVERVIEW ══════════════════════════════════════════════════
+function renderOverview(data) {
+  const fi = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+  const s = data.summary || {};
+  adminDashData = data;
+  
+  // KPIs
+  document.getElementById('totalRev').textContent = fi(s.totalRev);
+  document.getElementById('totalOrders').textContent = s.totalOrders || 0;
+  document.getElementById('totalComm').textContent = fi(s.totalComm);
+  document.getElementById('newParties').textContent = s.newParties || 0;
+  document.getElementById('todayOrdersKpi').textContent = s.todayOrders || 0;
+  
+  // Salesmen grid
+  const grid = document.getElementById('smGrid');
+  const salesmen = data.salesmen || [];
+  grid.innerHTML = salesmen.map(sm => {
+    const info = SALESMEN.find(x => x.id === sm.smId) || {};
+    const init = (sm.smName || '').split(' ').map(w => w[0]).join('');
+    return `<div class="smc" onclick="goIndividual('${sm.smId}')">
+      <div class="smh">
+        <div class="sma">${init}</div>
+        <div style="flex:1;min-width:0">
+          <div class="smn">${sm.smName}</div>
+          <div class="sid">${sm.smId} · ${info.terr || ''}</div>
+        </div>
+      </div>
+      <div class="smm">
+        <div class="smi">
+          <div class="smv">${sm.orders || 0}</div>
+          <div class="sml">Orders</div>
+        </div>
+        <div class="smi">
+          <div class="smv">${fi(sm.rev)}</div>
+          <div class="sml">Revenue</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  
+  // Recent orders
+  const recent = document.getElementById('recentOrders');
+  const orders = data.recentOrders || [];
+  if (!orders.length) {
+    recent.innerHTML = '<div class="empty" style="padding:30px">No orders yet</div>';
+  } else {
+    recent.innerHTML = orders.slice(0, 10).map(o => {
+      const d = new Date(o.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      return `<div class="otr" onclick="openAdminOrderModal('${o.oid}')">
+        <div class="oid" style="flex:0.8">${o.oid}</div>
+        <div class="odate" style="flex:0.7">${d}</div>
+        <div style="flex:1.2">${o.bname}</div>
+        <div style="font-size:10px;color:var(--mut)">${o.smName}</div>
+        <div class="oamt" style="flex:0.7">${fi(o.gt)}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ═══ LOAD INDIVIDUAL ══════════════════════════════════════════════════
+async function loadIndividual(smId) {
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=dashboard&smId=${smId}&t=${Date.now()}`);
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error);
+    
+    const sm = SALESMEN.find(x => x.id === smId) || {};
+    const s = data.summary || {};
+    const fi = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+    
+    document.getElementById('indName').textContent = sm.name || smId;
+    document.getElementById('indId').textContent = `${smId} · ${sm.terr || ''}`;
+    
+    // Today
+    document.getElementById('indTodaySales').textContent = fi(s.todaySales);
+    document.getElementById('indTodayShops').textContent = s.todayShops || 0;
+    
+    // MTD
+    document.getElementById('indMtdAmt').textContent = fi(s.mtdSales);
+    document.getElementById('indMtdPct').textContent = s.mtdPct + '%';
+    document.getElementById('indMtdTgt').textContent = fi(s.target);
+    document.getElementById('indMtdBar').style.width = Math.min(s.mtdPct, 100) + '%';
+    
+    // YTD
+    const ytdTgt = s.target * 12;
+    document.getElementById('indYtdAmt').textContent = fi(s.ytdSales);
+    document.getElementById('indYtdPct').textContent = s.ytdPct + '%';
+    document.getElementById('indYtdTgt').textContent = fi(ytdTgt);
+    document.getElementById('indYtdBar').style.width = Math.min(s.ytdPct, 100) + '%';
+    
+    // Shops
+    document.getElementById('indMtdShops').textContent = s.mtdShops || 0;
+    const shopGap = 15 - (s.mtdShops || 0);
+    document.getElementById('indShopGap').textContent = shopGap > 0 ? `${shopGap} more needed` : '✓ Target met';
+    
+    // New Parties
+    document.getElementById('indNewParties').textContent = s.newParties || 0;
+    
+    // Product Mix Chart
+    const mix = data.productMix || [];
+    if (mix.length) {
+      const ctx = document.getElementById('indChart').getContext('2d');
+      if (indChart) indChart.destroy();
+      indChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: mix.map(m => m.code),
+          datasets: [{
+            data: mix.map(m => m.value),
+            backgroundColor: ['#3b82f6', '#8b5cf6', '#22c55e', '#f97316', '#eab308'],
+            borderColor: '#0a1222',
+            borderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#94a3b8', font: { size: 10, family: 'Outfit' }, padding: 10,
+                usePointStyle: true, pointStyle: 'circle' }
+            }
+          },
+          cutout: '65%'
+        }
+      });
+    }
+    
+    const now = new Date();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    document.getElementById('indChartMonth').textContent = months[now.getMonth()] + ' ' + now.getFullYear();
+    
+  } catch (e) {
+    console.error('Individual load error:', e);
+    toast('⚠️ Could not load salesman data', 'er');
+  }
+}
+
+// ═══ RENDER ORDERS ════════════════════════════════════════════════════
+function renderOrders() {
+  const q = (document.getElementById('osearch')?.value || '').toLowerCase();
+  const smFilter = document.getElementById('osmFilter')?.value || '';
+  const stFilter = document.getElementById('ostatFilter')?.value || '';
+  
+  const filtered = allOrders.filter(o => {
+    const matchQ = !q || o.oid.toLowerCase().includes(q) || o.bname.toLowerCase().includes(q);
+    const matchSm = !smFilter || o.smId === smFilter;
+    const matchSt = !stFilter || o.status === stFilter;
+    return matchQ && matchSm && matchSt;
+  });
+  
+  document.getElementById('ocount').textContent = filtered.length;
+  const list = document.getElementById('ordersList');
+  const fi = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+  
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty" style="padding:30px">No orders found</div>';
+  } else {
+    list.innerHTML = filtered.map(o => {
+      const d = new Date(o.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      const isCancelled = o.status === 'Cancelled';
+      return `<div class="otr" onclick="openAdminOrderModal('${o.oid}')" style="${isCancelled?'opacity:.6':''}">
+        <div class="oid" style="flex:0.8">${o.oid}</div>
+        <div class="odate">${d}</div>
+        <div style="flex:1.2">${o.bname}</div>
+        <div style="font-size:10px;color:var(--mut)">${o.smName}</div>
+        <div class="oamt" style="flex:0.7">${fi(o.gt)}</div>
+        <div style="flex:0.6"><span class="sb ${o.status === 'Dispatched' ? 'sd' : isCancelled?'sc':'sp'}">${o.status}</span></div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ═══ RENDER PARTIES ═══════════════════════════════════════════════════
+function renderParties() {
+  const q = (document.getElementById('psearch')?.value || '').toLowerCase();
+  const filtered = allParties.filter(p => 
+    !q || p.name.toLowerCase().includes(q) || (p.id || '').toLowerCase().includes(q));
+  
+  document.getElementById('pcount').textContent = filtered.length;
+  const list = document.getElementById('partiesList');
+  
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty">No parties found</div>';
+  } else {
+    list.innerHTML = filtered.map(p => `<div class="pl">
+      <div class="pav">🏪</div>
+      <div style="flex:1;min-width:0">
+        <div class="pnm">${p.name}</div>
+        <div class="pid">${p.id || ''}</div>
+        <div class="pph">${p.phone || ''} · ${p.territory || ''}</div>
+      </div>
+    </div>`).join('');
+  }
+}
+
+// ═══ ADMIN ORDER MODAL ════════════════════════════════════════════════
+function openAdminOrderModal(oid) {
+  const o = allOrders.find(x => x.oid === oid);
+  if (!o) return;
+  adminModalOID = oid;
+  const fi = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+  const d = new Date(o.date).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
+  
+  document.getElementById('adminMTitle').textContent = `${o.oid} · ${o.bname}`;
+  let h = `<div style="font-size:11px;color:var(--mut);margin-bottom:8px">📅 ${d} · 👤 ${o.smName} (${o.smId})</div>`;
+  h += `<div style="margin-bottom:10px"><span class="sb ${o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':'sp'}">${o.status}</span></div>`;
+  
+  (o.items||[]).forEach(i => {
+    h += `<div class="mr"><span class="ml" style="flex:1;padding-right:7px">${i.name}<br><span style="font-size:10px">${i.qty} × ₹${i.price}</span></span>
+    <span class="mv" style="color:var(--a2)">${fi(i.total)}</span></div>`;
+  });
+  h += `<div style="margin-top:11px;display:flex;justify-content:space-between;align-items:center">
+    <span style="color:var(--mut)">Grand Total</span>
+    <span style="font-size:19px;font-weight:700;font-family:var(--m);color:var(--a2)">${fi(o.gt)}</span>
+  </div>`;
+  if (o.notes) h += `<div style="margin-top:8px;padding:8px;background:var(--s2);border-radius:7px;font-size:11px;color:var(--mut)">📝 ${o.notes}</div>`;
+  if (o.bphone) h += `<div style="margin-top:5px;font-size:11px;color:var(--mut)">📱 ${o.bphone}</div>`;
+  if (o.distributor) h += `<div style="margin-top:5px;font-size:11px;color:var(--mut)">🚚 ${o.distributor}</div>`;
+  
+  document.getElementById('adminMBody').innerHTML = h;
+  document.getElementById('adminEditSection').style.display = 'none';
+  document.getElementById('adminCancelSection').style.display = 'none';
+  document.getElementById('adminEditNotes').value = o.notes || '';
+  document.getElementById('adminEditStatus').value = o.status || 'Pending';
+  document.getElementById('adminCancelMBtn').style.display = o.status === 'Cancelled' ? 'none' : '';
+  document.getElementById('adminOrderOv').classList.add('on');
+}
+
+function closeAdminOrderModal() {
+  document.getElementById('adminOrderOv').classList.remove('on');
+}
+
+async function adminSaveEdit() {
+  const status = document.getElementById('adminEditStatus').value;
+  const notes = document.getElementById('adminEditNotes').value;
+  const btn = document.querySelector('#adminEditSection .maction.dispatch');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  
+  // Update in allOrders array
+  const idx = allOrders.findIndex(x => x.oid === adminModalOID);
+  if (idx >= 0) { allOrders[idx].status = status; allOrders[idx].notes = notes; }
+  
+  try {
+    await fetch(SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'editOrder', orderId:adminModalOID, changes:{status,notes}, actor:'ADMIN'})});
+  } catch(e) {}
+  
+  btn.disabled = false; btn.textContent = '💾 Save';
+  toast('✅ Order updated', 'ok');
+  closeAdminOrderModal();
+  renderOrders();
+}
+
+async function adminConfirmCancel() {
+  const reason = document.getElementById('adminCancelReason').value;
+  const btn = document.querySelector('#adminCancelSection .maction.cancel');
+  btn.disabled = true; btn.textContent = 'Cancelling…';
+  
+  const idx = allOrders.findIndex(x => x.oid === adminModalOID);
+  if (idx >= 0) allOrders[idx].status = 'Cancelled';
+  
+  try {
+    await fetch(SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'cancelOrder', orderId:adminModalOID, reason, actor:'ADMIN'})});
+  } catch(e) {}
+  
+  btn.disabled = false;
+  toast('⛔ Order cancelled', 'er');
+  closeAdminOrderModal();
+  renderOrders();
+  loadData(); // refresh KPIs
+}
+
+// ═══ ADMIN KPI MODALS ═════════════════════════════════════════════════
+function showAdminKpi(type) {
+  const fi = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+  let title = '', body = '';
+  
+  if (type === 'revenue') {
+    title = '💰 Revenue Breakdown by Salesman';
+    const smMap = {};
+    allOrders.filter(o=>o.status!=='Cancelled').forEach(o => {
+      if (!smMap[o.smId]) smMap[o.smId] = {name:o.smName, rev:0, count:0};
+      smMap[o.smId].rev += o.gt; smMap[o.smId].count++;
+    });
+    body = Object.values(smMap).sort((a,b)=>b.rev-a.rev).map(s =>
+      `<div class="kmod-row"><span style="color:var(--mut)">👤 ${s.name}</span>
+      <span><span style="font-family:var(--m);color:var(--a2)">${fi(s.rev)}</span> <span style="color:var(--mut);font-size:10px">(${s.count} orders)</span></span></div>`
+    ).join('') || '<div style="padding:20px;text-align:center;color:var(--mut)">No data</div>';
+    const total = allOrders.filter(o=>o.status!=='Cancelled').reduce((s,o)=>s+o.gt,0);
+    body += `<div style="display:flex;justify-content:space-between;padding:11px 0 0;font-weight:700"><span>Total</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+  } else if (type === 'orders') {
+    title = '📦 Orders by Salesman';
+    const smMap = {};
+    allOrders.forEach(o => {
+      if (!smMap[o.smId]) smMap[o.smId] = {name:o.smName, total:0, cancelled:0};
+      smMap[o.smId].total++; if(o.status==='Cancelled') smMap[o.smId].cancelled++;
+    });
+    body = Object.values(smMap).sort((a,b)=>b.total-a.total).map(s =>
+      `<div class="kmod-row"><span style="color:var(--mut)">👤 ${s.name}</span>
+      <span style="font-family:var(--m)">${s.total} <span style="font-size:10px;color:var(--red)">(${s.cancelled} cancelled)</span></span></div>`
+    ).join('') || '<div style="padding:20px;text-align:center;color:var(--mut)">No data</div>';
+  } else if (type === 'today') {
+    title = '📅 Today\'s Orders';
+    // We can only show from loaded allOrders
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    // Also check for IST date
+    const istToday = new Date(today.getTime() + (330 - today.getTimezoneOffset())*60000).toISOString().split('T')[0];
+    const todayOrd = allOrders.filter(o => o.date === todayStr || o.date === istToday);
+    if (!todayOrd.length) {
+      body = '<div style="padding:20px;text-align:center;color:var(--mut)">No orders today</div>';
+    } else {
+      body = todayOrd.map(o => `<div class="kmod-row" onclick="closeAdminKpiAndOpen('${o.oid}')" style="cursor:pointer">
+        <span style="color:var(--mut)">${o.oid} · ${o.bname} <span style="font-size:10px;color:var(--acc)">(${o.smName})</span></span>
+        <span style="font-family:var(--m);color:var(--a2)">${fi(o.gt)}</span></div>`).join('');
+      const total = todayOrd.reduce((s,o)=>s+o.gt,0);
+      body += `<div style="display:flex;justify-content:space-between;padding:11px 0 0;font-weight:700"><span>Total</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+    }
+  } else if (type === 'commission') {
+    title = '💵 Commission by Salesman';
+    const smMap = {};
+    allOrders.filter(o=>o.status!=='Cancelled').forEach(o => {
+      if (!smMap[o.smId]) smMap[o.smId] = {name:o.smName, comm:0};
+      smMap[o.smId].comm += o.tc||0;
+    });
+    body = Object.values(smMap).sort((a,b)=>b.comm-a.comm).map(s =>
+      `<div class="kmod-row"><span style="color:var(--mut)">👤 ${s.name}</span>
+      <span style="font-family:var(--m);color:var(--grn)">${fi(s.comm)}</span></div>`
+    ).join('') || '<div style="padding:20px;text-align:center;color:var(--mut)">No data</div>';
+  } else if (type === 'parties') {
+    title = '⭐ New Parties';
+    body = allParties.slice(0,15).map(p =>
+      `<div class="kmod-row"><span style="color:var(--mut)">🏪 ${p.name}</span>
+      <span style="font-size:10px;color:var(--a2)">${p.addedBy||''}</span></div>`
+    ).join('') || '<div style="padding:20px;text-align:center;color:var(--mut)">No parties yet</div>';
+  }
+  
+  document.getElementById('adminKpiTitle').textContent = title;
+  document.getElementById('adminKpiBody').innerHTML = body;
+  document.getElementById('adminKpiOv').classList.add('on');
+}
+
+function closeAdminKpiAndOpen(oid) {
+  document.getElementById('adminKpiOv').classList.remove('on');
+  setTimeout(() => openAdminOrderModal(oid), 100);
+}
+
+// ═══ TOAST ════════════════════════════════════════════════════════════
+let tt;
+function toast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  clearTimeout(tt);
+  t.textContent = msg;
+  t.className = `toast ${type} on`;
+  tt = setTimeout(() => t.classList.remove('on'), 2500);
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+  loadData();
+  if (currentView === 'individual' && currentSmId) {
+    loadIndividual(currentSmId);
+  }
+}, 30000);
+</script>
+</body>
+</html>

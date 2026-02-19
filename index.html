@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sales Order System</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:#050a14;color:#f1f5f9;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:28px 18px;text-align:center}
+h1{font-size:26px;font-weight:700;margin-bottom:7px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:13px;color:#64748b;margin-bottom:38px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;width:100%;max-width:600px;margin-bottom:18px}
+a.card{background:#0a1222;border:1px solid #1e3152;border-radius:14px;
+  padding:20px 14px;text-decoration:none;color:#f1f5f9;transition:all .2s;
+  display:block}
+a.card:hover{border-color:#3b82f6;transform:translateY(-2px)}
+.ico{font-size:28px;margin-bottom:10px}
+.name{font-size:15px;font-weight:600;margin-bottom:2px}
+.id{font-size:11px;color:#3b82f6;font-family:monospace}
+.admin{margin-top:10px}
+.admin a{color:#64748b;font-size:13px;text-decoration:none;
+  border:1px solid #1e3152;padding:9px 20px;border-radius:9px;
+  transition:color .2s;display:inline-block}
+.admin a:hover{color:#f1f5f9;border-color:#3b82f6}
+.feat{margin-top:30px;padding:18px;background:#0a1222;border:1px solid #1e3152;
+  border-radius:12px;max-width:500px;text-align:left}
+.feat h3{font-size:14px;color:#3b82f6;margin-bottom:10px}
+.feat ul{font-size:12px;color:#94a3b8;line-height:1.9;list-style:none;padding:0}
+.feat li::before{content:'✓ ';color:#22c55e;font-weight:700;margin-right:5px}
+</style>
+</head>
+<body>
+<h1>🛒 Sales Order System</h1>
+<p class="sub">Enhanced with Dashboard & Performance Metrics</p>
+<div class="grid">
+  <a class="card" href="sunil-bhai.html">
+    <div class="ico">👤</div>
+    <div class="name">Sunil Bhai</div>
+    <div class="id">SM001 · North</div>
+  </a>
+  <a class="card" href="jk-bhai.html">
+    <div class="ico">👤</div>
+    <div class="name">JK Bhai</div>
+    <div class="id">SM002 · South</div>
+  </a>
+  <a class="card" href="satish.html">
+    <div class="ico">👤</div>
+    <div class="name">Satish</div>
+    <div class="id">SM003 · East</div>
+  </a>
+  <a class="card" href="ajay.html">
+    <div class="ico">👤</div>
+    <div class="name">Ajay</div>
+    <div class="id">SM004 · West</div>
+  </a>
+  <a class="card" href="jitu-bhai.html">
+    <div class="ico">👤</div>
+    <div class="name">Jitu Bhai</div>
+    <div class="id">SM005 · Central</div>
+  </a>
+</div>
+<div class="admin"><a href="admin.html">⚙️ Admin Dashboard</a></div>
+<div class="feat">
+  <h3>📊 What's New</h3>
+  <ul>
+    <li>Real-time dashboard with MTD/YTD performance</li>
+    <li>Product mix visualization with charts</li>
+    <li>Today's sales & shop count</li>
+    <li>Progress tracking vs targets</li>
+    <li>Auto-refresh every 30 seconds</li>
+  </ul>
+</div>
+</body>
+</html>
