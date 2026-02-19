@@ -308,23 +308,38 @@ textarea{resize:none;line-height:1.5;min-height:58px}
   </div>
 
   <div class="sec">
-    <div class="sl">Product Mix This Month</div>
+    <div class="sl">Product Mix</div>
+    <!-- MTD Chart -->
     <div class="ccard">
       <div class="ctitle">
-        <span>Sales by Product</span>
+        <span>MTD — Sales by Product</span>
         <span id="chartMonth" style="font-size:10px;color:var(--mut);font-weight:500">Feb 2026</span>
       </div>
       <div class="cwrap">
         <canvas id="prodChart"></canvas>
       </div>
+      <!-- Product % table MTD -->
+      <div id="prodTableMtd" style="margin-top:10px"></div>
+    </div>
+    <!-- YTD Chart -->
+    <div class="ccard">
+      <div class="ctitle">
+        <span>YTD — Sales by Product</span>
+        <span id="chartYear" style="font-size:10px;color:var(--mut);font-weight:500">2026</span>
+      </div>
+      <div class="cwrap">
+        <canvas id="prodChartYtd"></canvas>
+      </div>
+      <!-- Product % table YTD -->
+      <div id="prodTableYtd" style="margin-top:10px"></div>
     </div>
   </div>
 
   <div class="sec">
     <div class="sl">Coverage & Growth</div>
     <div class="grid2">
-      <div class="scard">
-        <div class="slbl2">Shops This Month</div>
+      <div class="scard" onclick="showKpiModal('mtdshops')" style="cursor:pointer">
+        <div class="slbl2">Shops This Month ▸</div>
         <div class="stop">
           <div class="sico">🏪</div>
           <div class="snum" id="mtdShops">0</div>
@@ -332,8 +347,8 @@ textarea{resize:none;line-height:1.5;min-height:58px}
         <div class="sdet">Target: <strong id="shopTgt">15 shops</strong></div>
         <div class="sdet" style="margin-top:3px;color:var(--ylw)" id="shopGap">—</div>
       </div>
-      <div class="scard">
-        <div class="slbl2">New Parties Added</div>
+      <div class="scard" onclick="showKpiModal('newparties')" style="cursor:pointer">
+        <div class="slbl2">New Parties Added ▸</div>
         <div class="stop">
           <div class="sico">⭐</div>
           <div class="snum" id="newParties">0</div>
@@ -575,7 +590,7 @@ function go(tab){
 }
 
 // ═══ DASHBOARD LOADING ════════════════════════════════════════════════
-let prodChart;
+let prodChart, prodChartYtd;
 async function loadDashboard(){
   try{
     const r=await fetch(`${SCRIPT_URL}?action=dashboard&smId=${SID}&t=${Date.now()}`);
@@ -611,40 +626,77 @@ async function loadDashboard(){
     // New Parties
     document.getElementById('newParties').textContent=s.newParties||0;
     
-    // Product Mix Chart
+    // Also fetch all orders for this salesman to power the KPI modals
+    try{
+      const ro=await fetch(`${SCRIPT_URL}?action=orders&smId=${SID}&t=${Date.now()}`);
+      const od=await ro.json();
+      if(od.ok)data.allOrders=od.orders||[];
+    }catch(e){data.allOrders=[];}
+    lastDashData=data; // Store AFTER allOrders is attached
+
+    // Product Mix Charts (MTD + YTD)
     const mix=data.productMix||[];
+    const colors=['#3b82f6','#8b5cf6','#22c55e','#f97316','#eab308','#ec4899','#14b8a6'];
+    const chartOpts=(title)=>({
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:10,family:'Outfit'},padding:8,usePointStyle:true,pointStyle:'circle'}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ₹${Number(ctx.raw).toLocaleString('en-IN')} (${Math.round(ctx.raw/ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0)*100)}%)`}}
+      },
+      cutout:'62%'
+    });
+
+    // MTD Chart
     if(mix.length){
       const ctx=document.getElementById('prodChart').getContext('2d');
       if(prodChart)prodChart.destroy();
-      prodChart=new Chart(ctx,{
-        type:'doughnut',
-        data:{
-          labels:mix.map(m=>m.code),
-          datasets:[{
-            data:mix.map(m=>m.value),
-            backgroundColor:['#3b82f6','#8b5cf6','#22c55e','#f97316','#eab308'],
-            borderColor:'#0a1222',
-            borderWidth:3
-          }]
-        },
-        options:{
-          responsive:true,
-          maintainAspectRatio:false,
-          plugins:{
-            legend:{
-              position:'bottom',
-              labels:{color:'#94a3b8',font:{size:10,family:'Outfit'},padding:10,
-                usePointStyle:true,pointStyle:'circle'}
-            }
-          },
-          cutout:'65%'
-        }
-      });
+      prodChart=new Chart(ctx,{type:'doughnut',
+        data:{labels:mix.map(m=>m.code),datasets:[{data:mix.map(m=>m.value),backgroundColor:colors,borderColor:'#0a1222',borderWidth:3}]},
+        options:chartOpts('MTD')});
+      // Product % table MTD
+      const mtdTotal=mix.reduce((s,m)=>s+m.value,0);
+      document.getElementById('prodTableMtd').innerHTML=mix.map((m,i)=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:8px;height:8px;border-radius:50%;background:${colors[i%colors.length]};flex-shrink:0"></div>
+            <span style="color:var(--mut)">${m.code}</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <span style="font-family:var(--m);color:var(--a2)">₹${Number(m.value).toLocaleString('en-IN')}</span>
+            <span style="font-family:var(--m);font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(59,130,246,.1);color:var(--a2)">${mtdTotal>0?Math.round(m.value/mtdTotal*100):0}%</span>
+          </div>
+        </div>`).join('');
+    }
+
+    // YTD Chart — build from allOrders
+    const curYear=now.getFullYear();
+    const ytdOrders=(data.allOrders||[]).filter(o=>o.status!=='Cancelled'&&new Date(o.date).getFullYear()===curYear);
+    const ytdProdMap={};
+    ytdOrders.forEach(o=>(o.items||[]).forEach(it=>{ytdProdMap[it.code]=(ytdProdMap[it.code]||0)+(it.total||0);}));
+    const ytdMix=Object.entries(ytdProdMap).map(([code,value])=>({code,value})).sort((a,b)=>b.value-a.value).slice(0,7);
+    if(ytdMix.length){
+      const ctx2=document.getElementById('prodChartYtd').getContext('2d');
+      if(prodChartYtd)prodChartYtd.destroy();
+      prodChartYtd=new Chart(ctx2,{type:'doughnut',
+        data:{labels:ytdMix.map(m=>m.code),datasets:[{data:ytdMix.map(m=>m.value),backgroundColor:colors,borderColor:'#0a1222',borderWidth:3}]},
+        options:chartOpts('YTD')});
+      const ytdTotal=ytdMix.reduce((s,m)=>s+m.value,0);
+      document.getElementById('prodTableYtd').innerHTML=ytdMix.map((m,i)=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:8px;height:8px;border-radius:50%;background:${colors[i%colors.length]};flex-shrink:0"></div>
+            <span style="color:var(--mut)">${m.code}</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <span style="font-family:var(--m);color:var(--a2)">₹${Number(m.value).toLocaleString('en-IN')}</span>
+            <span style="font-family:var(--m);font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(34,197,94,.1);color:var(--grn)">${ytdTotal>0?Math.round(m.value/ytdTotal*100):0}%</span>
+          </div>
+        </div>`).join('');
     }
     
-    const now=new Date();
     const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     document.getElementById('chartMonth').textContent=months[now.getMonth()]+' '+now.getFullYear();
+    document.getElementById('chartYear').textContent=now.getFullYear();
     
   }catch(e){
     console.error('Dashboard load error:',e);
@@ -1060,54 +1112,250 @@ function toast(msg,type='in'){
 }
 
 // ═══ KPI MODALS ═══════════════════════════════════════════════════════
+// All modals use lastDashData (server data) — NOT localStorage
+
 function showKpiModal(type){
-  const d=lastDashData;
+  if(!lastDashData){toast('⏳ Loading data, please wait...','in');return;}
   const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+  const allOrders=lastDashData.allOrders||[];
+  const today=getIndianDate();
+  const now=new Date();
+  const curMonth=now.getMonth()+1;
+  const curYear=now.getFullYear();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
   let title='', body='';
-  
+
+  // ── TODAY'S SALES ──────────────────────────────────────────────────
   if(type==='today'){
-    title='💰 Today\'s Sales Breakdown';
-    const todayOrders=getOrders().filter(o=>{
-      const today=getIndianDate();
-      return o.date===today && o.status!=='Cancelled';
-    });
-    if(!todayOrders.length){body='<div style="text-align:center;padding:20px;color:var(--mut)">No orders today yet</div>';}
-    else{
-      body=todayOrders.map(o=>`<div class="kmod-row">
-        <span style="color:var(--mut)">${o.oid} · ${o.bname}</span>
-        <span style="font-family:var(--m);color:var(--a2)">${fi(o.gt)}</span>
-      </div>`).join('');
-      const total=todayOrders.reduce((s,o)=>s+o.gt,0);
-      body+=`<div style="display:flex;justify-content:space-between;padding:11px 0 0;font-weight:700">
-        <span>Total</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+    title='💰 Today\'s Sales';
+    const todayOrders=allOrders.filter(o=>o.date===today&&o.status!=='Cancelled');
+    if(!todayOrders.length){
+      body='<div style="text-align:center;padding:24px;color:var(--mut)">No orders today yet</div>';
+    } else {
+      body=todayOrders.map(o=>`
+        <div class="kmod-row" onclick="closeKpiAndOpenOrder('${o.oid}')" style="cursor:pointer;flex-wrap:wrap;gap:3px">
+          <div style="flex:1;min-width:0">
+            <div style="font-family:var(--m);font-size:11px;color:var(--a2)">${o.oid}</div>
+            <div style="font-size:12px;font-weight:600">${o.bname}</div>
+          </div>
+          <div style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(o.gt)}</div>
+        </div>`).join('');
+      const total=todayOrders.reduce((s,o)=>s+(o.gt||0),0);
+      body+=`<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-weight:700;font-size:13px">
+        <span>${todayOrders.length} order${todayOrders.length>1?'s':''}</span>
+        <span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
     }
+
+  // ── SHOPS SERVED TODAY ─────────────────────────────────────────────
   } else if(type==='shops'){
     title='🏪 Shops Served Today';
-    const todayOrders=getOrders().filter(o=>o.date===getIndianDate()&&o.status!=='Cancelled');
-    const shops={};todayOrders.forEach(o=>shops[o.bid]={name:o.bname,total:(shops[o.bid]?.total||0)+o.gt});
-    const shopList=Object.values(shops);
-    if(!shopList.length){body='<div style="text-align:center;padding:20px;color:var(--mut)">No shops served today</div>';}
-    else{body=shopList.map(s=>`<div class="kmod-row"><span style="color:var(--mut)">🏪 ${s.name}</span><span style="font-family:var(--m);color:var(--a2)">${fi(s.total)}</span></div>`).join('');}
+    const todayOrders=allOrders.filter(o=>o.date===today&&o.status!=='Cancelled');
+    const shopMap={};
+    todayOrders.forEach(o=>{
+      if(!shopMap[o.bid])shopMap[o.bid]={name:o.bname,phone:o.bphone||'',address:o.baddress||'',total:0,orders:0};
+      shopMap[o.bid].total+=(o.gt||0);
+      shopMap[o.bid].orders++;
+    });
+    const shopList=Object.values(shopMap);
+    if(!shopList.length){
+      body='<div style="text-align:center;padding:24px;color:var(--mut)">No shops served today</div>';
+    } else {
+      body=shopList.map(s=>`
+        <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="font-size:13px;font-weight:700">🏪 ${s.name}</div>
+            <div style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(s.total)}</div>
+          </div>
+          ${s.phone?`<div style="font-size:11px;color:var(--mut);margin-top:3px">📱 ${s.phone}</div>`:''}
+          ${s.address?`<div style="font-size:11px;color:var(--mut);margin-top:2px">📍 ${s.address}</div>`:''}
+          <div style="font-size:10px;color:var(--mut);margin-top:3px">${s.orders} order${s.orders>1?'s':''} today</div>
+        </div>`).join('');
+    }
+
+  // ── MTD SALES ─────────────────────────────────────────────────────
   } else if(type==='mtd'){
-    title='📅 MTD Sales Details';
-    const s=d?.summary||{};
-    body=`<div class="kmod-row"><span style="color:var(--mut)">MTD Sales</span><span style="font-family:var(--m);color:var(--a2)">${fi(s.mtdSales)}</span></div>
-    <div class="kmod-row"><span style="color:var(--mut)">Target</span><span style="font-family:var(--m)">${fi(s.target)}</span></div>
-    <div class="kmod-row"><span style="color:var(--mut)">Achievement</span><span style="font-family:var(--m);color:${s.mtdPct>=100?'var(--grn)':'var(--ylw)'}">${s.mtdPct||0}%</span></div>
-    <div class="kmod-row"><span style="color:var(--mut)">Shops Served</span><span style="font-family:var(--m)">${s.mtdShops||0}</span></div>`;
+    title=`📅 ${months[curMonth-1]} ${curYear} — Order Details`;
+    const mtdOrders=allOrders.filter(o=>{
+      if(o.status==='Cancelled')return false;
+      const d=new Date(o.date);
+      return d.getMonth()+1===curMonth && d.getFullYear()===curYear;
+    }).sort((a,b)=>new Date(a.date)-new Date(b.date));
+    if(!mtdOrders.length){
+      body='<div style="text-align:center;padding:24px;color:var(--mut)">No orders this month</div>';
+    } else {
+      body=mtdOrders.map(o=>{
+        const d=new Date(o.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+        return `<div class="kmod-row" onclick="closeKpiAndOpenOrder('${o.oid}')" style="cursor:pointer;flex-wrap:wrap;gap:3px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:7px;align-items:center">
+              <span style="font-size:10px;color:var(--mut)">${d}</span>
+              <span style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid}</span>
+            </div>
+            <div style="font-size:12px;font-weight:600;margin-top:2px">${o.bname}</div>
+          </div>
+          <div style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(o.gt)}</div>
+        </div>`;
+      }).join('');
+      const total=mtdOrders.reduce((s,o)=>s+(o.gt||0),0);
+      body+=`<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-weight:700;font-size:13px">
+        <span>${mtdOrders.length} orders</span>
+        <span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+    }
+
+  // ── YTD SALES — Month-wise breakdown with drilldown ───────────────
   } else if(type==='ytd'){
-    title='📈 YTD Sales Details';
-    const s=d?.summary||{};
-    body=`<div class="kmod-row"><span style="color:var(--mut)">YTD Sales</span><span style="font-family:var(--m);color:var(--a2)">${fi(s.ytdSales)}</span></div>
-    <div class="kmod-row"><span style="color:var(--mut)">Annual Target</span><span style="font-family:var(--m)">${fi((s.target||50000)*12)}</span></div>
-    <div class="kmod-row"><span style="color:var(--mut)">Achievement</span><span style="font-family:var(--m);color:${s.ytdPct>=100?'var(--grn)':'var(--ylw)'}">${s.ytdPct||0}%</span></div>
-    <div class="kmod-row"><span style="color:var(--mut)">Total Commission</span><span style="font-family:var(--m);color:var(--grn)">${fi(getOrders().filter(o=>o.status!=='Cancelled').reduce((s,o)=>s+o.tc,0))}</span></div>`;
+    title=`📈 ${curYear} — Month-wise Sales`;
+    const ytdOrders=allOrders.filter(o=>{
+      if(o.status==='Cancelled')return false;
+      return new Date(o.date).getFullYear()===curYear;
+    });
+    // Build month-wise map
+    const mMap={};
+    ytdOrders.forEach(o=>{
+      const m=new Date(o.date).getMonth();
+      if(!mMap[m])mMap[m]={month:m,total:0,orders:[]};
+      mMap[m].total+=(o.gt||0);
+      mMap[m].orders.push(o);
+    });
+    if(!Object.keys(mMap).length){
+      body='<div style="text-align:center;padding:24px;color:var(--mut)">No orders this year</div>';
+    } else {
+      const ytdTotal=ytdOrders.reduce((s,o)=>s+(o.gt||0),0);
+      body=Object.keys(mMap).sort((a,b)=>a-b).map(m=>{
+        const mn=mMap[m];
+        const pct=ytdTotal>0?Math.round((mn.total/ytdTotal)*100):0;
+        return `<div class="kmod-row" onclick="showMonthDrilldown(${m})" style="cursor:pointer;flex-wrap:wrap;gap:4px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600">${months[m]} ${curYear}</div>
+            <div style="font-size:10px;color:var(--mut);margin-top:2px">${mn.orders.length} orders · ${pct}% of YTD</div>
+            <div style="height:3px;background:rgba(255,255,255,.05);border-radius:4px;margin-top:5px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,var(--acc),var(--a2));border-radius:4px"></div>
+            </div>
+          </div>
+          <div style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(mn.total)} ▸</div>
+        </div>`;
+      }).join('');
+      body+=`<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-weight:700;font-size:13px">
+        <span>YTD Total</span><span style="font-family:var(--m);color:var(--a2)">${fi(ytdTotal)}</span></div>`;
+    }
+
+  // ── SHOPS THIS MONTH ───────────────────────────────────────────────
+  } else if(type==='mtdshops'){
+    title=`🏪 Shops This Month — ${months[curMonth-1]}`;
+    const mtdOrders=allOrders.filter(o=>{
+      if(o.status==='Cancelled')return false;
+      const d=new Date(o.date);
+      return d.getMonth()+1===curMonth && d.getFullYear()===curYear;
+    });
+    const shopMap={};
+    mtdOrders.forEach(o=>{
+      if(!shopMap[o.bid])shopMap[o.bid]={name:o.bname,phone:o.bphone||'',address:o.baddress||'',total:0,orders:0};
+      shopMap[o.bid].total+=(o.gt||0);
+      shopMap[o.bid].orders++;
+    });
+    const shopList=Object.values(shopMap).sort((a,b)=>b.total-a.total);
+    if(!shopList.length){
+      body='<div style="text-align:center;padding:24px;color:var(--mut)">No shops served this month</div>';
+    } else {
+      body=shopList.map(s=>`
+        <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="font-size:13px;font-weight:700">🏪 ${s.name}</div>
+            <div style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(s.total)}</div>
+          </div>
+          ${s.phone?`<div style="font-size:11px;color:var(--mut);margin-top:3px">📱 ${s.phone}</div>`:''}
+          ${s.address?`<div style="font-size:11px;color:var(--mut);margin-top:2px">📍 ${s.address}</div>`:''}
+          <div style="font-size:10px;color:var(--mut);margin-top:3px">${s.orders} order${s.orders>1?'s':''} this month</div>
+        </div>`).join('');
+      const total=shopList.reduce((s,x)=>s+x.total,0);
+      body+=`<div style="display:flex;justify-content:space-between;padding:8px 0 0;font-weight:700;font-size:13px">
+        <span>${shopList.length} unique shops</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+    }
+
+  // ── NEW PARTIES ────────────────────────────────────────────────────
+  } else if(type==='newparties'){
+    title='⭐ New Parties Added';
+    const parties=lastDashData.newParties||[];
+    const smParties=parties.filter(p=>p.addedBy===SID);
+    if(!smParties.length){
+      body='<div style="text-align:center;padding:24px;color:var(--mut)">No parties added yet</div>';
+    } else {
+      // For each party, calc their order value this month
+      const mtdOrders=allOrders.filter(o=>{
+        if(o.status==='Cancelled')return false;
+        const d=new Date(o.date);
+        return d.getMonth()+1===curMonth && d.getFullYear()===curYear;
+      });
+      body=smParties.map(p=>{
+        const pOrders=mtdOrders.filter(o=>o.bid===p.id);
+        const pTotal=pOrders.reduce((s,o)=>s+(o.gt||0),0);
+        const addedAt=p.at?new Date(p.at).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'-';
+        return `<div style="background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="font-size:13px;font-weight:700">🏪 ${p.name}</div>
+            <div style="font-family:var(--m);color:${pTotal>0?'var(--a2)':'var(--mut)'};font-weight:700">${pTotal>0?fi(pTotal):'No orders'}</div>
+          </div>
+          ${p.phone?`<div style="font-size:11px;color:var(--mut);margin-top:3px">📱 ${p.phone}</div>`:''}
+          ${p.address?`<div style="font-size:11px;color:var(--mut);margin-top:2px">📍 ${p.address}</div>`:''}
+          <div style="font-size:10px;color:var(--mut);margin-top:3px">Added: ${addedAt} · ${pOrders.length} order${pOrders.length!==1?'s':''} this month</div>
+        </div>`;
+      }).join('');
+    }
   }
-  
+
   document.getElementById('kpiTitle').textContent=title;
   document.getElementById('kpiBody').innerHTML=body;
   document.getElementById('kpiOv').classList.add('on');
 }
+
+// ── YTD Month drilldown ────────────────────────────────────────────
+function showMonthDrilldown(monthIdx){
+  if(!lastDashData)return;
+  const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const curYear=new Date().getFullYear();
+  const allOrders=lastDashData.allOrders||[];
+  const mOrders=allOrders.filter(o=>{
+    if(o.status==='Cancelled')return false;
+    const d=new Date(o.date);
+    return d.getMonth()===monthIdx && d.getFullYear()===curYear;
+  }).sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  const title=`📅 ${months[monthIdx]} ${curYear} — Orders`;
+  let body='';
+  if(!mOrders.length){
+    body='<div style="text-align:center;padding:24px;color:var(--mut)">No orders</div>';
+  } else {
+    body=mOrders.map(o=>{
+      const d=new Date(o.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+      return `<div class="kmod-row" onclick="closeKpiAndOpenOrder('${o.oid}')" style="cursor:pointer;flex-wrap:wrap;gap:3px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:7px;align-items:center">
+            <span style="font-size:10px;color:var(--mut)">${d}</span>
+            <span style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid}</span>
+          </div>
+          <div style="font-size:12px;font-weight:600;margin-top:2px">${o.bname}</div>
+        </div>
+        <div style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(o.gt)}</div>
+      </div>`;
+    }).join('');
+    const total=mOrders.reduce((s,o)=>s+(o.gt||0),0);
+    body+=`<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-weight:700;font-size:13px">
+      <span>${mOrders.length} orders</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+  }
+  // Add back button to YTD
+  body=`<div onclick="showKpiModal('ytd')" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--mut);cursor:pointer;margin-bottom:12px;padding:5px 10px;background:var(--s2);border-radius:7px;border:1px solid var(--bdr)">← Back to YTD</div>`+body;
+  document.getElementById('kpiTitle').textContent=title;
+  document.getElementById('kpiBody').innerHTML=body;
+}
+
+// Close KPI modal and open order modal
+function closeKpiAndOpenOrder(oid){
+  closeKpiModal();
+  setTimeout(()=>openModal(oid),150);
+}
+
 function closeKpiModal(){document.getElementById('kpiOv').classList.remove('on');}
 
 // Auto-refresh dashboard every 30 seconds when on dash page
