@@ -1124,23 +1124,26 @@ function toast(msg,type='in'){
 // ═══ KPI MODALS ═══════════════════════════════════════════════════════
 // All modals use lastDashData (server data) — NOT localStorage
 
-// Normalize any date format to yyyy-MM-dd string
+// Normalize any date to yyyy-MM-dd in IST
 function normDate(d){
   if(!d)return '';
-  if(typeof d==='object'&&d.getFullYear){
-    // Date object — convert using IST offset
-    const ist=new Date(d.getTime()+330*60000+d.getTimezoneOffset()*60000);
-    return ist.toISOString().split('T')[0];
-  }
+  try{
+    // Handle ISO strings like "2026-02-22T18:30:00.000Z" — convert to IST
+    const dt=new Date(typeof d==='string'||typeof d==='object'?d:String(d));
+    if(!isNaN(dt)){
+      // Add IST offset (+5:30 = 330 mins)
+      const ist=new Date(dt.getTime()+330*60000);
+      return ist.toISOString().slice(0,10);
+    }
+  }catch(e){}
+  // Already yyyy-MM-dd plain string
   const s=String(d).trim();
-  // Already yyyy-MM-dd
-  if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.slice(0,10);
-  // dd-MMM-yyyy e.g. 19-Feb-2026
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  // dd-MMM-yyyy
   const mo={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
   const m=s.match(/^(\d{2})-([A-Za-z]{3})-(\d{4})/);
   if(m&&mo[m[2]])return `${m[3]}-${mo[m[2]]}-${m[1]}`;
-  // Fallback
-  try{const dt=new Date(s);return dt.toISOString().split('T')[0];}catch(e){return s;}
+  return s.slice(0,10);
 }
 
 function showKpiModal(type){
