@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#050a14">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Jitu Bhai - Sales Dashboard</title>
+<title>Salesman Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -626,13 +626,14 @@ async function loadDashboard(){
     // New Parties
     document.getElementById('newParties').textContent=s.newParties||0;
     
-    // Also fetch all orders for this salesman to power the KPI modals
+    // Fetch all orders FIRST — needed for YTD chart AND KPI modals
     try{
       const ro=await fetch(`${SCRIPT_URL}?action=orders&smId=${SID}&t=${Date.now()}`);
       const od=await ro.json();
       if(od.ok)data.allOrders=od.orders||[];
+      else data.allOrders=[];
     }catch(e){data.allOrders=[];}
-    lastDashData=data; // Store AFTER allOrders is attached
+    lastDashData=data; // Store after allOrders attached
 
     // Product Mix Charts (MTD + YTD)
     const mix=data.productMix||[];
@@ -668,12 +669,17 @@ async function loadDashboard(){
         </div>`).join('');
     }
 
-    // YTD Chart — build from allOrders
-    const curYear=now.getFullYear();
-    const ytdOrders=(data.allOrders||[]).filter(o=>o.status!=='Cancelled'&&new Date(o.date).getFullYear()===curYear);
-    const ytdProdMap={};
-    ytdOrders.forEach(o=>(o.items||[]).forEach(it=>{ytdProdMap[it.code]=(ytdProdMap[it.code]||0)+(it.total||0);}));
-    const ytdMix=Object.entries(ytdProdMap).map(([code,value])=>({code,value})).sort((a,b)=>b.value-a.value).slice(0,7);
+    // YTD Chart — use ytdProductMix from server if available, else build from allOrders items
+    const nowYtd=new Date();
+    const curYear=nowYtd.getFullYear();
+    let ytdMix=data.productMixYtd||[];
+    if(!ytdMix.length){
+      // Try building from allOrders if items are present
+      const ytdOrd=(data.allOrders||[]).filter(o=>o.status!=='Cancelled'&&new Date(o.date).getFullYear()===curYear);
+      const ytdProdMap={};
+      ytdOrd.forEach(o=>(o.items||[]).forEach(it=>{ytdProdMap[it.code]=(ytdProdMap[it.code]||0)+(it.total||0);}));
+      ytdMix=Object.entries(ytdProdMap).map(([code,value])=>({code,value})).sort((a,b)=>b.value-a.value).slice(0,7);
+    }
     if(ytdMix.length){
       const ctx2=document.getElementById('prodChartYtd').getContext('2d');
       if(prodChartYtd)prodChartYtd.destroy();
@@ -694,9 +700,10 @@ async function loadDashboard(){
         </div>`).join('');
     }
     
+    const nowDisp=new Date();
     const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    document.getElementById('chartMonth').textContent=months[now.getMonth()]+' '+now.getFullYear();
-    document.getElementById('chartYear').textContent=now.getFullYear();
+    document.getElementById('chartMonth').textContent=months[nowDisp.getMonth()]+' '+nowDisp.getFullYear();
+    document.getElementById('chartYear').textContent=nowDisp.getFullYear();
     
   }catch(e){
     console.error('Dashboard load error:',e);
@@ -932,7 +939,10 @@ function renderHistory(){
 }
 
 function openModal(oid){
-  const o=getOrders().find(x=>x.oid===oid);if(!o)return;
+  // Check localStorage first, then server orders
+  let o=getOrders().find(x=>x.oid===oid);
+  if(!o&&lastDashData&&lastDashData.allOrders)o=lastDashData.allOrders.find(x=>x.oid===oid);
+  if(!o){toast('⚠️ Order not found','er');return;}
   modalOID=oid;
   const d=new Date(o.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
   document.getElementById('mTitle').textContent=`${o.oid} · ${o.bname}`;
@@ -1114,10 +1124,32 @@ function toast(msg,type='in'){
 // ═══ KPI MODALS ═══════════════════════════════════════════════════════
 // All modals use lastDashData (server data) — NOT localStorage
 
+// Normalize any date to yyyy-MM-dd in IST
+function normDate(d){
+  if(!d)return '';
+  try{
+    // Handle ISO strings like "2026-02-22T18:30:00.000Z" — convert to IST
+    const dt=new Date(typeof d==='string'||typeof d==='object'?d:String(d));
+    if(!isNaN(dt)){
+      // Add IST offset (+5:30 = 330 mins)
+      const ist=new Date(dt.getTime()+330*60000);
+      return ist.toISOString().slice(0,10);
+    }
+  }catch(e){}
+  // Already yyyy-MM-dd plain string
+  const s=String(d).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  // dd-MMM-yyyy
+  const mo={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+  const m=s.match(/^(\d{2})-([A-Za-z]{3})-(\d{4})/);
+  if(m&&mo[m[2]])return `${m[3]}-${mo[m[2]]}-${m[1]}`;
+  return s.slice(0,10);
+}
+
 function showKpiModal(type){
   if(!lastDashData){toast('⏳ Loading data, please wait...','in');return;}
   const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
-  const allOrders=lastDashData.allOrders||[];
+  const allOrders=(lastDashData.allOrders||[]).map(o=>({...o,date:normDate(o.date)}));
   const today=getIndianDate();
   const now=new Date();
   const curMonth=now.getMonth()+1;
@@ -1131,7 +1163,7 @@ function showKpiModal(type){
     title='💰 Today\'s Sales';
     const todayOrders=allOrders.filter(o=>o.date===today&&o.status!=='Cancelled');
     if(!todayOrders.length){
-      body='<div style="text-align:center;padding:24px;color:var(--mut)">No orders today yet</div>';
+      body=`<div style="text-align:center;padding:24px;color:var(--mut)">No orders today yet</div>`;
     } else {
       body=todayOrders.map(o=>`
         <div class="kmod-row" onclick="closeKpiAndOpenOrder('${o.oid}')" style="cursor:pointer;flex-wrap:wrap;gap:3px">
@@ -1159,7 +1191,7 @@ function showKpiModal(type){
     });
     const shopList=Object.values(shopMap);
     if(!shopList.length){
-      body='<div style="text-align:center;padding:24px;color:var(--mut)">No shops served today</div>';
+      body=`<div style="text-align:center;padding:24px;color:var(--mut)">No shops served today<br><span style="font-size:10px">(Looking for: ${today})</span></div>`;
     } else {
       body=shopList.map(s=>`
         <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:8px">
@@ -1250,7 +1282,7 @@ function showKpiModal(type){
     });
     const shopMap={};
     mtdOrders.forEach(o=>{
-      if(!shopMap[o.bid])shopMap[o.bid]={name:o.bname,phone:o.bphone||'',address:o.baddress||'',total:0,orders:0};
+      if(!shopMap[o.bid])shopMap[o.bid]={bid:o.bid,name:o.bname,phone:o.bphone||'',address:o.baddress||'',total:0,orders:0};
       shopMap[o.bid].total+=(o.gt||0);
       shopMap[o.bid].orders++;
     });
@@ -1259,14 +1291,14 @@ function showKpiModal(type){
       body='<div style="text-align:center;padding:24px;color:var(--mut)">No shops served this month</div>';
     } else {
       body=shopList.map(s=>`
-        <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div onclick="showShopDrilldown('${s.bid}')" style="background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;active:border-color:var(--acc)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div style="font-size:13px;font-weight:700">🏪 ${s.name}</div>
-            <div style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(s.total)}</div>
+            <div style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(s.total)} ▸</div>
           </div>
           ${s.phone?`<div style="font-size:11px;color:var(--mut);margin-top:3px">📱 ${s.phone}</div>`:''}
           ${s.address?`<div style="font-size:11px;color:var(--mut);margin-top:2px">📍 ${s.address}</div>`:''}
-          <div style="font-size:10px;color:var(--mut);margin-top:3px">${s.orders} order${s.orders>1?'s':''} this month</div>
+          <div style="font-size:10px;color:var(--mut);margin-top:3px">${s.orders} order${s.orders>1?'s':''} this month · tap to view</div>
         </div>`).join('');
       const total=shopList.reduce((s,x)=>s+x.total,0);
       body+=`<div style="display:flex;justify-content:space-between;padding:8px 0 0;font-weight:700;font-size:13px">
@@ -1350,10 +1382,55 @@ function showMonthDrilldown(monthIdx){
   document.getElementById('kpiBody').innerHTML=body;
 }
 
-// Close KPI modal and open order modal
+// ── Shop drilldown: show all orders for a shop this month ──────────
+function showShopDrilldown(bid){
+  if(!lastDashData)return;
+  const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+  const allOrders=(lastDashData.allOrders||[]).map(o=>({...o,date:normDate(o.date)}));
+  const now=new Date();
+  const curMonth=now.getMonth()+1;
+  const curYear=now.getFullYear();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const shopOrders=allOrders.filter(o=>{
+    if(o.status==='Cancelled')return false;
+    if(o.bid!==bid)return false;
+    const d=new Date(o.date);
+    return d.getMonth()+1===curMonth && d.getFullYear()===curYear;
+  }).sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  const shopName=shopOrders.length?shopOrders[0].bname:bid;
+  const title=`🏪 ${shopName} — ${months[curMonth-1]} Orders`;
+  let body=`<div onclick="showKpiModal('mtdshops')" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--mut);cursor:pointer;margin-bottom:12px;padding:5px 10px;background:var(--s2);border-radius:7px;border:1px solid var(--bdr)">← Back to Shops</div>`;
+
+  if(!shopOrders.length){
+    body+='<div style="text-align:center;padding:24px;color:var(--mut)">No orders found</div>';
+  } else {
+    body+=shopOrders.map(o=>{
+      const d=new Date(o.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+      return `<div class="kmod-row" onclick="closeKpiAndOpenOrder('${o.oid}')" style="cursor:pointer;flex-wrap:wrap;gap:3px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:7px;align-items:center">
+            <span style="font-size:10px;color:var(--mut)">${d}</span>
+            <span style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid}</span>
+          </div>
+          <div style="font-size:12px;font-weight:600;margin-top:2px">${o.bname}</div>
+        </div>
+        <div style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(o.gt)}</div>
+      </div>`;
+    }).join('');
+    const total=shopOrders.reduce((s,o)=>s+(o.gt||0),0);
+    body+=`<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-weight:700;font-size:13px">
+      <span>${shopOrders.length} orders</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+  }
+  document.getElementById('kpiTitle').textContent=title;
+  document.getElementById('kpiBody').innerHTML=body;
+}
+
+// Close KPI modal and open order detail modal on top
 function closeKpiAndOpenOrder(oid){
   closeKpiModal();
-  setTimeout(()=>openModal(oid),150);
+  setTimeout(()=>openModal(oid),200);
 }
 
 function closeKpiModal(){document.getElementById('kpiOv').classList.remove('on');}
