@@ -1163,8 +1163,7 @@ function showKpiModal(type){
     title='💰 Today\'s Sales';
     const todayOrders=allOrders.filter(o=>o.date===today&&o.status!=='Cancelled');
     if(!todayOrders.length){
-      const sample=allOrders.slice(0,3).map(o=>`${o.oid}:${o.date}`).join(', ');
-      body=`<div style="text-align:center;padding:24px;color:var(--mut)">No orders today yet<br><span style="font-size:10px">Today: ${today}</span><br><span style="font-size:10px">Orders: ${sample}</span><br><span style="font-size:10px">Raw: ${(lastDashData.allOrders||[]).slice(0,1).map(o=>o.date)}</span></div>`;
+      body=`<div style="text-align:center;padding:24px;color:var(--mut)">No orders today yet</div>`;
     } else {
       body=todayOrders.map(o=>`
         <div class="kmod-row" onclick="closeKpiAndOpenOrder('${o.oid}')" style="cursor:pointer;flex-wrap:wrap;gap:3px">
