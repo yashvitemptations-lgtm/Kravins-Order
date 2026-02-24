@@ -558,9 +558,15 @@ function getBuyers(){return LS.get(LK.b)||[];}
 function saveBuyers(b){LS.set(LK.b,b);}
 function getOrders(){return LS.get(LK.o)||[];}
 function saveOrders(o){LS.set(LK.o,o);}
-function nextOID(){const orders=getOrders();if(!orders.length)return 'ORD001';
-  const n=orders.map(o=>parseInt(o.oid.replace('ORD',''))||0);
-  return 'ORD'+String(Math.max(...n)+1).padStart(3,'0');}
+function nextOID(){
+  // Use server orders (allOrders) for global numbering, fall back to localStorage
+  const serverOrders=lastDashData&&lastDashData.allOrders?lastDashData.allOrders:[];
+  const localOrders=getOrders();
+  const allOrds=[...serverOrders,...localOrders];
+  if(!allOrds.length)return 'ORD001';
+  const nums=allOrds.map(o=>parseInt((o.oid||'').replace('ORD',''))||0);
+  return 'ORD'+String(Math.max(...nums)+1).padStart(3,'0');
+}
 function nextBID(){const buyers=getBuyers();
   const n=buyers.map(b=>parseInt(b.id.replace('B',''))||0);
   return 'B'+String(Math.max(...n)+1).padStart(3,'0');}
@@ -921,17 +927,27 @@ function shareFromModal(){
 
 // ═══ HISTORY ══════════════════════════════════════════════════════════
 function renderHistory(){
-  const orders=getOrders();const c=document.getElementById('histList');
+  // Merge server orders + local orders, server takes priority
+  const serverOrders=(lastDashData&&lastDashData.allOrders)?lastDashData.allOrders:[];
+  const localOrders=getOrders();
+  const map={};
+  serverOrders.forEach(o=>map[o.oid]=o);
+  localOrders.forEach(o=>{if(!map[o.oid])map[o.oid]=o;});
+  const orders=Object.values(map).sort((a,b)=>b.oid>a.oid?1:-1);
+  
+  const c=document.getElementById('histList');
   if(!orders.length){c.innerHTML='<div class="empty">No orders yet.<br>Submit your first order!</div>';return;}
   c.innerHTML=orders.map(o=>{
-    const d=new Date(o.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    const dateStr=normDate(o.date||o.at);
+    const d=dateStr?new Date(dateStr).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'-';
     const isCancelled=o.status==='Cancelled';
+    const items=o.items||[];
     return `<div class="hi" onclick="openModal('${o.oid}')" style="${isCancelled?'opacity:.6':''}">
       <div class="hh"><span class="hoid">${o.oid}</span><span class="hd">${d}</span></div>
       <div class="hb">${o.bname}</div>
       <div class="hm">
-        <span>${o.items.length} item${o.items.length>1?'s':''}</span>
-        <span style="color:${isCancelled?'var(--red)':'var(--a2)'};font-family:var(--m)">₹${o.gt.toLocaleString('en-IN')}</span>
+        <span>${items.length} item${items.length>1?'s':''}</span>
+        <span style="color:${isCancelled?'var(--red)':'var(--a2)'};font-family:var(--m)">₹${(o.gt||0).toLocaleString('en-IN')}</span>
         <span class="sb ${o.status==='Dispatched'?'sd':isCancelled?'sc':'sp'}">${o.status}</span>
       </div>
     </div>`;
