@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="theme-color" content="#050a14">
-<title>Admin Console</title>
+<title>Admin Console · Kravins</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -13,174 +13,176 @@
   --ylw:#eab308;--pur:#a855f7;--txt:#f1f5f9;--mut:#64748b;
   --f:'Outfit',sans-serif;--m:'JetBrains Mono',monospace}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:var(--f);background:var(--bg);color:var(--txt);overflow-x:hidden;min-height:100vh}
-.hdr{background:linear-gradient(135deg,#0a1222,#0f1a2e,#152238);
-  padding:16px 18px 14px;border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:100}
-.htop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.hl{display:flex;align-items:center;gap:11px}
-.av{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#2563eb,#1d4ed8);
-  display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 14px rgba(37,99,235,.3)}
-.ht{font-size:17px;font-weight:700}.hst{font-size:11px;color:var(--mut);margin-top:1px}
-.sync{display:flex;align-items:center;gap:5px;background:rgba(34,197,94,.12);
-  border:1px solid rgba(34,197,94,.25);padding:5px 11px;border-radius:18px;
+body{font-family:var(--f);background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+/* ── Header ── */
+.hdr{background:linear-gradient(135deg,#0a1222,#0f1a2e);padding:14px 16px 0;
+  border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.htop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hlogo{display:flex;align-items:center;gap:10px}
+.hav{width:40px;height:40px;border-radius:11px;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  display:flex;align-items:center;justify-content:center;font-size:17px}
+.htitle{font-size:16px;font-weight:700}.hsub{font-size:10px;color:var(--mut);margin-top:1px}
+.hright{display:flex;align-items:center;gap:8px}
+.livebadge{display:flex;align-items:center;gap:5px;background:rgba(34,197,94,.12);
+  border:1px solid rgba(34,197,94,.25);padding:5px 10px;border-radius:16px;
   font-size:11px;font-weight:600;color:var(--grn);cursor:pointer}
-.sync:active{background:rgba(34,197,94,.18)}
+.livebadge:active{opacity:.7}
 .dot{width:5px;height:5px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.tabs{display:flex;background:var(--s1);overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--bdr)}
+/* ── Tabs ── */
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex:1;min-width:80px;padding:11px 8px;text-align:center;font-size:11px;
-  font-weight:600;color:var(--mut);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s}
+.tab{flex-shrink:0;padding:10px 14px;font-size:11px;font-weight:600;color:var(--mut);
+  border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap}
 .tab.on{color:var(--a2);border-bottom-color:var(--acc)}
-.scr{overflow-y:auto;padding-bottom:30px}
-.page{display:none;animation:fadein .3s}.page.on{display:block}
-@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.sec{padding:13px 16px 10px}.sl{font-size:9px;font-weight:700;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--mut);margin-bottom:11px}
-/* KPI Cards */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
-.kpi{background:linear-gradient(135deg,var(--s2),var(--s1));border:1.5px solid var(--bdr);
-  border-radius:13px;padding:14px;position:relative;overflow:hidden}
-.kpi::before{content:'';position:absolute;top:0;right:0;width:70px;height:70px;
-  border-radius:50%;filter:blur(35px);opacity:.12}
-.kpi.bl::before{background:var(--acc)}.kpi.gr::before{background:var(--grn)}
-.kpi.or::before{background:var(--org)}.kpi.pu::before{background:var(--pur)}
-.kico{font-size:20px;margin-bottom:7px;opacity:.9}
-.kval{font-size:21px;font-weight:800;font-family:var(--m);line-height:1;margin-bottom:3px}
+/* ── Pages ── */
+.scr{padding-bottom:50px}
+.page{display:none;animation:fadein .25s}.page.on{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sec{padding:12px 15px 6px}
+.sl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+/* ── KPI Cards ── */
+.kg3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.kg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.kg4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+@media(min-width:500px){.kg4{grid-template-columns:repeat(4,1fr)}}
+.kcard{border-radius:13px;padding:12px 11px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--s2),var(--s1));border:1.5px solid var(--bdr);
+  cursor:pointer;transition:all .15s}
+.kcard:hover{transform:translateY(-1px)}
+.kcard::before{content:'';position:absolute;top:-15px;right:-15px;width:70px;height:70px;
+  border-radius:50%;filter:blur(28px);opacity:.18}
+.kcard.bl{border-color:rgba(59,130,246,.25)}.kcard.bl::before{background:var(--acc)}
+.kcard.gr{border-color:rgba(34,197,94,.25)}.kcard.gr::before{background:var(--grn)}
+.kcard.or{border-color:rgba(249,115,22,.25)}.kcard.or::before{background:var(--org)}
+.kcard.pu{border-color:rgba(168,85,247,.25)}.kcard.pu::before{background:var(--pur)}
+.kcard.yl{border-color:rgba(234,179,8,.25)}.kcard.yl::before{background:var(--ylw)}
+.kico{font-size:17px;margin-bottom:5px}
+.kval{font-size:17px;font-weight:800;font-family:var(--m);line-height:1.1;margin-bottom:2px}
 .klbl{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
-/* Salesman Cards */
-.sm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:9px;margin-bottom:12px}
-.smc{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;
-  padding:13px;cursor:pointer;transition:all .2s;position:relative}
-.smc:hover{border-color:var(--acc);transform:translateY(-2px)}
-.smc:active{transform:scale(.98)}
-.smh{display:flex;align-items:center;gap:9px;margin-bottom:10px}
-.sma{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--acc),var(--pur));
-  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
-.smn{font-size:14px;font-weight:700}.sid{font-size:10px;font-family:var(--m);color:var(--a2)}
-.smm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.smi{text-align:center}
-.smv{font-size:14px;font-weight:700;font-family:var(--m);color:var(--a2)}
-.sml{font-size:8px;color:var(--mut);margin-top:2px;text-transform:uppercase}
-/* Orders Table */
-.ot{background:var(--s1);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:12px}
-.oth{background:var(--s2);display:flex;padding:10px 12px;border-bottom:1px solid var(--bdr);
-  font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
-.oth>div{flex:1;min-width:0}
-.otr{display:flex;padding:11px 12px;border-bottom:1px solid var(--bdr);
-  font-size:12px;cursor:pointer;transition:background .15s}
-.otr:hover{background:var(--s2)}
-.otr:last-child{border-bottom:none}
-.otr>div{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.oid{font-family:var(--m);color:var(--a2);font-weight:500;font-size:11px}
-.odate{color:var(--mut);font-size:11px}
-.oamt{font-weight:600;font-family:var(--m);color:var(--grn)}
-.sb{display:inline-block;padding:2px 7px;border-radius:16px;font-size:9px;font-weight:700}
-.sp{background:rgba(234,179,8,.12);color:var(--ylw)}
-.sd{background:rgba(34,197,94,.12);color:var(--grn)}
-/* Filters */
-.fbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.fi{flex:1;min-width:140px;background:var(--s2);border:1.5px solid var(--bdr);
-  border-radius:9px;padding:9px 11px;font-family:var(--f);font-size:12px;
-  color:var(--txt);outline:none;-webkit-appearance:none}
-.fi:focus{border-color:var(--acc)}
-select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath fill='%2364748b' d='M5 7L0 2h10z'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 11px center;padding-right:32px}
-.fbtn{padding:9px 16px;background:var(--s2);border:1.5px solid var(--bdr);
-  border-radius:9px;font-family:var(--f);font-size:11px;font-weight:600;
-  color:var(--mut);cursor:pointer;transition:all .15s}
-.fbtn:hover{border-color:var(--acc);color:var(--a2)}
-/* Party items */
-.pl{background:var(--s1);border:1px solid var(--bdr);border-radius:11px;
-  padding:11px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
-.pav{width:36px;height:36px;border-radius:9px;background:var(--s2);
-  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-.pnm{font-size:13px;font-weight:600}.pid{font-size:10px;font-family:var(--m);color:var(--a2)}
-.pph{font-size:11px;color:var(--mut);margin-top:2px}
-/* Individual View */
-.back{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;
-  background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;
-  font-size:12px;font-weight:600;color:var(--mut);cursor:pointer;
-  transition:all .15s;margin-bottom:13px}
-.back:hover{border-color:var(--acc);color:var(--a2)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
-.dcard{background:linear-gradient(135deg,var(--s2),var(--s1));border:1px solid var(--bdr);
-  border-radius:13px;padding:13px;position:relative;overflow:hidden}
-.dcard::before{content:'';position:absolute;top:0;right:0;width:70px;height:70px;
-  border-radius:50%;filter:blur(35px);opacity:.12}
-.dcard.bl::before{background:var(--acc)}.dcard.gr::before{background:var(--grn)}
-.dicon{font-size:22px;margin-bottom:7px;opacity:.9}
-.dval{font-size:22px;font-weight:800;font-family:var(--m);line-height:1;margin-bottom:3px}
-.dcard.bl .dval{color:var(--a2)}.dcard.gr .dval{color:var(--grn)}
-.dlbl{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
-.pcard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;
-  padding:13px 15px;margin-bottom:9px}
-.ptop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
+/* ── Progress card ── */
+.pcard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;padding:12px 13px}
+.ptop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
 .plbl{font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
-.ppct{font-size:12px;font-weight:700;font-family:var(--m);padding:2px 7px;
-  border-radius:5px;background:rgba(34,197,94,.12);color:var(--grn)}
-.pamt{font-size:19px;font-weight:800;font-family:var(--m);color:var(--txt);margin-bottom:3px}
+.ppct{font-size:11px;font-weight:700;font-family:var(--m);padding:2px 6px;border-radius:5px}
+.ppct.hi{background:rgba(34,197,94,.12);color:var(--grn)}
+.ppct.md{background:rgba(234,179,8,.12);color:var(--ylw)}
+.ppct.lo{background:rgba(239,68,68,.12);color:var(--red)}
+.pamt{font-size:20px;font-weight:800;font-family:var(--m);margin-bottom:2px}
 .ptgt{font-size:10px;color:var(--mut)}
-.pbar{height:5px;background:rgba(255,255,255,.05);border-radius:8px;overflow:hidden;margin-top:9px}
-.pfill{height:100%;border-radius:8px;transition:width .5s ease}
+.pbar{height:4px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-top:8px}
+.pfill{height:100%;border-radius:4px;transition:width .6s}
 .pfill.bl{background:linear-gradient(90deg,var(--acc),var(--a2))}
 .pfill.gr{background:linear-gradient(90deg,var(--grn),#16a34a)}
-.ccard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;
-  padding:15px;margin-bottom:10px}
-.ctitle{font-size:12px;font-weight:700;margin-bottom:12px;
-  display:flex;align-items:center;justify-content:space-between}
-.cwrap{position:relative;height:190px;display:flex;align-items:center;justify-content:center}
+.pfill.yl{background:linear-gradient(90deg,var(--ylw),#ca8a04)}
+/* ── Chart card ── */
+.ccard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;padding:13px;margin-bottom:10px}
+.ctop{font-size:12px;font-weight:700;margin-bottom:11px;display:flex;justify-content:space-between;align-items:center}
+.cwrap{position:relative;height:185px;display:flex;align-items:center;justify-content:center}
 canvas{max-width:100%;max-height:100%}
-.scard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;padding:13px 15px}
-.stop{display:flex;align-items:center;gap:9px;margin-bottom:9px}
-.sico{font-size:20px}
-.snum{font-size:22px;font-weight:800;font-family:var(--m);color:var(--a2)}
-.slbl2{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
-.sdet{font-size:11px;color:var(--mut)}
-.sdet strong{color:var(--txt);font-weight:600}
-.empty{text-align:center;padding:50px 18px;color:var(--mut);font-size:13px;line-height:1.8}
-.load{text-align:center;padding:40px;color:var(--mut)}
-.spin{display:inline-block;width:26px;height:26px;border:3px solid var(--bdr);
-  border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:9px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-12px);
-  background:var(--s2);border:1px solid var(--bdr);border-radius:10px;
-  padding:9px 17px;font-size:12px;font-weight:500;opacity:0;
-  transition:all .25s;z-index:9998;white-space:nowrap;pointer-events:none;
-  box-shadow:0 8px 24px rgba(0,0,0,.5)}
-.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.ok{border-color:rgba(34,197,94,.4);color:var(--grn)}
-.toast.er{border-color:rgba(239,68,68,.4);color:var(--red)}
-/* Admin modal */
+.ptable{margin-top:9px}
+.ptrow{display:flex;justify-content:space-between;align-items:center;
+  padding:5px 0;border-bottom:1px solid var(--bdr);font-size:11px}
+.ptrow:last-child{border-bottom:none}
+/* ── Leaderboard ── */
+.lbrow{background:var(--s1);border:1.5px solid var(--bdr);border-radius:12px;
+  padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:all .15s}
+.lbrow:hover{border-color:var(--acc);transform:translateX(2px)}
+.lbtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.lbbar{height:3px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.lbfill{height:100%;border-radius:3px;transition:width .5s}
+.rnk{display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;border-radius:6px;font-size:10px;font-weight:800;margin-right:7px;flex-shrink:0}
+.rnk.r1{background:rgba(234,179,8,.2);color:var(--ylw)}
+.rnk.r2{background:rgba(148,163,184,.1);color:#94a3b8}
+.rnk.r3{background:rgba(234,88,12,.1);color:#ea580c}
+.rnk.rx{background:rgba(100,116,139,.1);color:var(--mut)}
+/* ── SM cards ── */
+.smgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+.smcard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;
+  padding:11px;cursor:pointer;transition:all .2s}
+.smcard:hover{border-color:var(--acc);transform:translateY(-2px)}
+.smav{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;
+  justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0}
+.smstats{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px}
+.smst{text-align:center;background:var(--s2);border-radius:7px;padding:5px 3px}
+.smstv{font-size:11px;font-weight:700;font-family:var(--m);color:var(--a2)}
+.smstl{font-size:7px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+/* ── Dist cards ── */
+.distgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px;margin-bottom:10px}
+.distcard{background:var(--s1);border:1.5px solid rgba(168,85,247,.2);border-radius:13px;
+  padding:13px;cursor:pointer;transition:all .2s}
+.distcard:hover{border-color:var(--pur);transform:translateY(-2px)}
+.drow{display:flex;justify-content:space-between;padding:5px 0;
+  border-bottom:1px solid var(--bdr);font-size:11px}
+.drow:last-child{border-bottom:none}
+/* ── Orders table ── */
+.ot{background:var(--s1);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-bottom:10px}
+.oth{background:var(--s2);display:flex;padding:9px 12px;border-bottom:1px solid var(--bdr);
+  font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.otr{display:flex;padding:10px 12px;border-bottom:1px solid var(--bdr);
+  font-size:12px;cursor:pointer;transition:background .15s}
+.otr:hover{background:var(--s2)}.otr:last-child{border-bottom:none}
+.otr>div,.oth>div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oid2{font-family:var(--m);color:var(--a2);font-size:11px;font-weight:500}
+.oamt{font-weight:600;font-family:var(--m);color:var(--grn)}
+.sb{display:inline-block;padding:2px 7px;border-radius:14px;font-size:9px;font-weight:700}
+.sp{background:rgba(234,179,8,.12);color:var(--ylw)}
+.sd{background:rgba(34,197,94,.12);color:var(--grn)}
+.sc{background:rgba(239,68,68,.12);color:var(--red)}
+/* ── Filters ── */
+.fbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.fi{flex:1;min-width:130px;background:var(--s2);border:1.5px solid var(--bdr);
+  border-radius:9px;padding:8px 10px;font-family:var(--f);font-size:12px;color:var(--txt);outline:none;-webkit-appearance:none}
+.fi:focus{border-color:var(--acc)}
+select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath fill='%2364748b' d='M5 7L0 2h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:26px}
+/* ── Parties ── */
+.pl{background:var(--s1);border:1px solid var(--bdr);border-radius:11px;
+  padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:9px}
+/* ── Back btn ── */
+.back{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;
+  background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;
+  font-size:12px;font-weight:600;color:var(--mut);cursor:pointer;margin-bottom:12px;transition:all .15s}
+.back:hover{border-color:var(--acc);color:var(--a2)}
+/* ── Modal ── */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
   z-index:500;display:none;align-items:flex-end}
 .ov.on{display:flex}
 .mo{background:var(--s1);border-radius:18px 18px 0 0;border-top:1px solid var(--bdr);
-  padding:18px 16px max(env(safe-area-inset-bottom,24px),24px);width:100%;
-  max-height:85dvh;overflow-y:auto;animation:up .2s ease}
+  padding:16px 15px max(env(safe-area-inset-bottom,22px),22px);width:100%;
+  max-height:88dvh;overflow-y:auto;animation:up .2s ease}
 @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.mh{width:36px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 14px}
-.mt{font-size:15px;font-weight:700;margin-bottom:12px}
+.mh{width:34px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 13px}
+.mt{font-size:15px;font-weight:700;margin-bottom:11px}
 .mr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px}
 .mr:last-child{border-bottom:none}
 .ml{color:var(--mut)}.mv{font-weight:600;font-family:var(--m)}
-.bs{padding:10px 16px;border:1.5px solid var(--bdr);border-radius:9px;
-  background:var(--s2);font-family:var(--f);font-size:11px;font-weight:600;
-  color:var(--mut);cursor:pointer;transition:all .15s}
-.bs:active{transform:scale(.97)}
-.bs.wa{border-color:rgba(34,197,94,.3);color:var(--grn);background:rgba(34,197,94,.05)}
+.bs{padding:10px 14px;border:1.5px solid var(--bdr);border-radius:9px;background:var(--s2);
+  font-family:var(--f);font-size:11px;font-weight:600;color:var(--mut);cursor:pointer}
 .bs.cl{border-color:rgba(239,68,68,.3);color:var(--red);background:rgba(239,68,68,.05)}
-.maction{padding:10px 16px;border-radius:9px;font-family:var(--f);font-size:12px;font-weight:700;
-  cursor:pointer;border:none;flex:1;transition:all .15s}
-.maction:active{transform:scale(.97)}
+.maction{padding:10px 14px;border-radius:9px;font-family:var(--f);font-size:12px;
+  font-weight:700;cursor:pointer;border:none;flex:1}
 .maction.cancel{background:rgba(239,68,68,.15);color:var(--red);border:1.5px solid rgba(239,68,68,.3)}
 .maction.edit{background:rgba(59,130,246,.15);color:var(--a2);border:1.5px solid rgba(59,130,246,.3)}
-.maction.dispatch{background:rgba(34,197,94,.15);color:var(--grn);border:1.5px solid rgba(34,197,94,.3)}
-.kpi{cursor:pointer;transition:all .15s}
-.kpi:hover{border-color:var(--acc);transform:translateY(-1px)}
-.kmod-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bdr);font-size:12px}
+.maction.save{background:rgba(34,197,94,.15);color:var(--grn);border:1.5px solid rgba(34,197,94,.3)}
+.kmod-row{display:flex;justify-content:space-between;padding:8px 0;
+  border-bottom:1px solid var(--bdr);font-size:12px;cursor:pointer}
 .kmod-row:last-child{border-bottom:none}
-.sc{background:rgba(239,68,68,.12);color:var(--red)}
+.kmod-row:hover{background:rgba(255,255,255,.02)}
+/* ── Misc ── */
+.empty{text-align:center;padding:36px 16px;color:var(--mut);font-size:13px}
+.toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-10px);
+  background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:8px 16px;
+  font-size:12px;font-weight:500;opacity:0;transition:all .25s;z-index:9999;pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(34,197,94,.4);color:var(--grn)}
+.toast.er{border-color:rgba(239,68,68,.4);color:var(--red)}
+.toast.in{border-color:rgba(59,130,246,.4);color:var(--a2)}
 </style>
 </head>
 <body>
@@ -188,736 +190,998 @@ canvas{max-width:100%;max-height:100%}
 <!-- HEADER -->
 <div class="hdr">
   <div class="htop">
-    <div class="hl">
-      <div class="av">⚙️</div>
+    <div class="hlogo">
+      <div class="hav">⚙️</div>
       <div>
-        <div class="ht">Admin Console</div>
-        <div class="hst">Company-wide Dashboard</div>
+        <div class="htitle">Admin Console</div>
+        <div class="hsub" id="lastSync">Loading data...</div>
       </div>
     </div>
-    <div class="sync" onclick="refresh()">
-      <div class="dot"></div>
-      <span>Refresh</span>
+    <div class="hright">
+      <div class="livebadge" onclick="refresh()"><div class="dot"></div>Refresh</div>
     </div>
   </div>
   <div class="tabs">
-    <div class="tab on" onclick="goTab('overview')">📊 Overview</div>
-    <div class="tab" onclick="goTab('orders')">📦 Orders</div>
-    <div class="tab" onclick="goTab('parties')">🏪 Parties</div>
+    <div class="tab on"  onclick="goTab('overview')">📊 Overview</div>
+    <div class="tab"     onclick="goTab('salesmen')">👤 Salesmen</div>
+    <div class="tab"     onclick="goTab('distributors')">🚚 Distributors</div>
+    <div class="tab"     onclick="goTab('orders')">📦 Orders</div>
+    <div class="tab"     onclick="goTab('parties')">🏪 Parties</div>
   </div>
 </div>
 
 <div class="scr">
 
-<!-- ════════════════ OVERVIEW PAGE ════════════════ -->
+<!-- ══ OVERVIEW ══ -->
 <div class="page on" id="pg-overview">
-  <!-- Company KPIs -->
+
   <div class="sec">
-    <div class="sl">Company Performance</div>
-    <div class="kpi-grid">
-      <div class="kpi bl" onclick="showAdminKpi('revenue')">
-        <div class="kico">💰</div>
-        <div class="kval" id="totalRev">₹0</div>
-        <div class="klbl">Total Revenue ▸</div>
+    <div class="sl">Today — Company Wide</div>
+    <div class="kg3">
+      <div class="kcard bl" onclick="showKpiModal('todaySales')">
+        <div class="kico">💰</div><div class="kval" id="k-todaySales">₹0</div>
+        <div class="klbl">Today Sales ▸</div>
       </div>
-      <div class="kpi gr" onclick="showAdminKpi('orders')">
-        <div class="kico">📦</div>
-        <div class="kval" id="totalOrders">0</div>
-        <div class="klbl">Total Orders ▸</div>
+      <div class="kcard gr" onclick="showKpiModal('todayOrders')">
+        <div class="kico">📦</div><div class="kval" id="k-todayOrders">0</div>
+        <div class="klbl">Orders ▸</div>
       </div>
-      <div class="kpi or" onclick="showAdminKpi('today')">
-        <div class="kico">📅</div>
-        <div class="kval" id="todayOrdersKpi">0</div>
-        <div class="klbl">Today's Orders ▸</div>
-      </div>
-      <div class="kpi pu" onclick="showAdminKpi('commission')">
-        <div class="kico">💵</div>
-        <div class="kval" id="totalComm">₹0</div>
-        <div class="klbl">Commission ▸</div>
-      </div>
-      <div class="kpi" style="border-color:var(--bdr)" onclick="showAdminKpi('parties')">
-        <div class="kico">⭐</div>
-        <div class="kval" id="newParties">0</div>
-        <div class="klbl">New Parties ▸</div>
+      <div class="kcard or" onclick="showKpiModal('todayShops')">
+        <div class="kico">🏪</div><div class="kval" id="k-todayShops">0</div>
+        <div class="klbl">Shops ▸</div>
       </div>
     </div>
   </div>
 
-  <!-- Salesmen Performance -->
   <div class="sec">
-    <div class="sl">Salesman Performance · Click to View Details</div>
-    <div class="sm-grid" id="smGrid"></div>
+    <div class="sl">Month to Date — <span id="mtdLabel"></span></div>
+    <div class="kg2">
+      <div class="pcard">
+        <div class="ptop"><div class="plbl">MTD Sales</div><div class="ppct hi" id="k-mtdPct">0%</div></div>
+        <div class="pamt" id="k-mtdSales">₹0</div>
+        <div class="ptgt">Target: <span id="k-mtdTgt">—</span></div>
+        <div class="pbar"><div class="pfill bl" id="k-mtdBar" style="width:0%"></div></div>
+      </div>
+      <div class="pcard">
+        <div class="ptop"><div class="plbl">MTD Shops</div></div>
+        <div class="pamt" id="k-mtdShops">0</div>
+        <div class="ptgt" id="k-mtdOrderCount">— orders</div>
+        <div style="margin-top:8px;font-size:11px;color:var(--a2)" id="k-mtdSalesmenActive">—</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Recent Orders -->
+  <div class="sec">
+    <div class="sl">Year to Date — <span id="ytdLabel"></span></div>
+    <div class="kg2">
+      <div class="pcard">
+        <div class="ptop"><div class="plbl">YTD Sales</div><div class="ppct hi" id="k-ytdPct">0%</div></div>
+        <div class="pamt" id="k-ytdSales">₹0</div>
+        <div class="ptgt">Annual Target: <span id="k-ytdTgt">—</span></div>
+        <div class="pbar"><div class="pfill gr" id="k-ytdBar" style="width:0%"></div></div>
+      </div>
+      <div class="pcard">
+        <div class="ptop"><div class="plbl">YTD Shops</div></div>
+        <div class="pamt" id="k-ytdShops">0</div>
+        <div class="ptgt" id="k-ytdOrderCount">— orders</div>
+        <div style="margin-top:8px;font-size:11px;color:var(--grn)" id="k-newParties">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sl">Product Mix — MTD</div>
+    <div class="ccard">
+      <div class="ctop"><span>Sales by Product</span><span style="font-size:10px;color:var(--mut)" id="chartMtdLbl"></span></div>
+      <div class="cwrap"><canvas id="chartMtd"></canvas></div>
+      <div class="ptable" id="tableMtd"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sl">Product Mix — YTD</div>
+    <div class="ccard">
+      <div class="ctop"><span>Sales by Product</span><span style="font-size:10px;color:var(--mut)" id="chartYtdLbl"></span></div>
+      <div class="cwrap"><canvas id="chartYtd"></canvas></div>
+      <div class="ptable" id="tableYtd"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sl">Salesman Leaderboard — MTD</div>
+    <div id="leaderboard"></div>
+  </div>
+
   <div class="sec">
     <div class="sl">Recent Orders</div>
     <div class="ot">
       <div class="oth">
-        <div style="flex:0.8">Order ID</div>
-        <div style="flex:1.2">Party</div>
-        <div>Salesman</div>
-        <div style="flex:0.7">Amount</div>
+        <div style="flex:.7">Order</div><div style="flex:.65">Date</div>
+        <div style="flex:1.2">Party</div><div style="flex:1">Salesman</div>
+        <div style="flex:.75">Amt</div><div style="flex:.5">Status</div>
       </div>
-      <div id="recentOrders"></div>
+      <div id="recentList"></div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════ INDIVIDUAL SALESMAN VIEW ════════════════ -->
+<!-- ══ SALESMEN ══ -->
+<div class="page" id="pg-salesmen">
+  <div class="sec">
+    <div class="sl">All Salesmen — Click to Drill Down</div>
+    <div class="smgrid" id="allSmGrid"></div>
+  </div>
+</div>
+
+<!-- ══ INDIVIDUAL SALESMAN ══ -->
 <div class="page" id="pg-individual">
   <div class="sec">
-    <div class="back" onclick="goTab('overview')">← Back to Overview</div>
-    <div style="margin-bottom:14px">
-      <div style="font-size:19px;font-weight:700" id="indName">Salesman Name</div>
-      <div style="font-size:11px;font-family:var(--m);color:var(--a2);margin-top:2px" id="indId">SM001</div>
-    </div>
-  </div>
-
-  <div class="sec">
-    <div class="sl">Today's Performance</div>
-    <div class="grid2">
-      <div class="dcard bl">
-        <div class="dicon">💰</div>
-        <div class="dval" id="indTodaySales">₹0</div>
-        <div class="dlbl">Today's Sales</div>
-      </div>
-      <div class="dcard gr">
-        <div class="dicon">🏪</div>
-        <div class="dval" id="indTodayShops">0</div>
-        <div class="dlbl">Shops Served</div>
+    <div class="back" onclick="goTab('salesmen')">← All Salesmen</div>
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:3px">
+      <div id="indAv" style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0;background:var(--acc)"></div>
+      <div>
+        <div style="font-size:19px;font-weight:700" id="indName">—</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:1px" id="indMeta">—</div>
       </div>
     </div>
   </div>
-
   <div class="sec">
-    <div class="sl">Month & Year Performance</div>
-    <div class="grid2">
+    <div class="sl">Today</div>
+    <div class="kg3">
+      <div class="kcard bl"><div class="kico">💰</div><div class="kval" id="is-todaySales">₹0</div><div class="klbl">Sales</div></div>
+      <div class="kcard gr"><div class="kico">📦</div><div class="kval" id="is-todayOrders">0</div><div class="klbl">Orders</div></div>
+      <div class="kcard or"><div class="kico">🏪</div><div class="kval" id="is-todayShops">0</div><div class="klbl">Shops</div></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sl">Month to Date</div>
+    <div class="kg2">
       <div class="pcard">
-        <div class="ptop">
-          <div class="plbl">MTD Sales</div>
-          <div class="ppct" id="indMtdPct">0%</div>
-        </div>
-        <div class="pamt" id="indMtdAmt">₹0</div>
-        <div class="ptgt">of <span id="indMtdTgt">₹50,000</span> target</div>
-        <div class="pbar">
-          <div class="pfill bl" id="indMtdBar" style="width:0%"></div>
-        </div>
+        <div class="ptop"><div class="plbl">MTD Sales</div><div class="ppct hi" id="is-mtdPct">0%</div></div>
+        <div class="pamt" id="is-mtdSales">₹0</div>
+        <div class="ptgt">Target: <span id="is-mtdTgt">—</span></div>
+        <div class="pbar"><div class="pfill bl" id="is-mtdBar" style="width:0%"></div></div>
       </div>
       <div class="pcard">
-        <div class="ptop">
-          <div class="plbl">YTD Sales</div>
-          <div class="ppct" id="indYtdPct">0%</div>
-        </div>
-        <div class="pamt" id="indYtdAmt">₹0</div>
-        <div class="ptgt">of <span id="indYtdTgt">₹600K</span> target</div>
-        <div class="pbar">
-          <div class="pfill gr" id="indYtdBar" style="width:0%"></div>
-        </div>
+        <div class="ptop"><div class="plbl">MTD Shops</div></div>
+        <div class="pamt" id="is-mtdShops">0</div>
+        <div class="ptgt">Shop target: 15</div>
+        <div style="margin-top:7px;font-size:11px" id="is-shopGap">—</div>
       </div>
     </div>
   </div>
-
   <div class="sec">
-    <div class="sl">Product Mix This Month</div>
+    <div class="sl">Year to Date</div>
+    <div class="kg2">
+      <div class="pcard">
+        <div class="ptop"><div class="plbl">YTD Sales</div><div class="ppct hi" id="is-ytdPct">0%</div></div>
+        <div class="pamt" id="is-ytdSales">₹0</div>
+        <div class="ptgt">Annual target: <span id="is-ytdTgt">—</span></div>
+        <div class="pbar"><div class="pfill gr" id="is-ytdBar" style="width:0%"></div></div>
+      </div>
+      <div class="pcard">
+        <div class="ptop"><div class="plbl">YTD Shops</div></div>
+        <div class="pamt" id="is-ytdShops">0</div>
+        <div class="ptgt">Unique shops this year</div>
+        <div style="margin-top:7px;font-size:11px;color:var(--grn)" id="is-newParties">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sl">Product Mix — MTD</div>
     <div class="ccard">
-      <div class="ctitle">
-        <span>Sales by Product</span>
-        <span id="indChartMonth" style="font-size:10px;color:var(--mut);font-weight:500"></span>
-      </div>
-      <div class="cwrap">
-        <canvas id="indChart"></canvas>
-      </div>
+      <div class="ctop"><span>MTD Sales by Product</span><span style="font-size:10px;color:var(--mut)" id="is-mtdChartLbl"></span></div>
+      <div class="cwrap"><canvas id="isChartMtd"></canvas></div>
+      <div class="ptable" id="isTableMtd"></div>
     </div>
   </div>
-
   <div class="sec">
-    <div class="sl">Coverage & Growth</div>
-    <div class="grid2">
-      <div class="scard">
-        <div class="slbl2">Shops This Month</div>
-        <div class="stop">
-          <div class="sico">🏪</div>
-          <div class="snum" id="indMtdShops">0</div>
-        </div>
-        <div class="sdet">Target: <strong>15 shops</strong></div>
-        <div class="sdet" style="margin-top:3px;color:var(--ylw)" id="indShopGap">—</div>
+    <div class="sl">Product Mix — YTD</div>
+    <div class="ccard">
+      <div class="ctop"><span>YTD Sales by Product</span><span style="font-size:10px;color:var(--mut)" id="is-ytdChartLbl"></span></div>
+      <div class="cwrap"><canvas id="isChartYtd"></canvas></div>
+      <div class="ptable" id="isTableYtd"></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sl">Recent Orders</div>
+    <div class="ot">
+      <div class="oth">
+        <div style="flex:.8">Order</div><div style="flex:.7">Date</div>
+        <div style="flex:1.5">Party</div><div style="flex:.8">Amt</div><div style="flex:.6">Status</div>
       </div>
-      <div class="scard">
-        <div class="slbl2">New Parties Added</div>
-        <div class="stop">
-          <div class="sico">⭐</div>
-          <div class="snum" id="indNewParties">0</div>
-        </div>
-        <div class="sdet">Sales from new: <strong id="indNewSales">₹0</strong></div>
-        <div class="sdet" style="margin-top:3px;color:var(--grn)" id="indNewPct">—</div>
-      </div>
+      <div id="isOrdersList"></div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════ ORDERS PAGE ════════════════ -->
+<!-- ══ DISTRIBUTORS ══ -->
+<div class="page" id="pg-distributors">
+  <div class="sec">
+    <div class="sl">All Distributors — Click to Drill Down</div>
+    <div class="distgrid" id="allDistGrid"></div>
+  </div>
+</div>
+
+<!-- ══ INDIVIDUAL DISTRIBUTOR ══ -->
+<div class="page" id="pg-dist-ind">
+  <div class="sec">
+    <div class="back" onclick="goTab('distributors')">← All Distributors</div>
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:3px">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--pur),#6d28d9);display:flex;align-items:center;justify-content:center;font-size:20px">🚚</div>
+      <div>
+        <div style="font-size:19px;font-weight:700" id="distName">—</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:1px" id="distMeta">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sl">Today</div>
+    <div class="kg3">
+      <div class="kcard pu"><div class="kico">💰</div><div class="kval" id="di-todaySales">₹0</div><div class="klbl">Sales</div></div>
+      <div class="kcard bl"><div class="kico">📦</div><div class="kval" id="di-todayOrders">0</div><div class="klbl">Orders</div></div>
+      <div class="kcard gr"><div class="kico">🏪</div><div class="kval" id="di-todayShops">0</div><div class="klbl">Shops</div></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sl">MTD / YTD</div>
+    <div class="kg4">
+      <div class="kcard pu"><div class="kico">📅</div><div class="kval" id="di-mtdSales">₹0</div><div class="klbl">MTD Sales</div></div>
+      <div class="kcard bl"><div class="kico">🏪</div><div class="kval" id="di-mtdShops">0</div><div class="klbl">MTD Shops</div></div>
+      <div class="kcard gr"><div class="kico">📈</div><div class="kval" id="di-ytdSales">₹0</div><div class="klbl">YTD Sales</div></div>
+      <div class="kcard or"><div class="kico">🏬</div><div class="kval" id="di-ytdShops">0</div><div class="klbl">YTD Shops</div></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sl">Salesmen Under This Distributor</div>
+    <div class="smgrid" id="distSmGrid"></div>
+  </div>
+  <div class="sec">
+    <div class="sl">Product Mix — MTD</div>
+    <div class="ccard">
+      <div class="ctop"><span>MTD Sales by Product</span></div>
+      <div class="cwrap"><canvas id="diChartMtd"></canvas></div>
+      <div class="ptable" id="diTableMtd"></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sl">Product Mix — YTD</div>
+    <div class="ccard">
+      <div class="ctop"><span>YTD Sales by Product</span></div>
+      <div class="cwrap"><canvas id="diChartYtd"></canvas></div>
+      <div class="ptable" id="diTableYtd"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ORDERS ══ -->
 <div class="page" id="pg-orders">
   <div class="sec">
-    <div class="sl">Filter Orders</div>
     <div class="fbar">
-      <input class="fi" type="search" id="osearch" placeholder="Search order ID, party..." oninput="renderOrders()">
-      <select class="fi" id="osmFilter" onchange="renderOrders()">
-        <option value="">All Salesmen</option>
-        <option value="SM001">SM001 · Sunil Bhai</option>
-        <option value="SM002">SM002 · JK Bhai</option>
-        <option value="SM003">SM003 · Satish</option>
-        <option value="SM004">SM004 · Ajay</option>
-        <option value="SM005">SM005 · Jitu Bhai</option>
-      </select>
-      <select class="fi" id="ostatFilter" onchange="renderOrders()">
+      <input class="fi" type="search" id="osearch" placeholder="Order ID, party name..." oninput="renderOrders()">
+      <select class="fi" id="osmf" onchange="renderOrders()"><option value="">All Salesmen</option></select>
+      <select class="fi" id="ostf" onchange="renderOrders()">
         <option value="">All Status</option>
         <option value="Pending">Pending</option>
         <option value="Dispatched">Dispatched</option>
+        <option value="Cancelled">Cancelled</option>
       </select>
     </div>
-  </div>
-  <div class="sec">
-    <div class="sl">All Orders (<span id="ocount">0</span>)</div>
+    <div class="sl">Orders (<span id="ocount">0</span>)</div>
     <div class="ot">
       <div class="oth">
-        <div style="flex:0.8">Order ID</div>
-        <div>Date</div>
-        <div style="flex:1.2">Party</div>
-        <div>Salesman</div>
-        <div style="flex:0.7">Amount</div>
-        <div style="flex:0.6">Status</div>
+        <div style="flex:.7">Order</div><div style="flex:.65">Date</div>
+        <div style="flex:1.3">Party</div><div style="flex:1">Salesman</div>
+        <div style="flex:.75">Amt</div><div style="flex:.5">Status</div>
       </div>
-      <div id="ordersList"></div>
+      <div id="ordersBody"></div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════ PARTIES PAGE ════════════════ -->
+<!-- ══ PARTIES ══ -->
 <div class="page" id="pg-parties">
   <div class="sec">
-    <div class="sl">Search Parties</div>
-    <input class="fi" type="search" id="psearch" placeholder="Search party name, ID..." oninput="renderParties()" style="width:100%;margin-bottom:12px">
-  </div>
-  <div class="sec">
-    <div class="sl">All Parties (<span id="pcount">0</span>)</div>
-    <div id="partiesList"></div>
+    <div class="fbar">
+      <input class="fi" type="search" id="psearch" placeholder="Party name, ID..." oninput="renderParties()">
+      <select class="fi" id="psmf" onchange="renderParties()"><option value="">All Salesmen</option></select>
+    </div>
+    <div class="sl">Parties (<span id="pcount">0</span>)</div>
+    <div id="partiesBody"></div>
   </div>
 </div>
 
 </div><!-- /scr -->
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ORDER DETAIL MODAL (Admin) -->
-<div class="ov" id="adminOrderOv" onclick="if(event.target===this)closeAdminOrderModal()">
+<!-- ══ ORDER MODAL ══ -->
+<div class="ov" id="orderOv" onclick="if(event.target===this)closeModal('orderOv')">
   <div class="mo">
     <div class="mh"></div>
-    <div class="mt" id="adminMTitle"></div>
-    <div id="adminMBody"></div>
-    <!-- Edit Section -->
-    <div id="adminEditSection" style="display:none;margin-top:10px">
+    <div class="mt" id="omTitle"></div>
+    <div id="omBody"></div>
+    <div id="editSec" style="display:none;margin-top:10px">
       <div style="font-size:10px;color:var(--mut);margin-bottom:5px;text-transform:uppercase">Update Status</div>
-      <select id="adminEditStatus" style="width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;padding:10px;font-family:var(--f);font-size:13px;color:var(--txt);outline:none;-webkit-appearance:none;margin-bottom:8px">
-        <option value="Pending">Pending</option>
-        <option value="Dispatched">Dispatched</option>
-        <option value="Cancelled">Cancelled</option>
+      <select id="editStatus" class="fi" style="width:100%;margin-bottom:8px">
+        <option>Pending</option><option>Dispatched</option><option>Cancelled</option>
       </select>
-      <div style="font-size:10px;color:var(--mut);margin-bottom:5px;text-transform:uppercase">Notes</div>
-      <textarea id="adminEditNotes" style="width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;padding:10px;font-family:var(--f);font-size:13px;color:var(--txt);outline:none;resize:none;min-height:60px"></textarea>
-      <div style="display:flex;gap:7px;margin-top:10px">
-        <button class="maction dispatch" onclick="adminSaveEdit()">💾 Save</button>
-        <button class="maction cancel" style="flex:0.5" onclick="document.getElementById('adminEditSection').style.display='none'">✕</button>
+      <div style="font-size:10px;color:var(--mut);margin-bottom:4px;text-transform:uppercase">Notes</div>
+      <textarea id="editNotes" class="fi" style="width:100%;resize:none;min-height:58px"></textarea>
+      <div style="display:flex;gap:7px;margin-top:9px">
+        <button class="maction save" onclick="saveEdit()">💾 Save</button>
+        <button class="maction cancel" style="flex:.5" onclick="document.getElementById('editSec').style.display='none'">✕</button>
       </div>
     </div>
-    <!-- Cancel Section -->
-    <div id="adminCancelSection" style="display:none;margin-top:10px">
-      <div style="font-size:10px;color:var(--red);margin-bottom:5px;text-transform:uppercase">Cancel Reason</div>
-      <textarea id="adminCancelReason" placeholder="Admin cancellation reason..." style="width:100%;background:var(--s2);border:1.5px solid rgba(239,68,68,.3);border-radius:9px;padding:10px;font-family:var(--f);font-size:13px;color:var(--txt);outline:none;resize:none;min-height:60px"></textarea>
-      <div style="display:flex;gap:7px;margin-top:10px">
-        <button class="maction cancel" onclick="adminConfirmCancel()">⛔ Confirm Cancel</button>
-        <button class="maction edit" style="flex:0.5" onclick="document.getElementById('adminCancelSection').style.display='none'">Back</button>
+    <div id="cancelSec" style="display:none;margin-top:10px">
+      <div style="font-size:10px;color:var(--red);margin-bottom:4px;text-transform:uppercase">Cancel Reason</div>
+      <textarea id="cancelReason" class="fi" placeholder="Reason..." style="width:100%;resize:none;min-height:55px"></textarea>
+      <div style="display:flex;gap:7px;margin-top:9px">
+        <button class="maction cancel" onclick="confirmCancel()">⛔ Confirm Cancel</button>
+        <button class="maction edit" style="flex:.5" onclick="document.getElementById('cancelSec').style.display='none'">Back</button>
       </div>
     </div>
-    <div style="display:flex;gap:7px;margin-top:13px;flex-wrap:wrap">
-      <button class="maction edit" onclick="document.getElementById('adminEditSection').style.display='block';document.getElementById('adminCancelSection').style.display='none'">✏️ Edit</button>
-      <button class="maction cancel" id="adminCancelMBtn" onclick="document.getElementById('adminCancelSection').style.display='block';document.getElementById('adminEditSection').style.display='none'">⛔ Cancel</button>
-      <button class="bs cl" style="flex:1;padding:12px;font-size:12px" onclick="closeAdminOrderModal()">Close</button>
+    <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">
+      <button class="maction edit" onclick="document.getElementById('editSec').style.display='block';document.getElementById('cancelSec').style.display='none'">✏️ Edit</button>
+      <button class="maction cancel" id="cancelBtn" onclick="document.getElementById('cancelSec').style.display='block';document.getElementById('editSec').style.display='none'">⛔ Cancel</button>
+      <button class="bs cl" style="flex:1;padding:11px" onclick="closeModal('orderOv')">Close</button>
     </div>
   </div>
 </div>
 
-<!-- KPI DETAIL MODAL (Admin) -->
-<div class="ov" id="adminKpiOv" onclick="if(event.target===this)document.getElementById('adminKpiOv').classList.remove('on')">
+<!-- ══ KPI MODAL ══ -->
+<div class="ov" id="kpiOv" onclick="if(event.target===this)closeModal('kpiOv')">
   <div class="mo">
     <div class="mh"></div>
-    <div class="mt" id="adminKpiTitle"></div>
-    <div id="adminKpiBody"></div>
-    <button class="bs cl" style="width:100%;padding:12px;font-size:12px;margin-top:13px" onclick="document.getElementById('adminKpiOv').classList.remove('on')">Close</button>
+    <div class="mt" id="kpiTitle"></div>
+    <div id="kpiBody"></div>
+    <button class="bs cl" style="width:100%;padding:11px;margin-top:12px" onclick="closeModal('kpiOv')">Close</button>
   </div>
 </div>
 
 <script>
-// ═══ CONFIG ═══════════════════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbws9XiOvp7ios6yXcIZcK3Hnex3Mm6IK_zdwf4pc2IY7ML9fRarHFgWx4z6BQjZoVmM/exec';
+// ═══════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWom2LgZbHfINY31GTmZOYdVva_rWxES-xrmVCDZ_hxolGf6SSxt0P_UIPDi-MaOOg/exec';
+const PALETTE = ['#3b82f6','#8b5cf6','#22c55e','#f97316','#eab308','#ec4899','#14b8a6','#f43f5e','#06b6d4','#84cc16'];
+const SM_PALETTE = ['#3b82f6','#8b5cf6','#22c55e','#f97316','#eab308','#ec4899','#14b8a6','#f43f5e'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-const SALESMEN = [
-  {id:'SM001',name:'Sunil Bhai',terr:'North'},
-  {id:'SM002',name:'JK Bhai',terr:'South'},
-  {id:'SM003',name:'Satish',terr:'East'},
-  {id:'SM004',name:'Ajay',terr:'West'},
-  {id:'SM005',name:'Jitu Bhai',terr:'Central'}
-];
+let allOrders=[], allParties=[], allSalesmen=[], allDistributors=[];
+let modalOid=null, charts={};
+let curSmId=null, curDistId=null;
 
-let allOrders = [];
-let allParties = [];
-let allSalesmen = [];
-let currentView = 'overview';
-let currentSmId = null;
-let indChart = null;
-let adminModalOID = null;
-let adminDashData = null;
+// ═══════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════
+const fi = n => '₹'+Number(n||0).toLocaleString('en-IN');
 
-// ═══ INIT ═════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  loadData();
-});
-
-// ═══ TAB NAVIGATION ═══════════════════════════════════════════════════
-function goTab(tab) {
-  document.querySelectorAll('.tab').forEach((t, i) => 
-    t.classList.toggle('on', ['overview', 'orders', 'parties'][i] === tab));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
-  
-  if (tab === 'overview') {
-    document.getElementById('pg-overview').classList.add('on');
-    currentView = 'overview';
-  } else if (tab === 'orders') {
-    document.getElementById('pg-orders').classList.add('on');
-    currentView = 'orders';
-    renderOrders();
-  } else if (tab === 'parties') {
-    document.getElementById('pg-parties').classList.add('on');
-    currentView = 'parties';
-    renderParties();
-  }
-  window.scrollTo({ top: 0 });
-}
-
-function goIndividual(smId) {
-  currentSmId = smId;
-  currentView = 'individual';
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
-  document.getElementById('pg-individual').classList.add('on');
-  loadIndividual(smId);
-  window.scrollTo({ top: 0 });
-}
-
-// ═══ LOAD DATA ════════════════════════════════════════════════════════
-async function loadData() {
-  try {
-    // Load overview dashboard
-    const r1 = await fetch(`${SCRIPT_URL}?action=dashboard&t=${Date.now()}`);
-    const dash = await r1.json();
-    
-    if (dash.ok) {
-      renderOverview(dash);
-      allSalesmen = dash.salesmen || [];
+function normDate(d){
+  if(!d) return '';
+  try{
+    const dt = new Date(d);
+    if(!isNaN(dt)){
+      const ist = new Date(dt.getTime()+330*60000);
+      return ist.toISOString().slice(0,10);
     }
-    
-    // Load all orders
-    const r2 = await fetch(`${SCRIPT_URL}?action=orders&t=${Date.now()}`);
-    const ord = await r2.json();
-    if (ord.ok) allOrders = ord.orders || [];
-    
-    // Load parties
-    const r3 = await fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`);
-    const par = await r3.json();
-    if (par.ok) allParties = par.parties || [];
-    
-  } catch (e) {
-    console.error('Load error:', e);
-    toast('⚠️ Could not load data', 'er');
-  }
+  }catch(e){}
+  return String(d).slice(0,10);
 }
 
-function refresh() {
-  toast('🔄 Refreshing...', 'ok');
-  loadData();
-  if (currentView === 'individual' && currentSmId) {
-    setTimeout(() => loadIndividual(currentSmId), 300);
-  }
+function getToday(){
+  const ist = new Date(Date.now()+330*60000);
+  return ist.toISOString().slice(0,10);
 }
 
-// ═══ RENDER OVERVIEW ══════════════════════════════════════════════════
-function renderOverview(data) {
-  const fi = n => '₹' + Number(n || 0).toLocaleString('en-IN');
-  const s = data.summary || {};
-  adminDashData = data;
-  
-  // KPIs
-  document.getElementById('totalRev').textContent = fi(s.totalRev);
-  document.getElementById('totalOrders').textContent = s.totalOrders || 0;
-  document.getElementById('totalComm').textContent = fi(s.totalComm);
-  document.getElementById('newParties').textContent = s.newParties || 0;
-  document.getElementById('todayOrdersKpi').textContent = s.todayOrders || 0;
-  
-  // Salesmen grid
-  const grid = document.getElementById('smGrid');
-  const salesmen = data.salesmen || [];
-  grid.innerHTML = salesmen.map(sm => {
-    const info = SALESMEN.find(x => x.id === sm.smId) || {};
-    const init = (sm.smName || '').split(' ').map(w => w[0]).join('');
-    return `<div class="smc" onclick="goIndividual('${sm.smId}')">
-      <div class="smh">
-        <div class="sma">${init}</div>
-        <div style="flex:1;min-width:0">
-          <div class="smn">${sm.smName}</div>
-          <div class="sid">${sm.smId} · ${info.terr || ''}</div>
-        </div>
-      </div>
-      <div class="smm">
-        <div class="smi">
-          <div class="smv">${sm.orders || 0}</div>
-          <div class="sml">Orders</div>
-        </div>
-        <div class="smi">
-          <div class="smv">${fi(sm.rev)}</div>
-          <div class="sml">Revenue</div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-  
-  // Recent orders
-  const recent = document.getElementById('recentOrders');
-  const orders = data.recentOrders || [];
-  if (!orders.length) {
-    recent.innerHTML = '<div class="empty" style="padding:30px">No orders yet</div>';
-  } else {
-    recent.innerHTML = orders.slice(0, 10).map(o => {
-      const d = new Date(o.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-      return `<div class="otr" onclick="openAdminOrderModal('${o.oid}')">
-        <div class="oid" style="flex:0.8">${o.oid}</div>
-        <div class="odate" style="flex:0.7">${d}</div>
-        <div style="flex:1.2">${o.bname}</div>
-        <div style="font-size:10px;color:var(--mut)">${o.smName}</div>
-        <div class="oamt" style="flex:0.7">${fi(o.gt)}</div>
-      </div>`;
-    }).join('');
-  }
+function getCurMY(){
+  const ist = new Date(Date.now()+330*60000);
+  return {m:ist.getUTCMonth()+1, y:ist.getUTCFullYear()};
 }
 
-// ═══ LOAD INDIVIDUAL ══════════════════════════════════════════════════
-async function loadIndividual(smId) {
-  try {
-    const r = await fetch(`${SCRIPT_URL}?action=dashboard&smId=${smId}&t=${Date.now()}`);
-    const data = await r.json();
-    if (!data.ok) throw new Error(data.error);
-    
-    const sm = SALESMEN.find(x => x.id === smId) || {};
-    const s = data.summary || {};
-    const fi = n => '₹' + Number(n || 0).toLocaleString('en-IN');
-    
-    document.getElementById('indName').textContent = sm.name || smId;
-    document.getElementById('indId').textContent = `${smId} · ${sm.terr || ''}`;
-    
-    // Today
-    document.getElementById('indTodaySales').textContent = fi(s.todaySales);
-    document.getElementById('indTodayShops').textContent = s.todayShops || 0;
-    
-    // MTD
-    document.getElementById('indMtdAmt').textContent = fi(s.mtdSales);
-    document.getElementById('indMtdPct').textContent = s.mtdPct + '%';
-    document.getElementById('indMtdTgt').textContent = fi(s.target);
-    document.getElementById('indMtdBar').style.width = Math.min(s.mtdPct, 100) + '%';
-    
-    // YTD
-    const ytdTgt = s.target * 12;
-    document.getElementById('indYtdAmt').textContent = fi(s.ytdSales);
-    document.getElementById('indYtdPct').textContent = s.ytdPct + '%';
-    document.getElementById('indYtdTgt').textContent = fi(ytdTgt);
-    document.getElementById('indYtdBar').style.width = Math.min(s.ytdPct, 100) + '%';
-    
-    // Shops
-    document.getElementById('indMtdShops').textContent = s.mtdShops || 0;
-    const shopGap = 15 - (s.mtdShops || 0);
-    document.getElementById('indShopGap').textContent = shopGap > 0 ? `${shopGap} more needed` : '✓ Target met';
-    
-    // New Parties
-    document.getElementById('indNewParties').textContent = s.newParties || 0;
-    
-    // Product Mix Chart
-    const mix = data.productMix || [];
-    if (mix.length) {
-      const ctx = document.getElementById('indChart').getContext('2d');
-      if (indChart) indChart.destroy();
-      indChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: mix.map(m => m.code),
-          datasets: [{
-            data: mix.map(m => m.value),
-            backgroundColor: ['#3b82f6', '#8b5cf6', '#22c55e', '#f97316', '#eab308'],
-            borderColor: '#0a1222',
-            borderWidth: 3
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: { color: '#94a3b8', font: { size: 10, family: 'Outfit' }, padding: 10,
-                usePointStyle: true, pointStyle: 'circle' }
-            }
-          },
-          cutout: '65%'
-        }
-      });
+function isMTD(date){
+  const {m,y}=getCurMY();
+  if(!date) return false;
+  return parseInt(date.slice(0,4))===y && parseInt(date.slice(5,7))===m;
+}
+
+function isYTD(date){
+  if(!date) return false;
+  return parseInt(date.slice(0,4))===getCurMY().y;
+}
+
+function computeMix(orders){
+  const map={};
+  orders.filter(o=>o.status!=='Cancelled').forEach(o=>(o.items||[]).forEach(it=>{
+    if(!map[it.code]) map[it.code]={code:it.code,name:it.name||'',value:0};
+    map[it.code].value+=(it.total||0);
+  }));
+  return Object.values(map).sort((a,b)=>b.value-a.value).slice(0,8);
+}
+
+function buildChart(canvasId, mix, key){
+  if(charts[key]) charts[key].destroy();
+  const ctx = document.getElementById(canvasId);
+  if(!ctx||!mix.length) return;
+  charts[key] = new Chart(ctx.getContext('2d'),{
+    type:'doughnut',
+    data:{
+      labels:mix.map(m=>m.code),
+      datasets:[{data:mix.map(m=>m.value),backgroundColor:PALETTE,borderColor:'#0a1222',borderWidth:3}]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:10,family:'Outfit'},padding:8,usePointStyle:true,pointStyle:'circle'}},
+        tooltip:{callbacks:{label:c=>{
+          const total=c.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+          return `${c.label}: ${fi(c.raw)} (${total>0?Math.round(c.raw/total*100):0}%)`;
+        }}}
+      },
+      cutout:'63%'
     }
-    
-    const now = new Date();
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    document.getElementById('indChartMonth').textContent = months[now.getMonth()] + ' ' + now.getFullYear();
-    
-  } catch (e) {
-    console.error('Individual load error:', e);
-    toast('⚠️ Could not load salesman data', 'er');
-  }
-}
-
-// ═══ RENDER ORDERS ════════════════════════════════════════════════════
-function renderOrders() {
-  const q = (document.getElementById('osearch')?.value || '').toLowerCase();
-  const smFilter = document.getElementById('osmFilter')?.value || '';
-  const stFilter = document.getElementById('ostatFilter')?.value || '';
-  
-  const filtered = allOrders.filter(o => {
-    const matchQ = !q || o.oid.toLowerCase().includes(q) || o.bname.toLowerCase().includes(q);
-    const matchSm = !smFilter || o.smId === smFilter;
-    const matchSt = !stFilter || o.status === stFilter;
-    return matchQ && matchSm && matchSt;
   });
-  
-  document.getElementById('ocount').textContent = filtered.length;
-  const list = document.getElementById('ordersList');
-  const fi = n => '₹' + Number(n || 0).toLocaleString('en-IN');
-  
-  if (!filtered.length) {
-    list.innerHTML = '<div class="empty" style="padding:30px">No orders found</div>';
-  } else {
-    list.innerHTML = filtered.map(o => {
-      const d = new Date(o.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-      const isCancelled = o.status === 'Cancelled';
-      return `<div class="otr" onclick="openAdminOrderModal('${o.oid}')" style="${isCancelled?'opacity:.6':''}">
-        <div class="oid" style="flex:0.8">${o.oid}</div>
-        <div class="odate">${d}</div>
-        <div style="flex:1.2">${o.bname}</div>
-        <div style="font-size:10px;color:var(--mut)">${o.smName}</div>
-        <div class="oamt" style="flex:0.7">${fi(o.gt)}</div>
-        <div style="flex:0.6"><span class="sb ${o.status === 'Dispatched' ? 'sd' : isCancelled?'sc':'sp'}">${o.status}</span></div>
-      </div>`;
-    }).join('');
-  }
 }
 
-// ═══ RENDER PARTIES ═══════════════════════════════════════════════════
-function renderParties() {
-  const q = (document.getElementById('psearch')?.value || '').toLowerCase();
-  const filtered = allParties.filter(p => 
-    !q || p.name.toLowerCase().includes(q) || (p.id || '').toLowerCase().includes(q));
-  
-  document.getElementById('pcount').textContent = filtered.length;
-  const list = document.getElementById('partiesList');
-  
-  if (!filtered.length) {
-    list.innerHTML = '<div class="empty">No parties found</div>';
-  } else {
-    list.innerHTML = filtered.map(p => `<div class="pl">
-      <div class="pav">🏪</div>
-      <div style="flex:1;min-width:0">
-        <div class="pnm">${p.name}</div>
-        <div class="pid">${p.id || ''}</div>
-        <div class="pph">${p.phone || ''} · ${p.territory || ''}</div>
+function buildProdTable(elId, mix){
+  const el=document.getElementById(elId); if(!el) return;
+  if(!mix.length){el.innerHTML='<div style="text-align:center;padding:12px;color:var(--mut);font-size:11px">No data yet</div>';return;}
+  const total=mix.reduce((s,m)=>s+m.value,0);
+  el.innerHTML=mix.map((m,i)=>`
+    <div class="ptrow">
+      <div style="display:flex;align-items:center;gap:7px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${PALETTE[i%PALETTE.length]};flex-shrink:0"></div>
+        <span style="color:var(--mut)">${m.code}</span>
+        ${m.name?`<span style="font-size:10px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px">${m.name}</span>`:''}
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        <span style="font-family:var(--m);color:var(--a2)">${fi(m.value)}</span>
+        <span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(59,130,246,.1);color:var(--a2);font-family:var(--m)">${total>0?Math.round(m.value/total*100):0}%</span>
       </div>
     </div>`).join('');
+}
+
+function pctClass(pct){ return pct>=80?'hi':pct>=40?'md':'lo'; }
+
+let toastT;
+function toast(msg,type='ok'){
+  const el=document.getElementById('toast'); clearTimeout(toastT);
+  el.textContent=msg; el.className=`toast ${type} on`;
+  toastT=setTimeout(()=>el.classList.remove('on'),2500);
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', loadAll);
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function goTab(tab){
+  const tabNames=['overview','salesmen','distributors','orders','parties'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',tabNames[i]===tab));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  const pg=document.getElementById('pg-'+tab);
+  if(pg) pg.classList.add('on');
+  if(tab==='salesmen') renderAllSalesmen();
+  if(tab==='distributors') renderAllDistributors();
+  if(tab==='orders') renderOrders();
+  if(tab==='parties') renderParties();
+  window.scrollTo({top:0});
+}
+
+function goSmInd(smId){
+  curSmId=smId;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-individual').classList.add('on');
+  renderSmIndividual(smId);
+  window.scrollTo({top:0});
+}
+
+function goDistInd(distId){
+  curDistId=distId;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-dist-ind').classList.add('on');
+  renderDistIndividual(distId);
+  window.scrollTo({top:0});
+}
+
+// ═══════════════════════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════════════════════
+async function loadAll(){
+  try{
+    const [r1,r2,r3,r4,r5] = await Promise.all([
+      fetch(`${SCRIPT_URL}?action=orders&t=${Date.now()}`),
+      fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`),
+      fetch(`${SCRIPT_URL}?action=salesmen&t=${Date.now()}`),
+      fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`),
+      fetch(`${SCRIPT_URL}?action=dashboard&t=${Date.now()}`)
+    ]);
+    const [od,pd,sd,dd] = await Promise.all([r1.json(),r2.json(),r3.json(),r4.json()]);
+
+    if(od.ok) allOrders=(od.orders||[]).map(o=>({...o,date:normDate(o.date)}));
+    if(pd.ok) allParties=pd.parties||[];
+    if(sd.ok) allSalesmen=sd.salesmen||[];
+    if(dd.ok) allDistributors=dd.distributors||[];
+
+    // Populate SM dropdowns
+    const smOpts=allSalesmen.map(s=>`<option value="${s.id}">${s.id} · ${s.name}</option>`).join('');
+    ['osmf','psmf'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.innerHTML='<option value="">All Salesmen</option>'+smOpts;
+    });
+
+    renderOverview();
+    renderAllSalesmen();
+    renderAllDistributors();
+
+    const t=new Date(); document.getElementById('lastSync').textContent=
+      'Updated '+t.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+  }catch(e){
+    console.error(e); toast('⚠️ Load failed — check connection','er');
   }
 }
 
-// ═══ ADMIN ORDER MODAL ════════════════════════════════════════════════
-function openAdminOrderModal(oid) {
-  const o = allOrders.find(x => x.oid === oid);
-  if (!o) return;
-  adminModalOID = oid;
-  const fi = n => '₹' + Number(n || 0).toLocaleString('en-IN');
-  const d = new Date(o.date).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
-  
-  document.getElementById('adminMTitle').textContent = `${o.oid} · ${o.bname}`;
-  let h = `<div style="font-size:11px;color:var(--mut);margin-bottom:8px">📅 ${d} · 👤 ${o.smName} (${o.smId})</div>`;
-  h += `<div style="margin-bottom:10px"><span class="sb ${o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':'sp'}">${o.status}</span></div>`;
-  
-  (o.items||[]).forEach(i => {
-    h += `<div class="mr"><span class="ml" style="flex:1;padding-right:7px">${i.name}<br><span style="font-size:10px">${i.qty} × ₹${i.price}</span></span>
+function refresh(){ toast('🔄 Refreshing...','in'); loadAll(); }
+
+// ═══════════════════════════════════════════════════════
+// OVERVIEW
+// ═══════════════════════════════════════════════════════
+function renderOverview(){
+  const today=getToday();
+  const {m:curM,y:curY}=getCurMY();
+  const active=allOrders.filter(o=>o.status!=='Cancelled');
+
+  // Today
+  const todayOrd=active.filter(o=>o.date===today);
+  const todayShops=new Set(todayOrd.map(o=>o.bid)).size;
+  document.getElementById('k-todaySales').textContent=fi(todayOrd.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('k-todayOrders').textContent=todayOrd.length;
+  document.getElementById('k-todayShops').textContent=todayShops;
+
+  // MTD
+  const mtdOrd=active.filter(o=>isMTD(o.date));
+  const mtdSales=mtdOrd.reduce((s,o)=>s+(o.gt||0),0);
+  const mtdShops=new Set(mtdOrd.map(o=>o.bid)).size;
+  const totalTgt=allSalesmen.reduce((s,sm)=>s+(sm.target||50000),0);
+  const mtdPct=totalTgt>0?Math.round(mtdSales/totalTgt*100):0;
+  const smActive=new Set(mtdOrd.map(o=>o.smId)).size;
+  document.getElementById('k-mtdSales').textContent=fi(mtdSales);
+  document.getElementById('k-mtdShops').textContent=mtdShops;
+  document.getElementById('k-mtdTgt').textContent=fi(totalTgt);
+  document.getElementById('k-mtdPct').textContent=mtdPct+'%';
+  document.getElementById('k-mtdPct').className='ppct '+pctClass(mtdPct);
+  document.getElementById('k-mtdBar').style.width=Math.min(mtdPct,100)+'%';
+  document.getElementById('k-mtdOrderCount').textContent=mtdOrd.length+' orders';
+  document.getElementById('k-mtdSalesmenActive').textContent=smActive+' salesmen active this month';
+  document.getElementById('mtdLabel').textContent=MONTHS[curM-1]+' '+curY;
+
+  // YTD
+  const ytdOrd=active.filter(o=>isYTD(o.date));
+  const ytdSales=ytdOrd.reduce((s,o)=>s+(o.gt||0),0);
+  const ytdShops=new Set(ytdOrd.map(o=>o.bid)).size;
+  const ytdTgt=totalTgt*12;
+  const ytdPct=ytdTgt>0?Math.round(ytdSales/ytdTgt*100):0;
+  const newP=allParties.filter(p=>{const d=normDate(p.at);return isMTD(d);}).length;
+  document.getElementById('k-ytdSales').textContent=fi(ytdSales);
+  document.getElementById('k-ytdShops').textContent=ytdShops;
+  document.getElementById('k-ytdTgt').textContent=fi(ytdTgt);
+  document.getElementById('k-ytdPct').textContent=ytdPct+'%';
+  document.getElementById('k-ytdPct').className='ppct '+pctClass(ytdPct);
+  document.getElementById('k-ytdBar').style.width=Math.min(ytdPct,100)+'%';
+  document.getElementById('k-ytdOrderCount').textContent=ytdOrd.length+' orders';
+  document.getElementById('k-newParties').textContent=newP+' new parties added this month';
+  document.getElementById('ytdLabel').textContent=curY;
+
+  // Charts
+  const mtdMix=computeMix(mtdOrd), ytdMix=computeMix(ytdOrd);
+  buildChart('chartMtd',mtdMix,'ovMtd'); buildProdTable('tableMtd',mtdMix);
+  buildChart('chartYtd',ytdMix,'ovYtd'); buildProdTable('tableYtd',ytdMix);
+  document.getElementById('chartMtdLbl').textContent=MONTHS[curM-1]+' '+curY;
+  document.getElementById('chartYtdLbl').textContent=curY;
+
+  // Leaderboard
+  renderLeaderboard(mtdOrd);
+
+  // Recent orders
+  const recent=[...allOrders].sort((a,b)=>b.oid>a.oid?1:-1).slice(0,20);
+  document.getElementById('recentList').innerHTML=recent.map(o=>orderRow(o)).join('')
+    ||'<div class="empty">No orders yet</div>';
+}
+
+function renderLeaderboard(mtdOrd){
+  const map={};
+  allSalesmen.forEach(s=>map[s.id]={id:s.id,name:s.name,sales:0,orders:0,shops:new Set(),target:s.target||50000});
+  mtdOrd.forEach(o=>{
+    if(!map[o.smId]) map[o.smId]={id:o.smId,name:o.smName,sales:0,orders:0,shops:new Set(),target:50000};
+    map[o.smId].sales+=(o.gt||0); map[o.smId].orders++; map[o.smId].shops.add(o.bid);
+  });
+  const sorted=Object.values(map).sort((a,b)=>b.sales-a.sales);
+  const maxS=sorted[0]?.sales||1;
+  const rnkCls=i=>i===0?'r1':i===1?'r2':i===2?'r3':'rx';
+  const barColor=i=>i===0?'linear-gradient(90deg,var(--ylw),#ca8a04)':i===1?'linear-gradient(90deg,#94a3b8,#64748b)':i===2?'linear-gradient(90deg,var(--org),#ea580c)':'linear-gradient(90deg,var(--acc),var(--a2))';
+  const sm=allSalesmen;
+  document.getElementById('leaderboard').innerHTML=sorted.map((s,i)=>{
+    const smInfo=sm.find(x=>x.id===s.id)||{};
+    const pct=Math.round(s.sales/maxS*100);
+    const tgtPct=s.target>0?Math.round(s.sales/s.target*100):0;
+    return `<div class="lbrow" onclick="goSmInd('${s.id}')">
+      <div class="lbtop">
+        <div style="display:flex;align-items:center">
+          <span class="rnk ${rnkCls(i)}">${i+1}</span>
+          <div>
+            <div style="font-size:13px;font-weight:700">${s.name}</div>
+            <div style="font-size:9px;color:var(--mut)">${s.id}${smInfo.territory?' · '+smInfo.territory:''}${smInfo.distributor?' · '+smInfo.distributor:''}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--m);font-size:14px;font-weight:700;color:var(--a2)">${fi(s.sales)}</div>
+          <div style="font-size:9px;color:var(--mut)">${s.orders} orders · ${s.shops.size} shops · ${tgtPct}% of target</div>
+        </div>
+      </div>
+      <div class="lbbar"><div class="lbfill" style="width:${pct}%;background:${barColor(i)}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// ALL SALESMEN
+// ═══════════════════════════════════════════════════════
+function renderAllSalesmen(){
+  const today=getToday();
+  const active=allOrders.filter(o=>o.status!=='Cancelled');
+  document.getElementById('allSmGrid').innerHTML=allSalesmen.map((sm,i)=>{
+    const smOrd=active.filter(o=>o.smId===sm.id);
+    const todayS=smOrd.filter(o=>o.date===today).reduce((s,o)=>s+(o.gt||0),0);
+    const mtdS=smOrd.filter(o=>isMTD(o.date)).reduce((s,o)=>s+(o.gt||0),0);
+    const ytdS=smOrd.filter(o=>isYTD(o.date)).reduce((s,o)=>s+(o.gt||0),0);
+    const mtdShops=new Set(smOrd.filter(o=>isMTD(o.date)).map(o=>o.bid)).size;
+    const init=sm.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+    const col=SM_PALETTE[i%SM_PALETTE.length];
+    const tgtPct=sm.target>0?Math.round(mtdS/sm.target*100):0;
+    return `<div class="smcard" onclick="goSmInd('${sm.id}')">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div class="smav" style="background:linear-gradient(135deg,${col},${col}bb)">${init}</div>
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sm.name}</div>
+          <div style="font-size:9px;font-family:var(--m);color:var(--a2)">${sm.id}</div>
+        </div>
+      </div>
+      <div style="font-size:9px;color:var(--mut);margin-bottom:6px">${sm.territory||''}${sm.distributor?' · '+sm.distributor:''}</div>
+      <div class="smstats">
+        <div class="smst"><div class="smstv">${fi(todayS)}</div><div class="smstl">Today</div></div>
+        <div class="smst"><div class="smstv">${fi(mtdS)}</div><div class="smstl">MTD</div></div>
+        <div class="smst"><div class="smstv">${fi(ytdS)}</div><div class="smstl">YTD</div></div>
+        <div class="smst"><div class="smstv">${mtdShops}</div><div class="smstl">MTD Shops</div></div>
+      </div>
+      <div style="margin-top:8px">
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mut);margin-bottom:3px">
+          <span>Target Progress</span><span style="color:${tgtPct>=80?'var(--grn)':tgtPct>=40?'var(--ylw)':'var(--red)'}">${tgtPct}%</span>
+        </div>
+        <div class="pbar"><div class="pfill ${tgtPct>=80?'gr':tgtPct>=40?'yl':'bl'}" style="width:${Math.min(tgtPct,100)}%"></div></div>
+      </div>
+    </div>`;
+  }).join('')||'<div class="empty">No salesmen found</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+// INDIVIDUAL SALESMAN
+// ═══════════════════════════════════════════════════════
+function renderSmIndividual(smId){
+  const sm=allSalesmen.find(x=>x.id===smId)||{id:smId,name:smId,target:50000};
+  const today=getToday();
+  const {m:curM,y:curY}=getCurMY();
+  const active=allOrders.filter(o=>o.smId===smId&&o.status!=='Cancelled');
+
+  // Header
+  const init=sm.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  const col=SM_PALETTE[allSalesmen.indexOf(sm)%SM_PALETTE.length]||'#3b82f6';
+  const av=document.getElementById('indAv');
+  av.textContent=init; av.style.background=`linear-gradient(135deg,${col},${col}bb)`;
+  document.getElementById('indName').textContent=sm.name;
+  document.getElementById('indMeta').textContent=`${smId}${sm.territory?' · '+sm.territory:''}${sm.distributor?' · Dist: '+sm.distributor:''} · Target: ${fi(sm.target||50000)}/mo`;
+
+  // Today
+  const todayOrd=active.filter(o=>o.date===today);
+  document.getElementById('is-todaySales').textContent=fi(todayOrd.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('is-todayOrders').textContent=todayOrd.length;
+  document.getElementById('is-todayShops').textContent=new Set(todayOrd.map(o=>o.bid)).size;
+
+  // MTD
+  const mtdOrd=active.filter(o=>isMTD(o.date));
+  const mtdS=mtdOrd.reduce((s,o)=>s+(o.gt||0),0);
+  const mtdShops=new Set(mtdOrd.map(o=>o.bid)).size;
+  const mtdPct=sm.target>0?Math.round(mtdS/sm.target*100):0;
+  document.getElementById('is-mtdSales').textContent=fi(mtdS);
+  document.getElementById('is-mtdTgt').textContent=fi(sm.target||50000);
+  document.getElementById('is-mtdPct').textContent=mtdPct+'%';
+  document.getElementById('is-mtdPct').className='ppct '+pctClass(mtdPct);
+  document.getElementById('is-mtdBar').style.width=Math.min(mtdPct,100)+'%';
+  document.getElementById('is-mtdShops').textContent=mtdShops;
+  const shopGap=15-mtdShops;
+  document.getElementById('is-shopGap').textContent=shopGap>0?shopGap+' more shops needed':'✓ Shop target met!';
+  document.getElementById('is-shopGap').style.color=shopGap>0?'var(--ylw)':'var(--grn)';
+  document.getElementById('is-mtdChartLbl').textContent=MONTHS[curM-1]+' '+curY;
+
+  // YTD
+  const ytdOrd=active.filter(o=>isYTD(o.date));
+  const ytdS=ytdOrd.reduce((s,o)=>s+(o.gt||0),0);
+  const ytdTgt=(sm.target||50000)*12;
+  const ytdPct=ytdTgt>0?Math.round(ytdS/ytdTgt*100):0;
+  const ytdShops=new Set(ytdOrd.map(o=>o.bid)).size;
+  const newP=allParties.filter(p=>p.addedBy===smId&&isMTD(normDate(p.at))).length;
+  document.getElementById('is-ytdSales').textContent=fi(ytdS);
+  document.getElementById('is-ytdTgt').textContent=fi(ytdTgt);
+  document.getElementById('is-ytdPct').textContent=ytdPct+'%';
+  document.getElementById('is-ytdPct').className='ppct '+pctClass(ytdPct);
+  document.getElementById('is-ytdBar').style.width=Math.min(ytdPct,100)+'%';
+  document.getElementById('is-ytdShops').textContent=ytdShops;
+  document.getElementById('is-newParties').textContent=newP+' new parties added this month';
+  document.getElementById('is-ytdChartLbl').textContent=curY;
+
+  // Charts
+  const mtdMix=computeMix(mtdOrd), ytdMix=computeMix(ytdOrd);
+  buildChart('isChartMtd',mtdMix,'isMtd'); buildProdTable('isTableMtd',mtdMix);
+  buildChart('isChartYtd',ytdMix,'isYtd'); buildProdTable('isTableYtd',ytdMix);
+
+  // Orders
+  const smOrders=allOrders.filter(o=>o.smId===smId).sort((a,b)=>b.oid>a.oid?1:-1).slice(0,25);
+  document.getElementById('isOrdersList').innerHTML=smOrders.map(o=>`
+    <div class="otr" onclick="openOrderModal('${o.oid}')">
+      <div class="oid2" style="flex:.8">${o.oid}</div>
+      <div style="flex:.7;color:var(--mut);font-size:11px">${o.date?new Date(o.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'-'}</div>
+      <div style="flex:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.bname}</div>
+      <div class="oamt" style="flex:.8">${fi(o.gt)}</div>
+      <div style="flex:.6"><span class="sb ${o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':'sp'}">${o.status}</span></div>
+    </div>`).join('')||'<div class="empty" style="padding:20px">No orders</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+// ALL DISTRIBUTORS
+// ═══════════════════════════════════════════════════════
+function renderAllDistributors(){
+  const today=getToday();
+  const active=allOrders.filter(o=>o.status!=='Cancelled');
+  document.getElementById('allDistGrid').innerHTML=allDistributors.map(d=>{
+    const dSmIds=new Set(allSalesmen.filter(s=>s.distributor===d.id).map(s=>s.id));
+    const dOrd=active.filter(o=>dSmIds.has(o.smId));
+    const todayS=dOrd.filter(o=>o.date===today).reduce((s,o)=>s+(o.gt||0),0);
+    const mtdS=dOrd.filter(o=>isMTD(o.date)).reduce((s,o)=>s+(o.gt||0),0);
+    const ytdS=dOrd.filter(o=>isYTD(o.date)).reduce((s,o)=>s+(o.gt||0),0);
+    const mtdShops=new Set(dOrd.filter(o=>isMTD(o.date)).map(o=>o.bid)).size;
+    return `<div class="distcard" onclick="goDistInd('${d.id}')">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
+        <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--pur),#6d28d9);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🚚</div>
+        <div>
+          <div style="font-size:14px;font-weight:700">${d.name}</div>
+          <div style="font-size:9px;font-family:var(--m);color:var(--pur)">${d.id}${d.territory?' · '+d.territory:''}</div>
+        </div>
+      </div>
+      <div class="drow"><span style="color:var(--mut)">📱 Phone</span><span>${d.phone||'—'}</span></div>
+      <div class="drow"><span style="color:var(--mut)">👤 Salesmen</span><span style="font-family:var(--m);color:var(--a2)">${dSmIds.size}</span></div>
+      <div class="drow"><span style="color:var(--mut)">📅 Today Sales</span><span style="font-family:var(--m);color:var(--grn)">${fi(todayS)}</span></div>
+      <div class="drow"><span style="color:var(--mut)">📆 MTD Sales</span><span style="font-family:var(--m);color:var(--a2)">${fi(mtdS)}</span></div>
+      <div class="drow"><span style="color:var(--mut)">🏪 MTD Shops</span><span style="font-family:var(--m);color:var(--a2)">${mtdShops}</span></div>
+      <div class="drow"><span style="color:var(--mut)">📈 YTD Sales</span><span style="font-family:var(--m);color:var(--a2)">${fi(ytdS)}</span></div>
+    </div>`;
+  }).join('')||'<div class="empty">No distributors found</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+// INDIVIDUAL DISTRIBUTOR
+// ═══════════════════════════════════════════════════════
+function renderDistIndividual(distId){
+  const dist=allDistributors.find(x=>x.id===distId)||{id:distId,name:distId};
+  const today=getToday();
+  const {m:curM,y:curY}=getCurMY();
+  document.getElementById('distName').textContent=dist.name;
+  document.getElementById('distMeta').textContent=`${distId}${dist.territory?' · '+dist.territory:''}${dist.phone?' · '+dist.phone:''}`;
+
+  const dSalesmen=allSalesmen.filter(s=>s.distributor===distId);
+  const dSmIds=new Set(dSalesmen.map(s=>s.id));
+  const active=allOrders.filter(o=>dSmIds.has(o.smId)&&o.status!=='Cancelled');
+
+  const todayOrd=active.filter(o=>o.date===today);
+  const mtdOrd=active.filter(o=>isMTD(o.date));
+  const ytdOrd=active.filter(o=>isYTD(o.date));
+
+  document.getElementById('di-todaySales').textContent=fi(todayOrd.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('di-todayOrders').textContent=todayOrd.length;
+  document.getElementById('di-todayShops').textContent=new Set(todayOrd.map(o=>o.bid)).size;
+  document.getElementById('di-mtdSales').textContent=fi(mtdOrd.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('di-mtdShops').textContent=new Set(mtdOrd.map(o=>o.bid)).size;
+  document.getElementById('di-ytdSales').textContent=fi(ytdOrd.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('di-ytdShops').textContent=new Set(ytdOrd.map(o=>o.bid)).size;
+
+  // Salesmen under this dist
+  document.getElementById('distSmGrid').innerHTML=dSalesmen.map((sm,i)=>{
+    const smOrd=active.filter(o=>o.smId===sm.id);
+    const mtdS=smOrd.filter(o=>isMTD(o.date)).reduce((s,o)=>s+(o.gt||0),0);
+    const todayS=smOrd.filter(o=>o.date===today).reduce((s,o)=>s+(o.gt||0),0);
+    const init=sm.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+    const col=SM_PALETTE[i%SM_PALETTE.length];
+    return `<div class="smcard" onclick="goSmInd('${sm.id}')">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div class="smav" style="background:linear-gradient(135deg,${col},${col}bb)">${init}</div>
+        <div><div style="font-size:13px;font-weight:700">${sm.name}</div><div style="font-size:9px;font-family:var(--m);color:var(--a2)">${sm.id}</div></div>
+      </div>
+      <div class="smstats">
+        <div class="smst"><div class="smstv">${fi(todayS)}</div><div class="smstl">Today</div></div>
+        <div class="smst"><div class="smstv">${fi(mtdS)}</div><div class="smstl">MTD</div></div>
+      </div>
+    </div>`;
+  }).join('')||'<div style="color:var(--mut);font-size:12px;padding:8px">No salesmen linked. Set distributor field in Salesmen sheet.</div>';
+
+  // Charts
+  const mtdMix=computeMix(mtdOrd), ytdMix=computeMix(ytdOrd);
+  buildChart('diChartMtd',mtdMix,'diMtd'); buildProdTable('diTableMtd',mtdMix);
+  buildChart('diChartYtd',ytdMix,'diYtd'); buildProdTable('diTableYtd',ytdMix);
+}
+
+// ═══════════════════════════════════════════════════════
+// ORDERS PAGE
+// ═══════════════════════════════════════════════════════
+function renderOrders(){
+  const q=(document.getElementById('osearch')?.value||'').toLowerCase();
+  const smF=document.getElementById('osmf')?.value||'';
+  const stF=document.getElementById('ostf')?.value||'';
+  const filtered=allOrders.filter(o=>{
+    const mq=!q||o.oid.toLowerCase().includes(q)||o.bname.toLowerCase().includes(q)||(o.smName||'').toLowerCase().includes(q);
+    return mq&&(!smF||o.smId===smF)&&(!stF||o.status===stF);
+  }).sort((a,b)=>b.oid>a.oid?1:-1);
+  document.getElementById('ocount').textContent=filtered.length;
+  document.getElementById('ordersBody').innerHTML=filtered.map(o=>orderRow(o)).join('')
+    ||'<div class="empty" style="padding:24px">No orders found</div>';
+}
+
+function orderRow(o){
+  const d=o.date?new Date(o.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'-';
+  return `<div class="otr" onclick="openOrderModal('${o.oid}')" style="${o.status==='Cancelled'?'opacity:.6':''}">
+    <div class="oid2" style="flex:.7">${o.oid}</div>
+    <div style="flex:.65;color:var(--mut);font-size:11px">${d}</div>
+    <div style="flex:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.bname}</div>
+    <div style="flex:1;font-size:10px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.smName||''}</div>
+    <div class="oamt" style="flex:.75">${fi(o.gt)}</div>
+    <div style="flex:.5"><span class="sb ${o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':'sp'}">${o.status}</span></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// PARTIES PAGE
+// ═══════════════════════════════════════════════════════
+function renderParties(){
+  const q=(document.getElementById('psearch')?.value||'').toLowerCase();
+  const smF=document.getElementById('psmf')?.value||'';
+  const filtered=allParties.filter(p=>{
+    const mq=!q||p.name.toLowerCase().includes(q)||(p.id||'').toLowerCase().includes(q);
+    return mq&&(!smF||p.addedBy===smF);
+  });
+  document.getElementById('pcount').textContent=filtered.length;
+  document.getElementById('partiesBody').innerHTML=filtered.map(p=>`
+    <div class="pl">
+      <div style="width:34px;height:34px;border-radius:9px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🏪</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${p.name}</div>
+        <div style="font-size:10px;font-family:var(--m);color:var(--a2)">${p.id||''}</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:2px">${p.phone||''}${p.territory?' · '+p.territory:''}${p.addedBy?' · Added by: '+p.addedBy:''}</div>
+      </div>
+    </div>`).join('')||'<div class="empty">No parties found</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+// ORDER MODAL
+// ═══════════════════════════════════════════════════════
+function openOrderModal(oid){
+  const o=allOrders.find(x=>x.oid===oid); if(!o) return;
+  modalOid=oid;
+  const d=o.date?new Date(o.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'-';
+  document.getElementById('omTitle').textContent=`${o.oid} · ${o.bname}`;
+  let h=`<div style="font-size:11px;color:var(--mut);margin-bottom:8px">📅 ${d} · 👤 ${o.smName||''} (${o.smId||''})</div>`;
+  h+=`<div style="margin-bottom:9px"><span class="sb ${o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':'sp'}">${o.status}</span></div>`;
+  (o.items||[]).forEach(i=>{
+    h+=`<div class="mr"><span class="ml" style="flex:1;padding-right:8px">${i.name}<br><span style="font-size:10px">${i.qty} × ₹${i.price}</span></span>
     <span class="mv" style="color:var(--a2)">${fi(i.total)}</span></div>`;
   });
-  h += `<div style="margin-top:11px;display:flex;justify-content:space-between;align-items:center">
+  h+=`<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
     <span style="color:var(--mut)">Grand Total</span>
-    <span style="font-size:19px;font-weight:700;font-family:var(--m);color:var(--a2)">${fi(o.gt)}</span>
-  </div>`;
-  if (o.notes) h += `<div style="margin-top:8px;padding:8px;background:var(--s2);border-radius:7px;font-size:11px;color:var(--mut)">📝 ${o.notes}</div>`;
-  if (o.bphone) h += `<div style="margin-top:5px;font-size:11px;color:var(--mut)">📱 ${o.bphone}</div>`;
-  if (o.distributor) h += `<div style="margin-top:5px;font-size:11px;color:var(--mut)">🚚 ${o.distributor}</div>`;
-  
-  document.getElementById('adminMBody').innerHTML = h;
-  document.getElementById('adminEditSection').style.display = 'none';
-  document.getElementById('adminCancelSection').style.display = 'none';
-  document.getElementById('adminEditNotes').value = o.notes || '';
-  document.getElementById('adminEditStatus').value = o.status || 'Pending';
-  document.getElementById('adminCancelMBtn').style.display = o.status === 'Cancelled' ? 'none' : '';
-  document.getElementById('adminOrderOv').classList.add('on');
+    <span style="font-size:19px;font-weight:700;font-family:var(--m);color:var(--a2)">${fi(o.gt)}</span></div>`;
+  if(o.notes) h+=`<div style="margin-top:7px;padding:8px;background:var(--s2);border-radius:7px;font-size:11px;color:var(--mut)">📝 ${o.notes}</div>`;
+  if(o.bphone) h+=`<div style="margin-top:5px;font-size:11px;color:var(--mut)">📱 ${o.bphone}</div>`;
+  if(o.baddress) h+=`<div style="margin-top:3px;font-size:11px;color:var(--mut)">📍 ${o.baddress}</div>`;
+  document.getElementById('omBody').innerHTML=h;
+  document.getElementById('editSec').style.display='none';
+  document.getElementById('cancelSec').style.display='none';
+  document.getElementById('editNotes').value=o.notes||'';
+  document.getElementById('editStatus').value=o.status||'Pending';
+  document.getElementById('cancelBtn').style.display=o.status==='Cancelled'?'none':'';
+  document.getElementById('orderOv').classList.add('on');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('on'); }
+
+async function saveEdit(){
+  const status=document.getElementById('editStatus').value;
+  const notes=document.getElementById('editNotes').value;
+  const btn=document.querySelector('#editSec .maction.save');
+  btn.disabled=true; btn.textContent='Saving…';
+  const idx=allOrders.findIndex(x=>x.oid===modalOid);
+  if(idx>=0){allOrders[idx].status=status;allOrders[idx].notes=notes;}
+  try{await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({action:'editOrder',orderId:modalOid,changes:{status,notes},actor:'ADMIN'})});}catch(e){}
+  btn.disabled=false; btn.textContent='💾 Save';
+  toast('✅ Order updated','ok'); closeModal('orderOv'); renderOrders(); renderOverview();
 }
 
-function closeAdminOrderModal() {
-  document.getElementById('adminOrderOv').classList.remove('on');
+async function confirmCancel(){
+  const reason=document.getElementById('cancelReason').value;
+  const btn=document.querySelector('#cancelSec .maction.cancel');
+  btn.disabled=true; btn.textContent='Cancelling…';
+  const idx=allOrders.findIndex(x=>x.oid===modalOid);
+  if(idx>=0) allOrders[idx].status='Cancelled';
+  try{await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({action:'cancelOrder',orderId:modalOid,reason,actor:'ADMIN'})});}catch(e){}
+  btn.disabled=false;
+  toast('⛔ Order cancelled','er'); closeModal('orderOv'); renderOrders(); renderOverview();
 }
 
-async function adminSaveEdit() {
-  const status = document.getElementById('adminEditStatus').value;
-  const notes = document.getElementById('adminEditNotes').value;
-  const btn = document.querySelector('#adminEditSection .maction.dispatch');
-  btn.disabled = true; btn.textContent = 'Saving…';
-  
-  // Update in allOrders array
-  const idx = allOrders.findIndex(x => x.oid === adminModalOID);
-  if (idx >= 0) { allOrders[idx].status = status; allOrders[idx].notes = notes; }
-  
-  try {
-    await fetch(SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({action:'editOrder', orderId:adminModalOID, changes:{status,notes}, actor:'ADMIN'})});
-  } catch(e) {}
-  
-  btn.disabled = false; btn.textContent = '💾 Save';
-  toast('✅ Order updated', 'ok');
-  closeAdminOrderModal();
-  renderOrders();
-}
+// ═══════════════════════════════════════════════════════
+// KPI MODALS
+// ═══════════════════════════════════════════════════════
+function showKpiModal(type){
+  const today=getToday();
+  const active=allOrders.filter(o=>o.status!=='Cancelled');
+  let title='',body='';
 
-async function adminConfirmCancel() {
-  const reason = document.getElementById('adminCancelReason').value;
-  const btn = document.querySelector('#adminCancelSection .maction.cancel');
-  btn.disabled = true; btn.textContent = 'Cancelling…';
-  
-  const idx = allOrders.findIndex(x => x.oid === adminModalOID);
-  if (idx >= 0) allOrders[idx].status = 'Cancelled';
-  
-  try {
-    await fetch(SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({action:'cancelOrder', orderId:adminModalOID, reason, actor:'ADMIN'})});
-  } catch(e) {}
-  
-  btn.disabled = false;
-  toast('⛔ Order cancelled', 'er');
-  closeAdminOrderModal();
-  renderOrders();
-  loadData(); // refresh KPIs
-}
-
-// ═══ ADMIN KPI MODALS ═════════════════════════════════════════════════
-function showAdminKpi(type) {
-  const fi = n => '₹' + Number(n || 0).toLocaleString('en-IN');
-  let title = '', body = '';
-  
-  if (type === 'revenue') {
-    title = '💰 Revenue Breakdown by Salesman';
-    const smMap = {};
-    allOrders.filter(o=>o.status!=='Cancelled').forEach(o => {
-      if (!smMap[o.smId]) smMap[o.smId] = {name:o.smName, rev:0, count:0};
-      smMap[o.smId].rev += o.gt; smMap[o.smId].count++;
-    });
-    body = Object.values(smMap).sort((a,b)=>b.rev-a.rev).map(s =>
-      `<div class="kmod-row"><span style="color:var(--mut)">👤 ${s.name}</span>
-      <span><span style="font-family:var(--m);color:var(--a2)">${fi(s.rev)}</span> <span style="color:var(--mut);font-size:10px">(${s.count} orders)</span></span></div>`
-    ).join('') || '<div style="padding:20px;text-align:center;color:var(--mut)">No data</div>';
-    const total = allOrders.filter(o=>o.status!=='Cancelled').reduce((s,o)=>s+o.gt,0);
-    body += `<div style="display:flex;justify-content:space-between;padding:11px 0 0;font-weight:700"><span>Total</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
-  } else if (type === 'orders') {
-    title = '📦 Orders by Salesman';
-    const smMap = {};
-    allOrders.forEach(o => {
-      if (!smMap[o.smId]) smMap[o.smId] = {name:o.smName, total:0, cancelled:0};
-      smMap[o.smId].total++; if(o.status==='Cancelled') smMap[o.smId].cancelled++;
-    });
-    body = Object.values(smMap).sort((a,b)=>b.total-a.total).map(s =>
-      `<div class="kmod-row"><span style="color:var(--mut)">👤 ${s.name}</span>
-      <span style="font-family:var(--m)">${s.total} <span style="font-size:10px;color:var(--red)">(${s.cancelled} cancelled)</span></span></div>`
-    ).join('') || '<div style="padding:20px;text-align:center;color:var(--mut)">No data</div>';
-  } else if (type === 'today') {
-    title = '📅 Today\'s Orders';
-    // We can only show from loaded allOrders
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    // Also check for IST date
-    const istToday = new Date(today.getTime() + (330 - today.getTimezoneOffset())*60000).toISOString().split('T')[0];
-    const todayOrd = allOrders.filter(o => o.date === todayStr || o.date === istToday);
-    if (!todayOrd.length) {
-      body = '<div style="padding:20px;text-align:center;color:var(--mut)">No orders today</div>';
-    } else {
-      body = todayOrd.map(o => `<div class="kmod-row" onclick="closeAdminKpiAndOpen('${o.oid}')" style="cursor:pointer">
-        <span style="color:var(--mut)">${o.oid} · ${o.bname} <span style="font-size:10px;color:var(--acc)">(${o.smName})</span></span>
-        <span style="font-family:var(--m);color:var(--a2)">${fi(o.gt)}</span></div>`).join('');
-      const total = todayOrd.reduce((s,o)=>s+o.gt,0);
-      body += `<div style="display:flex;justify-content:space-between;padding:11px 0 0;font-weight:700"><span>Total</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+  if(type==='todaySales'){
+    title="💰 Today's Sales — All Salesmen";
+    const ord=active.filter(o=>o.date===today).sort((a,b)=>b.gt-a.gt);
+    if(!ord.length){ body='<div style="text-align:center;padding:24px;color:var(--mut)">No sales today yet</div>'; }
+    else{
+      const total=ord.reduce((s,o)=>s+(o.gt||0),0);
+      body=ord.map(o=>`<div class="kmod-row" onclick="closeKpiThenOrder('${o.oid}')">
+        <div><div style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid}</div>
+        <div>${o.bname} <span style="font-size:10px;color:var(--mut)">(${o.smName})</span></div></div>
+        <span style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(o.gt)}</span></div>`).join('');
+      body+=`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:700">
+        <span>${ord.length} orders · ${new Set(ord.map(o=>o.bid)).size} shops</span>
+        <span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
     }
-  } else if (type === 'commission') {
-    title = '💵 Commission by Salesman';
-    const smMap = {};
-    allOrders.filter(o=>o.status!=='Cancelled').forEach(o => {
-      if (!smMap[o.smId]) smMap[o.smId] = {name:o.smName, comm:0};
-      smMap[o.smId].comm += o.tc||0;
-    });
-    body = Object.values(smMap).sort((a,b)=>b.comm-a.comm).map(s =>
-      `<div class="kmod-row"><span style="color:var(--mut)">👤 ${s.name}</span>
-      <span style="font-family:var(--m);color:var(--grn)">${fi(s.comm)}</span></div>`
-    ).join('') || '<div style="padding:20px;text-align:center;color:var(--mut)">No data</div>';
-  } else if (type === 'parties') {
-    title = '⭐ New Parties';
-    body = allParties.slice(0,15).map(p =>
-      `<div class="kmod-row"><span style="color:var(--mut)">🏪 ${p.name}</span>
-      <span style="font-size:10px;color:var(--a2)">${p.addedBy||''}</span></div>`
-    ).join('') || '<div style="padding:20px;text-align:center;color:var(--mut)">No parties yet</div>';
+  }else if(type==='todayOrders'){
+    title="📦 Today's Orders by Salesman";
+    const ord=active.filter(o=>o.date===today);
+    const map={};
+    ord.forEach(o=>{if(!map[o.smId])map[o.smId]={name:o.smName,orders:0,sales:0,shops:new Set()};
+      map[o.smId].orders++;map[o.smId].sales+=(o.gt||0);map[o.smId].shops.add(o.bid);});
+    body=Object.values(map).sort((a,b)=>b.sales-a.sales).map(s=>`
+      <div class="kmod-row"><span style="color:var(--mut)">👤 ${s.name}</span>
+      <span>${s.orders} orders · ${s.shops.size} shops · <b style="font-family:var(--m);color:var(--a2)">${fi(s.sales)}</b></span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No orders today</div>';
+  }else if(type==='todayShops'){
+    title="🏪 Shops Served Today";
+    const ord=active.filter(o=>o.date===today);
+    const map={};
+    ord.forEach(o=>{if(!map[o.bid])map[o.bid]={name:o.bname,sm:o.smName,total:0,orders:0};
+      map[o.bid].total+=(o.gt||0);map[o.bid].orders++;});
+    body=Object.values(map).sort((a,b)=>b.total-a.total).map(s=>`
+      <div class="kmod-row">
+        <span><div>${s.name}</div><div style="font-size:10px;color:var(--mut)">${s.sm} · ${s.orders} orders</div></span>
+        <span style="font-family:var(--m);color:var(--a2)">${fi(s.total)}</span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No shops served today</div>';
   }
-  
-  document.getElementById('adminKpiTitle').textContent = title;
-  document.getElementById('adminKpiBody').innerHTML = body;
-  document.getElementById('adminKpiOv').classList.add('on');
+
+  document.getElementById('kpiTitle').textContent=title;
+  document.getElementById('kpiBody').innerHTML=body;
+  document.getElementById('kpiOv').classList.add('on');
 }
 
-function closeAdminKpiAndOpen(oid) {
-  document.getElementById('adminKpiOv').classList.remove('on');
-  setTimeout(() => openAdminOrderModal(oid), 100);
-}
+function closeKpiThenOrder(oid){ closeModal('kpiOv'); setTimeout(()=>openOrderModal(oid),150); }
 
-// ═══ TOAST ════════════════════════════════════════════════════════════
-let tt;
-function toast(msg, type = 'ok') {
-  const t = document.getElementById('toast');
-  clearTimeout(tt);
-  t.textContent = msg;
-  t.className = `toast ${type} on`;
-  tt = setTimeout(() => t.classList.remove('on'), 2500);
-}
-
-// Auto-refresh every 30 seconds
-setInterval(() => {
-  loadData();
-  if (currentView === 'individual' && currentSmId) {
-    loadIndividual(currentSmId);
-  }
-}, 30000);
+// Auto-refresh every 60s
+setInterval(()=>loadAll(), 60000);
 </script>
 </body>
 </html>
