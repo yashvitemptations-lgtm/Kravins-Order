@@ -939,9 +939,10 @@ function renderHistory(){
 }
 
 function openModal(oid){
-  // Check localStorage first, then server orders
-  let o=getOrders().find(x=>x.oid===oid);
-  if(!o&&lastDashData&&lastDashData.allOrders)o=lastDashData.allOrders.find(x=>x.oid===oid);
+  // Check server orders FIRST, then localStorage
+  let o=null;
+  if(lastDashData&&lastDashData.allOrders)o=lastDashData.allOrders.find(x=>x.oid===oid);
+  if(!o)o=getOrders().find(x=>x.oid===oid);
   if(!o){toast('⚠️ Order not found','er');return;}
   modalOID=oid;
   const d=new Date(o.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
@@ -1149,7 +1150,14 @@ function normDate(d){
 function showKpiModal(type){
   if(!lastDashData){toast('⏳ Loading data, please wait...','in');return;}
   const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
-  const allOrders=(lastDashData.allOrders||[]).map(o=>({...o,date:normDate(o.date)}));
+  
+  // Merge server orders + local orders, server takes priority, deduplicate by oid
+  const serverOrders=(lastDashData.allOrders||[]).map(o=>({...o,date:normDate(o.date)}));
+  const localOrders=getOrders().map(o=>({...o,date:normDate(o.date||o.at)}));
+  const allOrdersMap={};
+  serverOrders.forEach(o=>allOrdersMap[o.oid]=o);
+  localOrders.forEach(o=>{if(!allOrdersMap[o.oid])allOrdersMap[o.oid]=o;}); // add local-only orders
+  const allOrders=Object.values(allOrdersMap);
   const today=getIndianDate();
   const now=new Date();
   const curMonth=now.getMonth()+1;
@@ -1347,7 +1355,12 @@ function showMonthDrilldown(monthIdx){
   const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const curYear=new Date().getFullYear();
-  const allOrders=lastDashData.allOrders||[];
+  const serverOrders=(lastDashData.allOrders||[]).map(o=>({...o,date:normDate(o.date)}));
+  const localOrders=getOrders().map(o=>({...o,date:normDate(o.date||o.at)}));
+  const allOrdersMap={};
+  serverOrders.forEach(o=>allOrdersMap[o.oid]=o);
+  localOrders.forEach(o=>{if(!allOrdersMap[o.oid])allOrdersMap[o.oid]=o;});
+  const allOrders=Object.values(allOrdersMap);
   const mOrders=allOrders.filter(o=>{
     if(o.status==='Cancelled')return false;
     const d=new Date(o.date);
@@ -1386,7 +1399,12 @@ function showMonthDrilldown(monthIdx){
 function showShopDrilldown(bid){
   if(!lastDashData)return;
   const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
-  const allOrders=(lastDashData.allOrders||[]).map(o=>({...o,date:normDate(o.date)}));
+  const serverOrders=(lastDashData.allOrders||[]).map(o=>({...o,date:normDate(o.date)}));
+  const localOrders=getOrders().map(o=>({...o,date:normDate(o.date||o.at)}));
+  const allOrdersMap={};
+  serverOrders.forEach(o=>allOrdersMap[o.oid]=o);
+  localOrders.forEach(o=>{if(!allOrdersMap[o.oid])allOrdersMap[o.oid]=o;});
+  const allOrders=Object.values(allOrdersMap);
   const now=new Date();
   const curMonth=now.getMonth()+1;
   const curYear=now.getFullYear();
