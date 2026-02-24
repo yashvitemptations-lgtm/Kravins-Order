@@ -558,14 +558,18 @@ function getBuyers(){return LS.get(LK.b)||[];}
 function saveBuyers(b){LS.set(LK.b,b);}
 function getOrders(){return LS.get(LK.o)||[];}
 function saveOrders(o){LS.set(LK.o,o);}
-function nextOID(){
-  // Use server orders (allOrders) for global numbering, fall back to localStorage
-  const serverOrders=lastDashData&&lastDashData.allOrders?lastDashData.allOrders:[];
-  const localOrders=getOrders();
-  const allOrds=[...serverOrders,...localOrders];
-  if(!allOrds.length)return 'ORD001';
-  const nums=allOrds.map(o=>parseInt((o.oid||'').replace('ORD',''))||0);
-  return 'ORD'+String(Math.max(...nums)+1).padStart(3,'0');
+async function getNextOID(){
+  try{
+    const r=await fetch(`${SCRIPT_URL}?action=orders&t=${Date.now()}`);
+    const d=await r.json();
+    if(d.ok&&d.orders&&d.orders.length){
+      const nums=d.orders.map(o=>parseInt((o.oid||'').replace('ORD',''))||0);
+      const localNums=getOrders().map(o=>parseInt((o.oid||'').replace('ORD',''))||0);
+      const max=Math.max(...nums,...localNums,0);
+      return 'ORD'+String(max+1).padStart(3,'0');
+    }
+  }catch(e){}
+  return nextOID();
 }
 function nextBID(){const buyers=getBuyers();
   const n=buyers.map(b=>parseInt(b.id.replace('B',''))||0);
@@ -839,11 +843,11 @@ async function submitOrder(){
   const fl=lines.filter(l=>l.code&&l.qty>0);
   if(!fl.length){toast('⚠️ Add at least one product','er');return;}
   
-  const btn=document.getElementById('submitBtn');
-  btn.disabled=true;btn.textContent='Submitting…';
+  btn.disabled=true;btn.textContent='Getting order number…';
   
   const buyers=getBuyers();const b=buyers.find(x=>x.id===bid);
-  const oid=nextOID();
+  const oid=await getNextOID();
+  btn.textContent='Submitting…';
   const items=fl.map(ln=>{
     const p=window.PRODS.find(x=>x.code===ln.code);
     return {code:p.code,name:p.name,price:p.price,qty:ln.qty,
