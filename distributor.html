@@ -3,1147 +3,681 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<meta name="theme-color" content="#050a14">
+<meta name="theme-color" content="#0b0d17">
 <title>Distributor Portal · Kravins</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#050a14;--s1:#0a1222;--s2:#0f1a2e;--s3:#152238;--bdr:#1e3152;
-  --acc:#a855f7;--a2:#c084fc;--a3:#7c3aed;
-  --grn:#22c55e;--org:#f97316;--red:#ef4444;--ylw:#eab308;--blu:#3b82f6;
-  --txt:#f1f5f9;--mut:#64748b;
-  --f:'Outfit',sans-serif;--m:'JetBrains Mono',monospace
+  --bg:#0b0d17;--s1:#111320;--s2:#171a2e;--bdr:#252a45;
+  --acc:#7c3aed;--a2:#a78bfa;
+  --grn:#10b981;--org:#f59e0b;--red:#ef4444;--blu:#3b82f6;
+  --txt:#f0f0ff;--mut:#6b7280;--sub:#9ca3af;
+  --f:'Plus Jakarta Sans',sans-serif;--m:'JetBrains Mono',monospace
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--f);background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
-
-/* ── Login Screen ── */
-#loginScreen{
-  min-height:100vh;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:24px;
-  background:radial-gradient(ellipse at 30% 20%, rgba(124,58,237,.15) 0%, transparent 60%),
-             radial-gradient(ellipse at 70% 80%, rgba(168,85,247,.1) 0%, transparent 60%),
-             var(--bg)
-}
-.login-logo{
-  width:72px;height:72px;border-radius:20px;
-  background:linear-gradient(135deg,#7c3aed,#a855f7);
-  display:flex;align-items:center;justify-content:center;
-  font-size:32px;margin-bottom:20px;
-  box-shadow:0 8px 32px rgba(124,58,237,.4)
-}
-.login-title{font-size:24px;font-weight:800;margin-bottom:6px;text-align:center}
-.login-sub{font-size:13px;color:var(--mut);margin-bottom:32px;text-align:center}
-.login-card{
-  width:100%;max-width:360px;background:var(--s1);
-  border:1.5px solid var(--bdr);border-radius:18px;padding:24px
-}
-.lbl{font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;
-  letter-spacing:.05em;margin-bottom:6px}
-.fi{width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:10px;
-  padding:11px 13px;font-family:var(--f);font-size:13px;color:var(--txt);outline:none;
-  -webkit-appearance:none;transition:border-color .2s}
-.fi:focus{border-color:var(--acc)}
-select.fi{
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath fill='%2364748b' d='M5 7L0 2h10z'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 12px center;padding-right:30px
-}
-.btn{
-  width:100%;padding:13px;border:none;border-radius:10px;
-  background:linear-gradient(135deg,#7c3aed,#a855f7);
-  color:#fff;font-family:var(--f);font-size:14px;font-weight:700;
-  cursor:pointer;margin-top:16px;transition:all .15s;
-  box-shadow:0 4px 16px rgba(124,58,237,.3)
-}
-.btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.4)}
-.btn:active{transform:translateY(0)}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.login-hint{
-  margin-top:16px;padding:11px 13px;background:rgba(168,85,247,.08);
-  border:1px solid rgba(168,85,247,.2);border-radius:9px;
-  font-size:11px;color:var(--mut);line-height:1.6
-}
-
-/* ── Main App ── */
-#mainApp{display:none}
-.hdr{
-  background:linear-gradient(135deg,#0a1222,#0f1a2e);
-  padding:14px 16px 0;border-bottom:1px solid var(--bdr);
-  position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)
-}
+#setupScreen{position:fixed;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(124,58,237,.15) 0%,transparent 60%),var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px}
+.setup-box{width:100%;max-width:400px;text-align:center}
+.setup-logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;box-shadow:0 8px 32px rgba(124,58,237,.4)}
+.setup-title{font-size:26px;font-weight:800;margin-bottom:6px;background:linear-gradient(135deg,#a78bfa,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.setup-sub{font-size:13px;color:var(--sub);margin-bottom:28px;line-height:1.7}
+.setup-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;text-align:left;display:block}
+.setup-input{width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:10px;padding:13px 14px;font-family:var(--f);font-size:14px;color:var(--txt);outline:none;transition:border-color .2s;margin-bottom:14px}
+.setup-input:focus{border-color:var(--acc)}
+.setup-btn{width:100%;padding:14px;border-radius:10px;border:none;cursor:pointer;font-family:var(--f);font-size:14px;font-weight:700;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,.35);transition:all .2s}
+.setup-btn:hover{transform:translateY(-1px)}
+.setup-err{color:var(--red);font-size:12px;margin-bottom:12px;display:none}
+/* Header */
+.hdr{background:linear-gradient(180deg,var(--s1),rgba(17,19,32,.96));padding:14px 16px 0;border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:100;backdrop-filter:blur(16px)}
 .htop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.hlogo{display:flex;align-items:center;gap:10px}
-.hav{
-  width:40px;height:40px;border-radius:11px;
-  background:linear-gradient(135deg,#7c3aed,#a855f7);
-  display:flex;align-items:center;justify-content:center;font-size:17px
-}
-.htitle{font-size:15px;font-weight:700}
-.hsub{font-size:10px;color:var(--a2);margin-top:1px;font-family:var(--m)}
-.hright{display:flex;align-items:center;gap:7px}
-.hbtn{
-  display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:16px;
-  font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:var(--f)
-}
-.hbtn.refresh{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:var(--grn)}
-.hbtn.logout{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
-.dot{width:5px;height:5px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hinfo{display:flex;align-items:center;gap:10px}
+.hav{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff}
+.hname{font-size:15px;font-weight:700}
+.hdid{font-size:10px;color:var(--a2);font-family:var(--m);margin-top:1px}
+.hbtn{padding:6px 13px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:var(--f)}
+.hbtn.sync{background:rgba(16,185,129,.12);color:var(--grn);border:1px solid rgba(16,185,129,.25)}
+.hbtn.out{background:rgba(107,114,128,.1);color:var(--sub);border:1px solid var(--bdr);margin-left:6px}
+/* Tabs */
 .tabs{display:flex;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{
-  flex-shrink:0;padding:10px 14px;font-size:11px;font-weight:600;
-  color:var(--mut);border-bottom:2px solid transparent;cursor:pointer;
-  transition:all .2s;white-space:nowrap
-}
+.tab{flex-shrink:0;padding:10px 15px;font-size:11px;font-weight:700;color:var(--mut);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap;text-transform:uppercase;letter-spacing:.03em}
 .tab.on{color:var(--a2);border-bottom-color:var(--acc)}
-
-/* ── Pages ── */
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:8px;font-size:9px;font-weight:800;margin-left:5px;background:var(--red);color:#fff;vertical-align:middle}
+/* Pages */
 .scr{padding-bottom:50px}
 .page{display:none;animation:fadein .25s}.page.on{display:block}
-@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.sec{padding:12px 15px 6px}
-.sl{
-  font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--mut);margin-bottom:10px;display:flex;align-items:center;gap:8px
-}
+@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.sec{padding:13px 15px 8px}
+.sl{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .sl::after{content:'';flex:1;height:1px;background:var(--bdr)}
-
-/* ── KPI Cards ── */
+/* KPI */
 .kg3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.kg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.kcard{
-  border-radius:13px;padding:12px 11px;position:relative;overflow:hidden;
-  background:linear-gradient(135deg,var(--s2),var(--s1));border:1.5px solid var(--bdr)
-}
-.kcard::before{
-  content:'';position:absolute;top:-15px;right:-15px;width:65px;height:65px;
-  border-radius:50%;filter:blur(26px);opacity:.2
-}
-.kcard.pu{border-color:rgba(168,85,247,.3)}.kcard.pu::before{background:var(--acc)}
-.kcard.gr{border-color:rgba(34,197,94,.25)}.kcard.gr::before{background:var(--grn)}
-.kcard.or{border-color:rgba(249,115,22,.25)}.kcard.or::before{background:var(--org)}
-.kcard.bl{border-color:rgba(59,130,246,.25)}.kcard.bl::before{background:var(--blu)}
-.kcard.yl{border-color:rgba(234,179,8,.25)}.kcard.yl::before{background:var(--ylw)}
-.kico{font-size:17px;margin-bottom:5px}
-.kval{font-size:16px;font-weight:800;font-family:var(--m);line-height:1.1;margin-bottom:2px}
+.kcard{border-radius:13px;padding:12px 10px;position:relative;overflow:hidden;border:1px solid var(--bdr);background:linear-gradient(135deg,var(--s2),var(--s1))}
+.kcard::before{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;filter:blur(28px);opacity:.2}
+.kcard.or::before{background:var(--org)}.kcard.bl::before{background:var(--blu)}.kcard.gr::before{background:var(--grn)}.kcard.rd::before{background:var(--red)}
+.kico{font-size:16px;margin-bottom:5px}
+.kval{font-size:18px;font-weight:800;font-family:var(--m);line-height:1.1;margin-bottom:2px}
 .klbl{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
-
-/* ── Order Cards ── */
-.ocard{
-  background:var(--s1);border:1.5px solid var(--bdr);border-radius:14px;
-  margin-bottom:10px;overflow:hidden;transition:all .15s
-}
-.ocard:active{transform:scale(.99)}
-.ocard-head{
-  padding:12px 13px;cursor:pointer;
-  display:flex;align-items:flex-start;justify-content:space-between;gap:10px
-}
-.ocard-left{flex:1;min-width:0}
-.ocard-oid{font-family:var(--m);font-size:11px;color:var(--a2);font-weight:600;margin-bottom:3px}
-.ocard-party{font-size:14px;font-weight:700;margin-bottom:2px}
-.ocard-meta{font-size:11px;color:var(--mut)}
-.ocard-right{text-align:right;flex-shrink:0}
-.ocard-amt{font-family:var(--m);font-size:15px;font-weight:800;color:var(--grn)}
-.ocard-date{font-size:10px;color:var(--mut);margin-top:2px}
-
-/* Status badges */
-.sb{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:14px;font-size:9px;font-weight:700}
-.s-pending  {background:rgba(234,179,8,.12);color:var(--ylw)}
-.s-accepted {background:rgba(168,85,247,.15);color:var(--a2)}
-.s-dispatched{background:rgba(34,197,94,.12);color:var(--grn)}
-.s-cancelled{background:rgba(239,68,68,.12);color:var(--red)}
-
-/* ── Action Buttons ── */
-.abtns{display:flex;gap:7px;padding:0 13px 12px;flex-wrap:wrap}
-.abtn{
-  flex:1;min-width:90px;padding:10px 8px;border-radius:9px;
-  font-family:var(--f);font-size:12px;font-weight:700;
-  cursor:pointer;border:none;transition:all .15s;text-align:center
-}
-.abtn:disabled{opacity:.35;cursor:not-allowed}
-.abtn.accept {background:rgba(168,85,247,.18);color:var(--a2);border:1.5px solid rgba(168,85,247,.35)}
-.abtn.dispatch{background:rgba(34,197,94,.15);color:var(--grn);border:1.5px solid rgba(34,197,94,.3)}
-.abtn.cancel {background:rgba(239,68,68,.12);color:var(--red);border:1.5px solid rgba(239,68,68,.25)}
-.abtn.edit   {background:rgba(59,130,246,.12);color:var(--blu);border:1.5px solid rgba(59,130,246,.25)}
-
-/* ── Order Items ── */
-.items-wrap{padding:0 13px 12px;display:none}
-.items-wrap.open{display:block}
-.item-row{
-  display:flex;align-items:center;gap:10px;padding:8px 10px;
-  background:var(--s2);border-radius:8px;margin-bottom:6px
-}
-.item-name{flex:1;min-width:0}
-.item-nm{font-size:12px;font-weight:600}
-.item-cd{font-size:10px;font-family:var(--m);color:var(--a2)}
-.item-qty{
-  display:flex;align-items:center;gap:6px;flex-shrink:0
-}
-.qty-inp{
-  width:52px;background:var(--s1);border:1.5px solid var(--bdr);
-  border-radius:7px;padding:5px 6px;font-family:var(--m);font-size:13px;
-  font-weight:600;color:var(--txt);text-align:center;outline:none
-}
-.qty-inp:focus{border-color:var(--acc)}
-.qty-inp:disabled{opacity:.5;background:var(--bg)}
-.item-total{font-family:var(--m);font-size:12px;font-weight:700;color:var(--a2);min-width:60px;text-align:right}
-
-/* ── Dispatch info card ── */
-.dinfo{
-  margin:0 13px 12px;padding:10px 12px;
-  background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);
-  border-radius:10px;font-size:11px
-}
-.dinfo-row{display:flex;justify-content:space-between;padding:3px 0;gap:8px}
-.dinfo-lbl{color:var(--mut)}
-.dinfo-val{font-family:var(--m);color:var(--a2);font-weight:600;text-align:right}
-
-/* ── Filters ── */
-.fbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.fi-s{flex:1;min-width:130px}
-
-/* ── Modals ── */
-.ov{
-  position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);
-  z-index:500;display:none;align-items:flex-end
-}
+/* Order cards */
+.ocard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;margin-bottom:9px;overflow:hidden;cursor:pointer;transition:border-color .2s}
+.ocard:hover{border-color:var(--acc)}
+.ocard-top{padding:12px 13px;display:flex;align-items:flex-start;gap:10px}
+.status-ico{flex-shrink:0;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.status-ico.pending{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.2)}
+.status-ico.accepted{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.2)}
+.status-ico.dispatched{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.2)}
+.status-ico.cancelled{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.12)}
+.ocard-body{flex:1;min-width:0}
+.ocard-r1{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.o-oid{font-family:var(--m);font-size:11px;font-weight:600;color:var(--a2)}
+.o-amt{font-family:var(--m);font-size:14px;font-weight:800;color:var(--grn)}
+.o-party{font-size:13px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.o-meta{font-size:10px;color:var(--sub);display:flex;gap:8px;flex-wrap:wrap}
+.ocard-foot{padding:7px 13px;background:var(--s2);border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;font-size:10px}
+.stbadge{display:inline-block;padding:2px 7px;border-radius:16px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.stbadge.pending{background:rgba(245,158,11,.12);color:var(--org)}
+.stbadge.accepted{background:rgba(59,130,246,.12);color:var(--blu)}
+.stbadge.dispatched{background:rgba(16,185,129,.12);color:var(--grn)}
+.stbadge.cancelled{background:rgba(239,68,68,.08);color:var(--red)}
+/* Filters */
+.fbar{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap}
+.fi{flex:1;min-width:120px;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;padding:8px 10px;font-family:var(--f);font-size:12px;color:var(--txt);outline:none;-webkit-appearance:none}
+.fi:focus{border-color:var(--acc)}
+select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath fill='%236b7280' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px}
+/* Empty */
+.empty{text-align:center;padding:42px 20px;color:var(--sub);font-size:13px;line-height:2}
+.empty-ico{font-size:36px;display:block;margin-bottom:8px}
+/* Modal */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:500;display:none;align-items:flex-end}
 .ov.on{display:flex}
-.mo{
-  background:var(--s1);border-radius:18px 18px 0 0;border-top:1px solid var(--bdr);
-  padding:16px 16px max(env(safe-area-inset-bottom,22px),22px);
-  width:100%;max-height:90dvh;overflow-y:auto;animation:slideup .22s ease
-}
-@keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.mh{width:34px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 14px}
-.mt{font-size:16px;font-weight:700;margin-bottom:4px}
-.msub{font-size:12px;color:var(--mut);margin-bottom:16px}
-.mfld{margin-bottom:14px}
-.mfld .lbl{display:block;margin-bottom:5px}
-.mrow{display:flex;gap:8px}
-.mrow .mfld{flex:1}
-.mbtns{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
-.mbtn{
-  flex:1;padding:12px;border-radius:10px;font-family:var(--f);
-  font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s
-}
-.mbtn.primary{
-  background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;
-  box-shadow:0 4px 14px rgba(124,58,237,.3)
-}
-.mbtn.primary:hover{box-shadow:0 6px 18px rgba(124,58,237,.4)}
-.mbtn.secondary{background:var(--s2);color:var(--mut);border:1.5px solid var(--bdr)}
-.mbtn.danger{background:rgba(239,68,68,.12);color:var(--red);border:1.5px solid rgba(239,68,68,.3)}
-
-/* ── Empty / Toast ── */
-.empty{text-align:center;padding:40px 16px;color:var(--mut);font-size:13px}
-.empty-ico{font-size:36px;margin-bottom:8px;opacity:.4}
-.toast{
-  position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-10px);
-  background:var(--s2);border:1px solid var(--bdr);border-radius:10px;
-  padding:8px 16px;font-size:12px;font-weight:500;opacity:0;
-  transition:all .25s;z-index:9999;pointer-events:none;
-  box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap
-}
+.mo{background:var(--s1);border-radius:20px 20px 0 0;border-top:1px solid var(--bdr);padding:18px 16px max(env(safe-area-inset-bottom,24px),24px);width:100%;max-height:92dvh;overflow-y:auto;animation:up .22s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhandle{width:36px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 15px}
+.mtitle{font-size:16px;font-weight:800;margin-bottom:3px}
+.msub{font-size:11px;color:var(--sub);margin-bottom:14px}
+/* Item edit rows */
+.irow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr)}
+.irow:last-child{border-bottom:none}
+.iinfo{flex:1;min-width:0}
+.iname{font-size:12px;font-weight:600;margin-bottom:2px}
+.icode{font-size:10px;color:var(--a2);font-family:var(--m)}
+.iorig{font-size:10px;color:var(--sub)}
+.qty-in{width:70px;background:var(--s2);border:1.5px solid var(--bdr);border-radius:8px;padding:7px 8px;font-family:var(--m);font-size:13px;font-weight:700;color:var(--txt);outline:none;text-align:center}
+.qty-in:focus{border-color:var(--acc)}
+.itotal{font-family:var(--m);font-size:12px;font-weight:700;color:var(--a2);min-width:68px;text-align:right;flex-shrink:0}
+/* Inforows */
+.ir{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px}
+.ir:last-child{border-bottom:none}
+.irl{color:var(--sub)}.irv{font-weight:600;max-width:60%;text-align:right}
+/* Dispatch form */
+.dlbl{font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:block;margin-top:12px}
+.din{width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;padding:10px 12px;font-family:var(--f);font-size:13px;color:var(--txt);outline:none}
+.din:focus{border-color:var(--acc)}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* Buttons */
+.btn{padding:12px 16px;border-radius:10px;font-family:var(--f);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s;flex:1}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;box-shadow:0 4px 16px rgba(124,58,237,.3)}
+.btn.success{background:linear-gradient(135deg,#059669,#047857);color:#fff;box-shadow:0 4px 16px rgba(5,150,105,.25)}
+.btn.warn{background:rgba(245,158,11,.15);color:var(--org);border:1.5px solid rgba(245,158,11,.3)}
+.btn.danger{background:rgba(239,68,68,.12);color:var(--red);border:1.5px solid rgba(239,68,68,.25)}
+.btn.ghost{background:var(--s2);color:var(--sub);border:1.5px solid var(--bdr)}
+.btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+/* Divider */
+.mdiv{height:1px;background:var(--bdr);margin:14px 0}
+/* Dispatch badge */
+.disp-box{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:10px;padding:10px 12px;margin:10px 0}
+.disp-title{font-size:11px;font-weight:800;color:var(--grn);margin-bottom:7px}
+.disp-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0}
+.disp-lbl{color:var(--sub)}.disp-val{font-family:var(--m);font-weight:600}
+/* Audit */
+.arow{padding:7px 0;border-bottom:1px solid var(--bdr);font-size:11px}
+.arow:last-child{border-bottom:none}
+.atag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:800;margin-right:5px;font-family:var(--m);text-transform:uppercase}
+.atag.SUBMIT{background:rgba(59,130,246,.1);color:var(--blu)}
+.atag.ACCEPT,.atag.DIST_MODIFY{background:rgba(124,58,237,.1);color:var(--a2)}
+.atag.DISPATCH,.atag.DISPATCH_UPDATE{background:rgba(16,185,129,.1);color:var(--grn)}
+.atag.CANCEL,.atag.DIST_CANCEL{background:rgba(239,68,68,.08);color:var(--red)}
+.atag.EDIT{background:rgba(245,158,11,.08);color:var(--org)}
+/* SM cards */
+.smrow{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px}
+.smav{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+/* Toast */
+.toast{position:fixed;top:72px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:9px 18px;font-size:12px;font-weight:600;opacity:0;transition:all .25s;z-index:9999;pointer-events:none;box-shadow:0 8px 28px rgba(0,0,0,.5)}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.ok{border-color:rgba(34,197,94,.4);color:var(--grn)}
+.toast.ok{border-color:rgba(16,185,129,.4);color:var(--grn)}
 .toast.er{border-color:rgba(239,68,68,.4);color:var(--red)}
-.toast.in{border-color:rgba(168,85,247,.4);color:var(--a2)}
-
-/* ── Salesman cards (dashboard) ── */
-.smrow{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 12px;background:var(--s1);
-  border:1px solid var(--bdr);border-radius:11px;margin-bottom:7px
-}
-.smav{
-  width:36px;height:36px;border-radius:9px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:800;color:#fff
-}
-.smnm{font-size:13px;font-weight:700}
-.smid{font-size:10px;font-family:var(--m);color:var(--a2);margin-top:1px}
-.smst{text-align:right;flex-shrink:0}
-.smstv{font-family:var(--m);font-size:13px;font-weight:700;color:var(--a2)}
-.smstl{font-size:9px;color:var(--mut)}
-
-/* ── Loading spinner ── */
-.spin-wrap{display:flex;flex-direction:column;align-items:center;padding:40px}
-.spin{
-  width:28px;height:28px;border:3px solid var(--bdr);
-  border-top-color:var(--acc);border-radius:50%;
-  animation:spin .7s linear infinite;margin-bottom:10px
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── Section tag ── */
-.stag{
-  display:inline-block;padding:2px 8px;border-radius:5px;
-  font-size:10px;font-weight:700;font-family:var(--m);margin-left:6px
-}
-.stag.pend{background:rgba(234,179,8,.15);color:var(--ylw)}
-.stag.acc{background:rgba(168,85,247,.15);color:var(--a2)}
-.stag.disp{background:rgba(34,197,94,.12);color:var(--grn)}
-.stag.canc{background:rgba(239,68,68,.12);color:var(--red)}
+.toast.in{border-color:rgba(124,58,237,.4);color:var(--a2)}
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════════════
-     LOGIN SCREEN
-════════════════════════════════════════════════ -->
-<div id="loginScreen">
-  <div class="login-logo">🚚</div>
-  <div class="login-title">Distributor Portal</div>
-  <div class="login-sub">Kravins Order Management</div>
-
-  <div class="login-card">
-    <div class="mfld">
-      <div class="lbl">Select Your Company</div>
-      <select class="fi" id="distSelect">
-        <option value="">Loading distributors…</option>
-      </select>
-    </div>
-    <button class="btn" id="loginBtn" onclick="doLogin()" disabled>Enter Portal</button>
-    <div class="login-hint">
-      💡 Select your distributor name from the list above.<br>
-      Contact admin to be added if you don't appear.
-    </div>
+<!-- Setup Screen -->
+<div id="setupScreen">
+  <div class="setup-box">
+    <div class="setup-logo">🚚</div>
+    <div class="setup-title">Distributor Portal</div>
+    <div class="setup-sub">Enter your Distributor ID to access your orders dashboard.<br>Contact admin if you need your ID.</div>
+    <span class="setup-lbl">Distributor ID</span>
+    <input id="setupId" class="setup-input" placeholder="e.g. D001" autocomplete="off" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')doSetup()">
+    <div class="setup-err" id="setupErr">Distributor not found. Please check your ID.</div>
+    <button class="setup-btn" onclick="doSetup()">Access My Portal →</button>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════
-     MAIN APP
-════════════════════════════════════════════════ -->
-<div id="mainApp">
-
-  <!-- Header -->
+<!-- App -->
+<div id="app" style="display:none">
   <div class="hdr">
     <div class="htop">
-      <div class="hlogo">
-        <div class="hav">🚚</div>
+      <div class="hinfo">
+        <div class="hav" id="hAv">D</div>
         <div>
-          <div class="htitle" id="hDistName">Distributor</div>
-          <div class="hsub" id="hDistId">—</div>
+          <div class="hname" id="hName">—</div>
+          <div class="hdid" id="hId">—</div>
         </div>
       </div>
-      <div class="hright">
-        <button class="hbtn refresh" onclick="refreshAll()">
-          <div class="dot"></div>Refresh
-        </button>
-        <button class="hbtn logout" onclick="doLogout()">Exit</button>
+      <div>
+        <button class="hbtn sync" onclick="loadData()">↻ Sync</button>
+        <button class="hbtn out" onclick="doLogout()">Exit</button>
       </div>
     </div>
     <div class="tabs">
-      <div class="tab on" onclick="goTab('orders')">📋 Orders</div>
-      <div class="tab"    onclick="goTab('dashboard')">📊 Dashboard</div>
-      <div class="tab"    onclick="goTab('salesmen')">👤 My Team</div>
+      <div class="tab on"  onclick="goTab('pending')">⏳ Pending<span class="badge" id="bPending" style="display:none">0</span></div>
+      <div class="tab"     onclick="goTab('accepted')">✅ Accepted</div>
+      <div class="tab"     onclick="goTab('dispatched')">📦 Dispatched</div>
+      <div class="tab"     onclick="goTab('all')">📋 All Orders</div>
+      <div class="tab"     onclick="goTab('salesmen')">👤 Salesmen</div>
     </div>
   </div>
 
   <div class="scr">
 
-    <!-- ══ ORDERS TAB ══ -->
-    <div class="page on" id="pg-orders">
-
-      <!-- Quick KPIs -->
+    <!-- PENDING -->
+    <div class="page on" id="pg-pending">
       <div class="sec">
         <div class="kg3">
-          <div class="kcard yl">
-            <div class="kico">⏳</div>
-            <div class="kval" id="cnt-pending">0</div>
-            <div class="klbl">Pending</div>
-          </div>
-          <div class="kcard pu">
-            <div class="kico">✅</div>
-            <div class="kval" id="cnt-accepted">0</div>
-            <div class="klbl">Accepted</div>
-          </div>
-          <div class="kcard gr">
-            <div class="kico">🚚</div>
-            <div class="kval" id="cnt-dispatched">0</div>
-            <div class="klbl">Dispatched</div>
-          </div>
+          <div class="kcard or"><div class="kico">⏳</div><div class="kval" id="k-p">0</div><div class="klbl">Pending</div></div>
+          <div class="kcard bl"><div class="kico">✅</div><div class="kval" id="k-a">0</div><div class="klbl">Accepted</div></div>
+          <div class="kcard gr"><div class="kico">📦</div><div class="kval" id="k-d">0</div><div class="klbl">Dispatched</div></div>
         </div>
+        <div class="sl">Awaiting Your Action</div>
+        <div id="pendingList"><div class="empty"><span class="empty-ico">🔄</span>Loading orders...</div></div>
       </div>
+    </div>
 
-      <!-- Filters -->
+    <!-- ACCEPTED -->
+    <div class="page" id="pg-accepted">
+      <div class="sec">
+        <div class="sl">Accepted — Ready to Dispatch</div>
+        <div id="acceptedList"><div class="empty"><span class="empty-ico">✅</span>No accepted orders</div></div>
+      </div>
+    </div>
+
+    <!-- DISPATCHED -->
+    <div class="page" id="pg-dispatched">
+      <div class="sec">
+        <div class="sl">Dispatched Orders</div>
+        <div id="dispatchedList"><div class="empty"><span class="empty-ico">📦</span>No dispatched orders yet</div></div>
+      </div>
+    </div>
+
+    <!-- ALL -->
+    <div class="page" id="pg-all">
       <div class="sec">
         <div class="fbar">
-          <input class="fi fi-s" type="search" id="osearch"
-            placeholder="Search order, party…" oninput="renderOrders()">
-          <select class="fi fi-s" id="smFilter" onchange="renderOrders()">
-            <option value="">All Salesmen</option>
-          </select>
-          <select class="fi fi-s" id="stFilter" onchange="renderOrders()">
+          <input class="fi" type="search" id="asearch" placeholder="Order, party, salesman..." oninput="renderAll()">
+          <select class="fi" id="asmf" onchange="renderAll()"><option value="">All Salesmen</option></select>
+          <select class="fi" id="astf" onchange="renderAll()">
             <option value="">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Accepted">Accepted</option>
-            <option value="Dispatched">Dispatched</option>
-            <option value="Cancelled">Cancelled</option>
+            <option>Pending</option><option>Accepted</option><option>Dispatched</option><option>Cancelled</option>
           </select>
         </div>
-      </div>
-
-      <!-- Orders list -->
-      <div class="sec">
-        <div class="sl">Orders <span class="stag pend" id="pendingBadge" style="display:none"></span></div>
-        <div id="ordersList">
-          <div class="spin-wrap"><div class="spin"></div><div style="color:var(--mut);font-size:12px">Loading orders…</div></div>
-        </div>
+        <div class="sl">All Orders (<span id="allCnt">0</span>)</div>
+        <div id="allList"></div>
       </div>
     </div>
 
-    <!-- ══ DASHBOARD TAB ══ -->
-    <div class="page" id="pg-dashboard">
-      <div class="sec">
-        <div class="sl">Today</div>
-        <div class="kg3">
-          <div class="kcard pu"><div class="kico">💰</div><div class="kval" id="d-todaySales">₹0</div><div class="klbl">Sales</div></div>
-          <div class="kcard bl"><div class="kico">📦</div><div class="kval" id="d-todayOrders">0</div><div class="klbl">Orders</div></div>
-          <div class="kcard gr"><div class="kico">🏪</div><div class="kval" id="d-todayShops">0</div><div class="klbl">Shops</div></div>
-        </div>
-      </div>
-      <div class="sec">
-        <div class="sl">Month to Date · <span id="d-mtdLabel"></span></div>
-        <div class="kg2">
-          <div class="kcard pu"><div class="kico">📅</div><div class="kval" id="d-mtdSales">₹0</div><div class="klbl">MTD Sales</div></div>
-          <div class="kcard bl"><div class="kico">🏪</div><div class="kval" id="d-mtdShops">0</div><div class="klbl">MTD Shops</div></div>
-        </div>
-      </div>
-      <div class="sec">
-        <div class="sl">Year to Date · <span id="d-ytdLabel"></span></div>
-        <div class="kg2">
-          <div class="kcard gr"><div class="kico">📈</div><div class="kval" id="d-ytdSales">₹0</div><div class="klbl">YTD Sales</div></div>
-          <div class="kcard or"><div class="kico">🏬</div><div class="kval" id="d-ytdShops">0</div><div class="klbl">YTD Shops</div></div>
-        </div>
-      </div>
-      <div class="sec">
-        <div class="sl">Order Pipeline</div>
-        <div class="kg2">
-          <div class="kcard yl"><div class="kico">⏳</div><div class="kval" id="d-pendingAmt">₹0</div><div class="klbl">Pending Value</div></div>
-          <div class="kcard pu"><div class="kico">✅</div><div class="kval" id="d-acceptedAmt">₹0</div><div class="klbl">Accepted Value</div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══ SALESMEN TAB ══ -->
+    <!-- SALESMEN -->
     <div class="page" id="pg-salesmen">
       <div class="sec">
-        <div class="sl">Salesmen Under You</div>
-        <div id="smList">
-          <div class="spin-wrap"><div class="spin"></div></div>
-        </div>
+        <div class="sl">Salesmen Linked to You</div>
+        <div id="smList"></div>
       </div>
     </div>
 
-  </div><!-- /scr -->
-</div><!-- /mainApp -->
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
-<!-- ════════════════════════════════════════════════
-     ACCEPT MODAL (with qty edit)
-════════════════════════════════════════════════ -->
-<div class="ov" id="acceptOv" onclick="if(event.target===this)closeModal('acceptOv')">
+<!-- ORDER MODAL -->
+<div class="ov" id="orderOv" onclick="if(event.target===this)closeModal()">
   <div class="mo">
-    <div class="mh"></div>
-    <div class="mt">✅ Accept Order</div>
-    <div class="msub" id="acceptOvSub"></div>
-    <div style="font-size:11px;color:var(--mut);margin-bottom:12px;
-      padding:9px 11px;background:rgba(168,85,247,.07);border-radius:8px;
-      border:1px solid rgba(168,85,247,.15)">
-      💡 Review quantities below. You can modify them before accepting.
-    </div>
-    <div id="acceptItemsWrap"></div>
-    <div class="mfld" style="margin-top:8px">
-      <div class="lbl">Notes (optional)</div>
-      <textarea class="fi" id="acceptNotes" rows="2" placeholder="Any notes for this acceptance…"></textarea>
-    </div>
-    <div class="mbtns">
-      <button class="mbtn secondary" onclick="closeModal('acceptOv')">Cancel</button>
-      <button class="mbtn primary" id="acceptBtn" onclick="submitAccept()">✅ Accept Order</button>
-    </div>
-  </div>
-</div>
+    <div class="mhandle"></div>
+    <div class="mtitle" id="om-title">Order</div>
+    <div class="msub" id="om-sub"></div>
+    <div id="om-details"></div>
+    <div id="om-disp-info" style="display:none"></div>
 
-<!-- ════════════════════════════════════════════════
-     DISPATCH MODAL
-════════════════════════════════════════════════ -->
-<div class="ov" id="dispatchOv" onclick="if(event.target===this)closeModal('dispatchOv')">
-  <div class="mo">
-    <div class="mh"></div>
-    <div class="mt" id="dispatchTitle">🚚 Dispatch Order</div>
-    <div class="msub" id="dispatchOvSub"></div>
-    <div class="mrow">
-      <div class="mfld">
-        <label class="lbl">Invoice Number *</label>
-        <input class="fi" type="text" id="dInvoiceNo" placeholder="e.g. INV-2026-001">
+    <!-- Accept/Modify -->
+    <div id="sec-accept" style="display:none">
+      <div class="mdiv"></div>
+      <div class="sl">Accept / Adjust Quantities</div>
+      <div id="accept-items"></div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--bdr);margin-top:4px">
+        <span style="font-size:12px;color:var(--sub)">Accepted Total</span>
+        <span id="accept-total" style="font-family:var(--m);font-size:16px;font-weight:800;color:var(--grn)">₹0</span>
       </div>
-      <div class="mfld">
-        <label class="lbl">Invoice Date *</label>
-        <input class="fi" type="date" id="dInvoiceDate">
+      <textarea id="accept-notes" class="fi" placeholder="Optional notes to salesman..." style="width:100%;resize:none;min-height:50px;margin-top:8px"></textarea>
+      <div class="btn-row">
+        <button class="btn success" onclick="submitAccept()">✅ Accept Order</button>
+        <button class="btn ghost" onclick="hideSec()">Cancel</button>
       </div>
     </div>
-    <div class="mfld">
-      <label class="lbl">Vehicle / Transport Details</label>
-      <input class="fi" type="text" id="dVehicle" placeholder="e.g. GJ 01 AB 1234 / DTDC Tracking">
-    </div>
-    <div class="mfld">
-      <label class="lbl">Dispatch Notes</label>
-      <textarea class="fi" id="dNotes" rows="2" placeholder="Any additional dispatch info…"></textarea>
-    </div>
-    <div class="mbtns">
-      <button class="mbtn secondary" onclick="closeModal('dispatchOv')">Cancel</button>
-      <button class="mbtn primary" id="dispatchBtn" onclick="submitDispatch()">🚚 Mark Dispatched</button>
-    </div>
-  </div>
-</div>
 
-<!-- ════════════════════════════════════════════════
-     CANCEL MODAL
-════════════════════════════════════════════════ -->
-<div class="ov" id="cancelOv" onclick="if(event.target===this)closeModal('cancelOv')">
-  <div class="mo">
-    <div class="mh"></div>
-    <div class="mt">⛔ Cancel Order</div>
-    <div class="msub" id="cancelOvSub"></div>
-    <div class="mfld">
-      <label class="lbl">Reason for Cancellation *</label>
-      <textarea class="fi" id="cancelReason" rows="3" placeholder="Please provide a reason…"></textarea>
+    <!-- Dispatch form -->
+    <div id="sec-dispatch" style="display:none">
+      <div class="mdiv"></div>
+      <div class="sl" id="disp-sec-title">Dispatch Details</div>
+      <div class="dgrid">
+        <div>
+          <label class="dlbl">Invoice No *</label>
+          <input id="d-inv" class="din" placeholder="INV-2026-001">
+        </div>
+        <div>
+          <label class="dlbl">Invoice Date *</label>
+          <input id="d-invdate" class="din" type="date">
+        </div>
+      </div>
+      <div class="dgrid">
+        <div>
+          <label class="dlbl">Dispatch Date</label>
+          <input id="d-dispdate" class="din" type="date">
+        </div>
+        <div>
+          <label class="dlbl">Transport / Courier</label>
+          <input id="d-transport" class="din" placeholder="DTDC, vehicle, etc.">
+        </div>
+      </div>
+      <label class="dlbl">Tracking / LR Number</label>
+      <input id="d-tracking" class="din" placeholder="Optional">
+      <label class="dlbl">Notes</label>
+      <textarea id="d-notes" class="din" style="resize:none;min-height:50px;margin-bottom:0" placeholder="Optional..."></textarea>
+      <div class="btn-row">
+        <button class="btn success" id="dispBtn" onclick="submitDispatch()">📦 Confirm Dispatch</button>
+        <button class="btn ghost" onclick="hideSec()">Cancel</button>
+      </div>
     </div>
-    <div class="mbtns">
-      <button class="mbtn secondary" onclick="closeModal('cancelOv')">Go Back</button>
-      <button class="mbtn danger" id="cancelBtn" onclick="submitCancel()">⛔ Confirm Cancel</button>
+
+    <!-- Cancel -->
+    <div id="sec-cancel" style="display:none">
+      <div class="mdiv"></div>
+      <div class="sl">Cancel Order</div>
+      <textarea id="cancel-reason" class="fi" placeholder="Reason for cancellation..." style="width:100%;resize:none;min-height:58px"></textarea>
+      <div class="btn-row">
+        <button class="btn danger" onclick="submitCancel()">⛔ Confirm Cancel</button>
+        <button class="btn ghost" onclick="hideSec()">Back</button>
+      </div>
+    </div>
+
+    <!-- Action bar -->
+    <div id="om-actions" class="btn-row" style="margin-top:16px;border-top:1px solid var(--bdr);padding-top:14px"></div>
+
+    <!-- History -->
+    <div id="audit-wrap" style="margin-top:14px;display:none">
+      <div class="sl">Order History</div>
+      <div id="audit-body"></div>
     </div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWom2LgZbHfINY31GTmZOYdVva_rWxES-xrmVCDZ_hxolGf6SSxt0P_UIPDi-MaOOg/exec';
-const SM_COLORS  = ['#a855f7','#3b82f6','#22c55e','#f97316','#eab308','#ec4899','#14b8a6','#f43f5e'];
-const MONTHS     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyWom2LgZbHfINY31GTmZOYdVva_rWxES-xrmVCDZ_hxolGf6SSxt0P_UIPDi-MaOOg/exec';
+const SM_COLORS=['#7c3aed','#3b82f6','#10b981','#f59e0b','#ec4899','#14b8a6','#f43f5e','#84cc16'];
+let distId='',distName='',distInfo={};
+let allOrders=[],allSalesmen=[];
+let curOrder=null,dispMode='new';
 
-// State
-let distInfo     = null; // {id, name, ...}
-let allOrders    = [];
-let mySalesmen   = [];
-let allDistributors = [];
-let modalOid     = null;
-let isDispatchEdit = false; // true when updating existing dispatch
+const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+function normDate(d){if(!d)return '';try{const dt=new Date(d);if(!isNaN(dt)){const i=new Date(dt.getTime()+330*60000);return i.toISOString().slice(0,10);}}catch(e){}return String(d).slice(0,10);}
+function fmtDate(s){if(!s)return '—';try{return new Date(s+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}catch(e){return s;}}
+function fmtTs(s){if(!s)return '—';try{return new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return s;}}
+let _tt;function toast(m,t='ok'){const el=document.getElementById('toast');clearTimeout(_tt);el.textContent=m;el.className=`toast ${t} on`;_tt=setTimeout(()=>el.classList.remove('on'),2800);}
 
-// ═══════════════════════════════════════════════════════════════
-// UTILITIES
-// ═══════════════════════════════════════════════════════════════
-const fi = n => '₹' + Number(n||0).toLocaleString('en-IN');
+document.addEventListener('DOMContentLoaded',()=>{
+  const s=localStorage.getItem('kravins_dist_id');
+  if(s){distId=s;initApp();}
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('d-invdate').value=today;
+  document.getElementById('d-dispdate').value=today;
+});
 
-function normDate(d){
-  if (!d) return '';
+async function doSetup(){
+  const id=document.getElementById('setupId').value.trim().toUpperCase();
+  if(!id){document.getElementById('setupErr').style.display='block';return;}
   try{
-    const dt = new Date(d);
-    if (!isNaN(dt)){
-      return new Date(dt.getTime()+330*60000).toISOString().slice(0,10);
-    }
-  }catch(e){}
-  return String(d).slice(0,10);
-}
-function getToday(){
-  return new Date(Date.now()+330*60000).toISOString().slice(0,10);
-}
-function getCurMY(){
-  const ist = new Date(Date.now()+330*60000);
-  return {m:ist.getUTCMonth()+1, y:ist.getUTCFullYear()};
-}
-function isMTD(date){ const {m,y}=getCurMY(); return date&&parseInt(date.slice(0,4))===y&&parseInt(date.slice(5,7))===m; }
-function isYTD(date){ return date&&parseInt(date.slice(0,4))===getCurMY().y; }
-
-function fmtDate(d){
-  if (!d) return '—';
-  try{ return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
-  catch(e){ return d; }
-}
-
-function statusClass(s){
-  return s==='Pending'?'s-pending':s==='Accepted'?'s-accepted':s==='Dispatched'?'s-dispatched':'s-cancelled';
-}
-function statusIcon(s){
-  return s==='Pending'?'⏳':s==='Accepted'?'✅':s==='Dispatched'?'🚚':'⛔';
-}
-
-let toastT;
-function toast(msg, type='ok'){
-  const el=document.getElementById('toast'); clearTimeout(toastT);
-  el.textContent=msg; el.className=`toast ${type} on`;
-  toastT=setTimeout(()=>el.classList.remove('on'),2800);
-}
-function closeModal(id){ document.getElementById(id).classList.remove('on'); }
-
-async function apiPost(body){
-  const r = await fetch(SCRIPT_URL, {
-    method:'POST', headers:{'Content-Type':'text/plain'},
-    body: JSON.stringify(body)
-  });
-  return r.json();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// LOGIN / SESSION
-// ═══════════════════════════════════════════════════════════════
-async function initLogin(){
-  try{
-    const r = await fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`);
-    const data = await r.json();
-    allDistributors = (data.distributors||[]).filter(d=>d.active!==false);
-
-    const sel = document.getElementById('distSelect');
-    sel.innerHTML = '<option value="">— Select your distributor —</option>' +
-      allDistributors.map(d=>`<option value="${d.id}">${d.name} (${d.id})</option>`).join('');
-    sel.disabled = false;
-
-    // Restore session
-    const saved = localStorage.getItem('kravins_dist');
-    if (saved){
-      try{
-        const s = JSON.parse(saved);
-        const found = allDistributors.find(d=>d.id===s.id);
-        if (found){ distInfo=found; launchApp(); return; }
-      }catch(e){}
-    }
-
-    document.getElementById('loginBtn').disabled = false;
-    sel.onchange = ()=> document.getElementById('loginBtn').disabled = !sel.value;
-
+    const r=await fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`);
+    const d=await r.json();
+    const found=(d.distributors||[]).find(x=>x.id===id);
+    if(!found){document.getElementById('setupErr').style.display='block';return;}
+    document.getElementById('setupErr').style.display='none';
+    distId=id;distInfo=found;distName=found.name;
+    localStorage.setItem('kravins_dist_id',id);
+    initApp();
   }catch(e){
-    console.error(e);
-    document.getElementById('distSelect').innerHTML = '<option value="">⚠️ Could not load — check connection</option>';
+    document.getElementById('setupErr').textContent='Connection error. Try again.';
+    document.getElementById('setupErr').style.display='block';
   }
 }
+function doLogout(){localStorage.removeItem('kravins_dist_id');location.reload();}
 
-function doLogin(){
-  const sel = document.getElementById('distSelect');
-  const id  = sel.value;
-  if (!id){ toast('Please select your distributor','er'); return; }
-  const found = allDistributors.find(d=>d.id===id);
-  if (!found){ toast('Distributor not found','er'); return; }
-  distInfo = found;
-  localStorage.setItem('kravins_dist', JSON.stringify(found));
-  launchApp();
+async function initApp(){
+  if(!distName){
+    try{
+      const r=await fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`);
+      const d=await r.json();
+      const f=(d.distributors||[]).find(x=>x.id===distId);
+      if(!f){doLogout();return;}
+      distInfo=f;distName=f.name;
+    }catch(e){doLogout();return;}
+  }
+  document.getElementById('setupScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  const init=distName.split(' ').map(w=>w[0]).join('').slice(0,2);
+  document.getElementById('hAv').textContent=init;
+  document.getElementById('hName').textContent=distName;
+  document.getElementById('hId').textContent=distId+(distInfo.territory?' · '+distInfo.territory:'');
+  await loadData();
 }
 
-function doLogout(){
-  localStorage.removeItem('kravins_dist');
-  location.reload();
+async function loadData(){
+  try{
+    const [r1,r2]=await Promise.all([
+      fetch(`${SCRIPT_URL}?action=orders&distId=${distId}&t=${Date.now()}`),
+      fetch(`${SCRIPT_URL}?action=salesmen&t=${Date.now()}`)
+    ]);
+    const [od,sd]=await Promise.all([r1.json(),r2.json()]);
+    if(od.ok) allOrders=(od.orders||[]).map(o=>({...o,date:normDate(o.date)}));
+    if(sd.ok) allSalesmen=(sd.salesmen||[]).filter(s=>s.distributor===distId);
+    // Update SM filter
+    const opts=allSalesmen.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    document.getElementById('asmf').innerHTML='<option value="">All Salesmen</option>'+opts;
+    renderViews();
+    toast('✓ Synced','ok');
+  }catch(e){toast('⚠️ Sync failed','er');}
 }
 
-function launchApp(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('mainApp').style.display='block';
-  document.getElementById('hDistName').textContent = distInfo.name;
-  document.getElementById('hDistId').textContent   = distInfo.id + (distInfo.territory?' · '+distInfo.territory:'');
-  loadAll();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════════════════
 function goTab(tab){
-  ['orders','dashboard','salesmen'].forEach((t,i)=>{
-    document.querySelectorAll('.tab')[i].classList.toggle('on', t===tab);
-    document.getElementById('pg-'+t).classList.toggle('on', t===tab);
-  });
+  const tabs=['pending','accepted','dispatched','all','salesmen'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',tabs[i]===tab));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-'+tab).classList.add('on');
+  if(tab==='all') renderAll();
+  if(tab==='salesmen') renderSalesmen();
   window.scrollTo({top:0});
 }
 
-// ═══════════════════════════════════════════════════════════════
-// LOAD ALL DATA
-// ═══════════════════════════════════════════════════════════════
-async function loadAll(){
-  try{
-    const [ordRes, smRes] = await Promise.all([
-      fetch(`${SCRIPT_URL}?action=orders&distId=${distInfo.id}&t=${Date.now()}`),
-      fetch(`${SCRIPT_URL}?action=salesmen&t=${Date.now()}`)
-    ]);
-    const [ordData, smData] = await Promise.all([ordRes.json(), smRes.json()]);
-
-    if (ordData.ok){
-      allOrders = (ordData.orders||[]).map(o=>({...o, date:normDate(o.date)}));
-    }
-    if (smData.ok){
-      mySalesmen = (smData.salesmen||[]).filter(s=>s.distributor===distInfo.id&&s.active!==false);
-    }
-
-    // Populate salesman filter
-    const smSel = document.getElementById('smFilter');
-    smSel.innerHTML = '<option value="">All Salesmen</option>' +
-      mySalesmen.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
-
-    renderOrders();
-    renderDashboard();
-    renderSalesmen();
-
-  }catch(e){
-    console.error(e);
-    toast('⚠️ Could not load data','er');
-    document.getElementById('ordersList').innerHTML =
-      '<div class="empty"><div class="empty-ico">⚠️</div>Failed to load. Tap Refresh.</div>';
-  }
+function renderViews(){
+  const pend=allOrders.filter(o=>o.status==='Pending');
+  const acc=allOrders.filter(o=>o.status==='Accepted');
+  const disp=allOrders.filter(o=>o.status==='Dispatched');
+  document.getElementById('k-p').textContent=pend.length;
+  document.getElementById('k-a').textContent=acc.length;
+  document.getElementById('k-d').textContent=disp.length;
+  const b=document.getElementById('bPending');
+  if(pend.length>0){b.textContent=pend.length;b.style.display='inline-flex';}else b.style.display='none';
+  document.getElementById('pendingList').innerHTML=pend.length?pend.map(oCard).join(''):'<div class="empty"><span class="empty-ico">🎉</span>All caught up! No pending orders.</div>';
+  document.getElementById('acceptedList').innerHTML=acc.length?acc.map(oCard).join(''):'<div class="empty"><span class="empty-ico">📭</span>No accepted orders yet.</div>';
+  document.getElementById('dispatchedList').innerHTML=disp.length?disp.map(oCard).join(''):'<div class="empty"><span class="empty-ico">📦</span>No dispatched orders yet.</div>';
+  renderAll();renderSalesmen();
 }
 
-function refreshAll(){
-  toast('🔄 Refreshing…','in');
-  loadAll();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RENDER ORDERS
-// ═══════════════════════════════════════════════════════════════
-function renderOrders(){
-  const q   = (document.getElementById('osearch')?.value||'').toLowerCase();
-  const smF = document.getElementById('smFilter')?.value||'';
-  const stF = document.getElementById('stFilter')?.value||'';
-
-  const filtered = allOrders.filter(o=>{
-    const mq = !q || o.oid.toLowerCase().includes(q) || o.bname.toLowerCase().includes(q)
-              || (o.smName||'').toLowerCase().includes(q);
-    return mq && (!smF||o.smId===smF) && (!stF||o.status===stF);
-  });
-
-  // Update counters
-  const pending    = allOrders.filter(o=>o.status==='Pending').length;
-  const accepted   = allOrders.filter(o=>o.status==='Accepted').length;
-  const dispatched = allOrders.filter(o=>o.status==='Dispatched').length;
-  document.getElementById('cnt-pending').textContent    = pending;
-  document.getElementById('cnt-accepted').textContent   = accepted;
-  document.getElementById('cnt-dispatched').textContent = dispatched;
-
-  const badge = document.getElementById('pendingBadge');
-  if (pending > 0){ badge.textContent=pending+' need action'; badge.style.display=''; }
-  else badge.style.display='none';
-
-  if (!filtered.length){
-    document.getElementById('ordersList').innerHTML =
-      '<div class="empty"><div class="empty-ico">📦</div>' +
-      (allOrders.length===0?'No orders yet for your account.':'No orders match the filter.')+'</div>';
-    return;
-  }
-
-  // Group by status for better UX: Pending first, then Accepted, then Dispatched, then Cancelled
-  const order = ['Pending','Accepted','Dispatched','Cancelled'];
-  const grouped = {};
-  order.forEach(s=>grouped[s]=[]);
-  filtered.forEach(o=>{ if (grouped[o.status]) grouped[o.status].push(o); else grouped['Cancelled'].push(o); });
-
-  let html = '';
-  order.forEach(status=>{
-    const grp = grouped[status];
-    if (!grp.length) return;
-    const tagCls = status==='Pending'?'pend':status==='Accepted'?'acc':status==='Dispatched'?'disp':'canc';
-    html += `<div style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;
-      letter-spacing:.1em;padding:4px 2px;margin-bottom:6px;margin-top:8px">
-      ${statusIcon(status)} ${status} <span class="stag ${tagCls}">${grp.length}</span></div>`;
-    grp.forEach(o=>{ html += buildOrderCard(o); });
-  });
-
-  document.getElementById('ordersList').innerHTML = html;
-}
-
-function buildOrderCard(o){
-  const stCls = statusClass(o.status);
-  const canAct = o.status !== 'Cancelled';
-  const isPending   = o.status === 'Pending';
-  const isAccepted  = o.status === 'Accepted';
-  const isDispatched= o.status === 'Dispatched';
-
-  let dispInfoHtml = '';
-  if (isDispatched || isAccepted){
-    if (o.invoiceNo || o.invoiceDate || o.acceptedBy){
-      dispInfoHtml = `<div class="dinfo">`;
-      if (o.acceptedBy)   dispInfoHtml += `<div class="dinfo-row"><span class="dinfo-lbl">Accepted by</span><span class="dinfo-val">${o.acceptedBy} ${o.acceptedAt?'· '+o.acceptedAt.slice(0,10):''}</span></div>`;
-      if (o.invoiceNo)    dispInfoHtml += `<div class="dinfo-row"><span class="dinfo-lbl">Invoice No</span><span class="dinfo-val">${o.invoiceNo}</span></div>`;
-      if (o.invoiceDate)  dispInfoHtml += `<div class="dinfo-row"><span class="dinfo-lbl">Invoice Date</span><span class="dinfo-val">${fmtDate(o.invoiceDate)}</span></div>`;
-      if (o.dispatchNotes)dispInfoHtml += `<div class="dinfo-row"><span class="dinfo-lbl">Notes</span><span class="dinfo-val" style="font-family:var(--f)">${o.dispatchNotes}</span></div>`;
-      dispInfoHtml += `</div>`;
-    }
-  }
-
-  // Items
-  let itemsHtml = '';
-  (o.items||[]).forEach((it,idx)=>{
-    const editable = isPending; // only editable when pending (during accept flow)
-    itemsHtml += `
-      <div class="item-row">
-        <div class="item-name">
-          <div class="item-nm">${it.name}</div>
-          <div class="item-cd">${it.code}</div>
-        </div>
-        <div class="item-qty">
-          <span style="font-size:10px;color:var(--mut)">Qty:</span>
-          <span style="font-family:var(--m);font-size:13px;font-weight:700;color:var(--a2)">${it.qty}</span>
-        </div>
-        <div class="item-total">${fi(it.total)}</div>
-      </div>`;
-  });
-
-  // Action buttons
-  let btnsHtml = '';
-  if (isPending){
-    btnsHtml = `
-      <div class="abtns">
-        <button class="abtn accept" onclick="openAccept('${o.oid}')">✅ Accept</button>
-        <button class="abtn cancel" onclick="openCancel('${o.oid}')">⛔ Cancel</button>
-      </div>`;
-  } else if (isAccepted){
-    btnsHtml = `
-      <div class="abtns">
-        <button class="abtn dispatch" onclick="openDispatch('${o.oid}',false)">🚚 Dispatch</button>
-        <button class="abtn edit"     onclick="openDispatch('${o.oid}',true)">✏️ Update Info</button>
-        <button class="abtn cancel"   onclick="openCancel('${o.oid}')">⛔ Cancel</button>
-      </div>`;
-  } else if (isDispatched){
-    btnsHtml = `
-      <div class="abtns">
-        <button class="abtn edit" onclick="openDispatch('${o.oid}',true)">✏️ Update Dispatch</button>
-      </div>`;
-  }
-
-  return `
-    <div class="ocard" id="card-${o.oid}">
-      <div class="ocard-head" onclick="toggleItems('${o.oid}')">
-        <div class="ocard-left">
-          <div class="ocard-oid">${o.oid} · <span class="sb ${stCls}">${statusIcon(o.status)} ${o.status}</span></div>
-          <div class="ocard-party">${o.bname}</div>
-          <div class="ocard-meta">👤 ${o.smName} &nbsp;·&nbsp; 📍 ${o.baddress||'—'}</div>
-          ${o.notes?`<div style="font-size:10px;color:var(--mut);margin-top:3px">📝 ${o.notes}</div>`:''}
-        </div>
-        <div class="ocard-right">
-          <div class="ocard-amt">${fi(o.gt)}</div>
-          <div class="ocard-date">${fmtDate(o.date)}</div>
-          <div style="font-size:18px;color:var(--mut);margin-top:4px">⌄</div>
+function oCard(o){
+  const sc=o.status.toLowerCase();
+  const ico=o.status==='Pending'?'⏳':o.status==='Accepted'?'✅':o.status==='Dispatched'?'📦':'✕';
+  const items=(o.items||[]).slice(0,2).map(it=>`${it.code}×${it.acceptedQty||it.qty}`).join(', ')+(o.items.length>2?` +${o.items.length-2}`:'');
+  const inv=o.status==='Dispatched'&&o.invoiceNo?`· ${o.invoiceNo}`:'';
+  return `<div class="ocard" onclick="openOrder('${o.oid}')">
+    <div class="ocard-top">
+      <div class="status-ico ${sc}">${ico}</div>
+      <div class="ocard-body">
+        <div class="ocard-r1"><span class="o-oid">${o.oid}</span><span class="o-amt">${fi(o.gt)}</span></div>
+        <div class="o-party">${o.bname}</div>
+        <div class="o-meta">
+          <span>👤 ${o.smName}</span>
+          <span>📅 ${fmtDate(o.date)}</span>
+          ${o.baddress?`<span>📍 ${o.baddress.slice(0,22)}…</span>`:''}
         </div>
       </div>
-      ${dispInfoHtml}
-      <div class="items-wrap" id="items-${o.oid}">
-        ${itemsHtml}
-        <div style="display:flex;justify-content:space-between;padding:6px 10px;
-          background:var(--s2);border-radius:7px;font-size:12px;font-weight:700;margin-bottom:8px">
-          <span style="color:var(--mut)">Grand Total</span>
-          <span style="font-family:var(--m);color:var(--a2)">${fi(o.gt)}</span>
-        </div>
-      </div>
-      ${btnsHtml}
-    </div>`;
+    </div>
+    <div class="ocard-foot">
+      <span style="color:var(--sub)">${items}</span>
+      <span><span class="stbadge ${sc}">${o.status}</span>${inv?`<span style="margin-left:5px;color:var(--sub);font-size:9px">${inv}</span>`:''}</span>
+    </div>
+  </div>`;
 }
 
-function toggleItems(oid){
-  const wrap = document.getElementById('items-'+oid);
-  if (wrap) wrap.classList.toggle('open');
-}
-
-// ═══════════════════════════════════════════════════════════════
-// ACCEPT FLOW
-// ═══════════════════════════════════════════════════════════════
-function openAccept(oid){
-  const o = allOrders.find(x=>x.oid===oid); if (!o) return;
-  modalOid = oid;
-
-  document.getElementById('acceptOvSub').textContent =
-    `${oid} · ${o.bname} · ${fi(o.gt)}`;
-
-  // Build editable items
-  let html = '';
-  (o.items||[]).forEach((it,i)=>{
-    html += `
-      <div class="item-row">
-        <div class="item-name">
-          <div class="item-nm">${it.name}</div>
-          <div class="item-cd">${it.code} · ₹${it.price}/unit</div>
-        </div>
-        <div class="item-qty">
-          <span style="font-size:10px;color:var(--mut)">Qty:</span>
-          <input class="qty-inp" type="number" min="0"
-            id="aqty-${i}" value="${it.qty}"
-            data-code="${it.code}" data-price="${it.price}" data-idx="${i}"
-            oninput="updateAcceptTotal()">
-        </div>
-        <div class="item-total" id="atotal-${i}">${fi(it.total)}</div>
-      </div>`;
+function renderAll(){
+  const q=(document.getElementById('asearch')?.value||'').toLowerCase();
+  const sf=document.getElementById('asmf')?.value||'';
+  const tf=document.getElementById('astf')?.value||'';
+  const f=allOrders.filter(o=>{
+    const mq=!q||o.oid.toLowerCase().includes(q)||o.bname.toLowerCase().includes(q)||(o.smName||'').toLowerCase().includes(q);
+    return mq&&(!sf||o.smId===sf)&&(!tf||o.status===tf);
   });
-  html += `
-    <div style="display:flex;justify-content:space-between;padding:8px 10px;
-      background:var(--s2);border-radius:8px;font-size:13px;font-weight:700;margin-bottom:10px">
-      <span style="color:var(--mut)">Grand Total</span>
-      <span style="font-family:var(--m);color:var(--a2)" id="acceptGrandTotal">${fi(o.gt)}</span>
-    </div>`;
-
-  document.getElementById('acceptItemsWrap').innerHTML = html;
-  document.getElementById('acceptNotes').value = '';
-  document.getElementById('acceptOv').classList.add('on');
+  document.getElementById('allCnt').textContent=f.length;
+  document.getElementById('allList').innerHTML=f.map(oCard).join('')||'<div class="empty"><span class="empty-ico">🔍</span>No orders found</div>';
 }
 
-function updateAcceptTotal(){
-  const o = allOrders.find(x=>x.oid===modalOid); if (!o) return;
-  let grand = 0;
-  (o.items||[]).forEach((it,i)=>{
-    const inp = document.getElementById('aqty-'+i);
-    if (!inp) return;
-    const qty = parseFloat(inp.value)||0;
-    const total = qty * (parseFloat(it.price)||0);
-    grand += total;
-    const el = document.getElementById('atotal-'+i);
-    if (el) el.textContent = fi(total);
-  });
-  const gt = document.getElementById('acceptGrandTotal');
-  if (gt) gt.textContent = fi(grand);
-}
-
-async function submitAccept(){
-  const o = allOrders.find(x=>x.oid===modalOid); if (!o) return;
-  const btn = document.getElementById('acceptBtn');
-  btn.disabled=true; btn.textContent='Accepting…';
-
-  // Collect modified items
-  const modifiedItems = (o.items||[]).map((it,i)=>{
-    const inp = document.getElementById('aqty-'+i);
-    return {code:it.code, qty:parseFloat(inp?.value||it.qty)||it.qty};
-  });
-
-  const hasChanges = modifiedItems.some((m,i)=>m.qty !== (o.items[i]?.qty));
-
-  try{
-    const res = await apiPost({
-      action:'distAcceptOrder',
-      orderId: modalOid,
-      distId:  distInfo.id,
-      distName:distInfo.name,
-      modifiedItems: hasChanges ? modifiedItems : []
-    });
-
-    if (res.ok){
-      // Update local state
-      const idx = allOrders.findIndex(x=>x.oid===modalOid);
-      if (idx>=0){
-        allOrders[idx].status = 'Accepted';
-        allOrders[idx].acceptedBy = distInfo.name;
-        allOrders[idx].acceptedAt = new Date().toISOString().slice(0,10);
-        if (hasChanges){
-          modifiedItems.forEach(m=>{
-            const it = allOrders[idx].items.find(x=>x.code===m.code);
-            if (it){ it.qty=m.qty; it.total=m.qty*(it.price||0); }
-          });
-          allOrders[idx].gt = allOrders[idx].items.reduce((s,it)=>s+(it.total||0),0);
-        }
-      }
-      toast('✅ Order accepted successfully','ok');
-      closeModal('acceptOv');
-      renderOrders();
-      renderDashboard();
-    } else {
-      toast('⚠️ '+res.error,'er');
-    }
-  }catch(e){
-    toast('⚠️ Network error','er');
-  }
-
-  btn.disabled=false; btn.textContent='✅ Accept Order';
-}
-
-// ═══════════════════════════════════════════════════════════════
-// DISPATCH FLOW
-// ═══════════════════════════════════════════════════════════════
-function openDispatch(oid, isEdit){
-  const o = allOrders.find(x=>x.oid===oid); if (!o) return;
-  modalOid = oid;
-  isDispatchEdit = isEdit;
-
-  document.getElementById('dispatchTitle').textContent =
-    isEdit ? '✏️ Update Dispatch Details' : '🚚 Dispatch Order';
-  document.getElementById('dispatchOvSub').textContent =
-    `${oid} · ${o.bname} · ${fi(o.gt)}`;
-
-  // Pre-fill if editing
-  document.getElementById('dInvoiceNo').value   = isEdit ? (o.invoiceNo||'') : '';
-  document.getElementById('dInvoiceDate').value = isEdit ? (o.invoiceDate||'') : '';
-  document.getElementById('dVehicle').value     = '';
-  document.getElementById('dNotes').value       = isEdit ? (o.dispatchNotes||'') : '';
-
-  // If today's date not set yet, default to today
-  if (!isEdit || !o.invoiceDate){
-    document.getElementById('dInvoiceDate').value = getToday();
-  }
-
-  document.getElementById('dispatchBtn').textContent = isEdit ? '💾 Update Details' : '🚚 Mark Dispatched';
-  document.getElementById('dispatchOv').classList.add('on');
-}
-
-async function submitDispatch(){
-  const invoiceNo   = document.getElementById('dInvoiceNo').value.trim();
-  const invoiceDate = document.getElementById('dInvoiceDate').value;
-  const vehicle     = document.getElementById('dVehicle').value.trim();
-  const notes       = document.getElementById('dNotes').value.trim();
-
-  if (!invoiceNo){ toast('Please enter Invoice Number','er'); return; }
-  if (!invoiceDate){ toast('Please enter Invoice Date','er'); return; }
-
-  const btn = document.getElementById('dispatchBtn');
-  btn.disabled=true; btn.textContent='Saving…';
-
-  const dispatchNotes = [vehicle?'Vehicle: '+vehicle:'', notes].filter(Boolean).join(' | ');
-
-  try{
-    const res = await apiPost({
-      action:   'distDispatch',
-      orderId:  modalOid,
-      distId:   distInfo.id,
-      distName: distInfo.name,
-      dispatch: {invoiceNo, invoiceDate, notes: dispatchNotes}
-    });
-
-    if (res.ok){
-      const idx = allOrders.findIndex(x=>x.oid===modalOid);
-      if (idx>=0){
-        allOrders[idx].status       = 'Dispatched';
-        allOrders[idx].invoiceNo    = invoiceNo;
-        allOrders[idx].invoiceDate  = invoiceDate;
-        allOrders[idx].dispatchNotes= dispatchNotes;
-        allOrders[idx].distAction   = 'Dispatched';
-      }
-      toast(isDispatchEdit?'💾 Dispatch details updated':'🚚 Order marked as dispatched','ok');
-      closeModal('dispatchOv');
-      renderOrders();
-      renderDashboard();
-    } else {
-      toast('⚠️ '+res.error,'er');
-    }
-  }catch(e){
-    toast('⚠️ Network error','er');
-  }
-
-  btn.disabled=false;
-  btn.textContent = isDispatchEdit ? '💾 Update Details' : '🚚 Mark Dispatched';
-}
-
-// ═══════════════════════════════════════════════════════════════
-// CANCEL FLOW
-// ═══════════════════════════════════════════════════════════════
-function openCancel(oid){
-  const o = allOrders.find(x=>x.oid===oid); if (!o) return;
-  modalOid = oid;
-  document.getElementById('cancelOvSub').textContent = `${oid} · ${o.bname} · ${fi(o.gt)}`;
-  document.getElementById('cancelReason').value = '';
-  document.getElementById('cancelOv').classList.add('on');
-}
-
-async function submitCancel(){
-  const reason = document.getElementById('cancelReason').value.trim();
-  if (!reason){ toast('Please provide a cancellation reason','er'); return; }
-
-  const btn = document.getElementById('cancelBtn');
-  btn.disabled=true; btn.textContent='Cancelling…';
-
-  try{
-    const res = await apiPost({
-      action:   'distCancelOrder',
-      orderId:  modalOid,
-      distId:   distInfo.id,
-      distName: distInfo.name,
-      reason
-    });
-
-    if (res.ok){
-      const idx = allOrders.findIndex(x=>x.oid===modalOid);
-      if (idx>=0){ allOrders[idx].status='Cancelled'; allOrders[idx].distAction='Cancelled by Dist'; }
-      toast('⛔ Order cancelled','er');
-      closeModal('cancelOv');
-      renderOrders();
-      renderDashboard();
-    } else {
-      toast('⚠️ '+res.error,'er');
-    }
-  }catch(e){
-    toast('⚠️ Network error','er');
-  }
-
-  btn.disabled=false; btn.textContent='⛔ Confirm Cancel';
-}
-
-// ═══════════════════════════════════════════════════════════════
-// DASHBOARD
-// ═══════════════════════════════════════════════════════════════
-function renderDashboard(){
-  const today = getToday();
-  const {m:curM, y:curY} = getCurMY();
-  const active = allOrders.filter(o=>o.status!=='Cancelled');
-
-  // Today
-  const todayOrd = active.filter(o=>o.date===today);
-  document.getElementById('d-todaySales').textContent  = fi(todayOrd.reduce((s,o)=>s+(o.gt||0),0));
-  document.getElementById('d-todayOrders').textContent = todayOrd.length;
-  document.getElementById('d-todayShops').textContent  = new Set(todayOrd.map(o=>o.bid)).size;
-
-  // MTD
-  const mtdOrd = active.filter(o=>isMTD(o.date));
-  document.getElementById('d-mtdSales').textContent = fi(mtdOrd.reduce((s,o)=>s+(o.gt||0),0));
-  document.getElementById('d-mtdShops').textContent = new Set(mtdOrd.map(o=>o.bid)).size;
-  document.getElementById('d-mtdLabel').textContent = MONTHS[curM-1]+' '+curY;
-
-  // YTD
-  const ytdOrd = active.filter(o=>isYTD(o.date));
-  document.getElementById('d-ytdSales').textContent = fi(ytdOrd.reduce((s,o)=>s+(o.gt||0),0));
-  document.getElementById('d-ytdShops').textContent = new Set(ytdOrd.map(o=>o.bid)).size;
-  document.getElementById('d-ytdLabel').textContent = curY;
-
-  // Pipeline
-  const pendAmt = allOrders.filter(o=>o.status==='Pending').reduce((s,o)=>s+(o.gt||0),0);
-  const accAmt  = allOrders.filter(o=>o.status==='Accepted').reduce((s,o)=>s+(o.gt||0),0);
-  document.getElementById('d-pendingAmt').textContent  = fi(pendAmt);
-  document.getElementById('d-acceptedAmt').textContent = fi(accAmt);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SALESMEN LIST
-// ═══════════════════════════════════════════════════════════════
 function renderSalesmen(){
-  const today = getToday();
-  const active = allOrders.filter(o=>o.status!=='Cancelled');
-
-  if (!mySalesmen.length){
-    document.getElementById('smList').innerHTML =
-      '<div class="empty"><div class="empty-ico">👤</div>No salesmen linked to your account.<br><span style="font-size:11px">Contact admin to link salesmen to '+distInfo.id+'</span></div>';
-    return;
-  }
-
-  document.getElementById('smList').innerHTML = mySalesmen.map((sm,i)=>{
-    const smOrd   = active.filter(o=>o.smId===sm.id);
-    const today_s = smOrd.filter(o=>o.date===today).reduce((s,o)=>s+(o.gt||0),0);
-    const pending = allOrders.filter(o=>o.smId===sm.id&&o.status==='Pending').length;
-    const init    = sm.name.split(' ').map(w=>w[0]).join('').slice(0,2);
-    const col     = SM_COLORS[i%SM_COLORS.length];
-    return `
-      <div class="smrow">
-        <div class="smav" style="background:linear-gradient(135deg,${col},${col}99)">${init}</div>
-        <div style="flex:1;min-width:0">
-          <div class="smnm">${sm.name}</div>
-          <div class="smid">${sm.id} · ${sm.territory||''}</div>
-          ${pending>0?`<div style="font-size:10px;color:var(--ylw);margin-top:2px">⏳ ${pending} order${pending>1?'s':''} pending action</div>`:''}
-        </div>
-        <div class="smst">
-          <div class="smstv">${fi(today_s)}</div>
-          <div class="smstl">Today</div>
-        </div>
-      </div>`;
-  }).join('');
+  const SMC=['#7c3aed','#3b82f6','#10b981','#f59e0b','#ec4899'];
+  document.getElementById('smList').innerHTML=allSalesmen.map((sm,i)=>{
+    const orders=allOrders.filter(o=>o.smId===sm.id&&o.status!=='Cancelled').length;
+    const pend=allOrders.filter(o=>o.smId===sm.id&&o.status==='Pending').length;
+    const init=sm.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+    return `<div class="smrow">
+      <div class="smav" style="background:${SMC[i%SMC.length]}">${init}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700">${sm.name}</div>
+        <div style="font-size:10px;color:var(--sub)">${sm.id} · ${sm.territory||'—'} · Target: ${fi(sm.target||50000)}/mo</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:var(--m);font-size:13px;font-weight:700;color:var(--a2)">${orders} orders</div>
+        ${pend>0?`<div style="font-size:10px;color:var(--org)">${pend} pending</div>`:'<div style="font-size:10px;color:var(--grn)">✓ Clear</div>'}
+      </div>
+    </div>`;
+  }).join('')||'<div class="empty">No salesmen linked to your account.<br>Set the Distributor ID in Master_Salesmen sheet.</div>';
 }
 
-// ═══════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', initLogin);
+// ── ORDER MODAL ──
+async function openOrder(oid){
+  const o=allOrders.find(x=>x.oid===oid);
+  if(!o) return;
+  curOrder=o;
+  ['sec-accept','sec-dispatch','sec-cancel','om-disp-info','audit-wrap'].forEach(id=>{
+    document.getElementById(id).style.display='none';
+  });
+  document.getElementById('om-title').textContent=o.oid;
+  document.getElementById('om-sub').textContent=`${o.bname} · ${fmtDate(o.date)} · ${o.smName}`;
+  const sc=o.status.toLowerCase();
+  let det=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+    <span class="stbadge ${sc}">${o.status}</span>
+    <span style="font-size:11px;color:var(--sub)">Placed by ${o.smName} (${o.smId})</span>
+  </div>`;
+  det+=`<div style="background:var(--s2);border-radius:10px;padding:10px 12px;margin-bottom:11px">`;
+  (o.items||[]).forEach(it=>{
+    const aq=it.acceptedQty!==undefined?it.acceptedQty:it.qty;
+    const mod=aq!=it.qty;
+    det+=`<div class="ir">
+      <span class="irl">${it.name} <span style="font-size:9px;font-family:var(--m);color:var(--a2)">${it.code}</span></span>
+      <span class="irv" style="font-family:var(--m)">
+        ${mod?`<span style="text-decoration:line-through;color:var(--sub);font-size:10px">${it.qty}</span> `:''}${aq} × ₹${it.price} = ${fi(aq*it.price)}
+      </span>
+    </div>`;
+  });
+  det+=`<div class="ir" style="border-top:2px solid var(--bdr);margin-top:5px;padding-top:8px">
+    <span style="font-weight:700">Grand Total</span>
+    <span style="font-family:var(--m);font-size:16px;font-weight:800;color:var(--grn)">${fi(o.gt)}</span>
+  </div></div>`;
+  if(o.bphone||o.baddress) det+=`<div style="font-size:11px;color:var(--sub);margin-bottom:10px">${o.bphone?`📱 ${o.bphone}<br>`:''}${o.baddress?`📍 ${o.baddress}`:''}</div>`;
+  if(o.notes) det+=`<div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--a2);margin-bottom:8px">📝 ${o.notes}</div>`;
+  document.getElementById('om-details').innerHTML=det;
+  // Dispatch info
+  if(o.status==='Dispatched'&&(o.invoiceNo||o.dispatchDate)){
+    let di=`<div class="disp-box"><div class="disp-title">📦 Dispatch Details</div>`;
+    if(o.invoiceNo) di+=`<div class="disp-row"><span class="disp-lbl">Invoice No</span><span class="disp-val">${o.invoiceNo}</span></div>`;
+    if(o.invoiceDate) di+=`<div class="disp-row"><span class="disp-lbl">Invoice Date</span><span class="disp-val">${fmtDate(o.invoiceDate)}</span></div>`;
+    if(o.dispatchDate) di+=`<div class="disp-row"><span class="disp-lbl">Dispatch Date</span><span class="disp-val">${fmtDate(o.dispatchDate)}</span></div>`;
+    if(o.transport) di+=`<div class="disp-row"><span class="disp-lbl">Transport</span><span class="disp-val">${o.transport}</span></div>`;
+    if(o.trackingNo) di+=`<div class="disp-row"><span class="disp-lbl">Tracking/LR</span><span class="disp-val">${o.trackingNo}</span></div>`;
+    if(o.dispatchNotes) di+=`<div class="disp-row"><span class="disp-lbl">Notes</span><span class="disp-val">${o.dispatchNotes}</span></div>`;
+    di+='</div>';
+    document.getElementById('om-disp-info').innerHTML=di;
+    document.getElementById('om-disp-info').style.display='block';
+  }
+  // Actions
+  let acts='';
+  if(o.status==='Pending'){
+    acts=`<button class="btn success" onclick="showAccept()">✅ Accept / Adjust</button>
+    <button class="btn danger" onclick="showSec('sec-cancel')">⛔ Cancel</button>`;
+  }else if(o.status==='Accepted'){
+    acts=`<button class="btn primary" onclick="showDispatch(false)">📦 Add Dispatch Details</button>
+    <button class="btn warn" onclick="showAccept()">✏️ Modify Qty</button>
+    <button class="btn danger" onclick="showSec('sec-cancel')">⛔ Cancel</button>`;
+  }else if(o.status==='Dispatched'){
+    acts=`<button class="btn warn" onclick="showDispatch(true)">✏️ Update Dispatch</button>`;
+  }
+  acts+=`<button class="btn ghost" onclick="document.getElementById('audit-wrap').style.display=document.getElementById('audit-wrap').style.display==='none'?'block':'none'">📋 History</button>`;
+  document.getElementById('om-actions').innerHTML=acts;
+  document.getElementById('orderOv').classList.add('on');
+  loadAudit(oid);
+}
 
-// Auto-refresh every 60 seconds
-setInterval(()=>{ if (distInfo) loadAll(); }, 60000);
+async function loadAudit(oid){
+  try{
+    const r=await fetch(`${SCRIPT_URL}?action=auditLog&orderId=${oid}&t=${Date.now()}`);
+    const d=await r.json();
+    document.getElementById('audit-body').innerHTML=(d.logs||[]).length
+      ?(d.logs||[]).map(l=>`<div class="arow"><span class="atag ${l.action}">${l.action.replace('_',' ')}</span>${l.details||''}<div style="color:var(--mut);font-size:10px;margin-top:2px">${l.actor} · ${fmtTs(l.ts)}</div></div>`).join('')
+      :'<div style="text-align:center;padding:12px;color:var(--sub);font-size:11px">No history yet</div>';
+  }catch(e){}
+}
+
+function closeModal(){document.getElementById('orderOv').classList.remove('on');}
+function hideSec(){['sec-accept','sec-dispatch','sec-cancel'].forEach(id=>document.getElementById(id).style.display='none');}
+function showSec(id){hideSec();document.getElementById(id).style.display='block';setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth'}),80);}
+
+// Accept
+function showAccept(){
+  hideSec();document.getElementById('sec-accept').style.display='block';
+  const o=curOrder;
+  let h='';
+  (o.items||[]).forEach(it=>{
+    const aq=it.acceptedQty!==undefined?it.acceptedQty:it.qty;
+    h+=`<div class="irow">
+      <div class="iinfo"><div class="iname">${it.name}</div><div class="icode">${it.code} · ₹${it.price}/unit</div><div class="iorig">Ordered: ${it.qty}</div></div>
+      <input type="number" class="qty-in" id="aq-${it.code}" value="${aq}" min="0" oninput="updTotal()">
+      <div class="itotal" id="at-${it.code}">${fi(aq*it.price)}</div>
+    </div>`;
+  });
+  document.getElementById('accept-items').innerHTML=h;
+  document.getElementById('accept-notes').value='';
+  updTotal();
+  setTimeout(()=>document.getElementById('sec-accept').scrollIntoView({behavior:'smooth'}),80);
+}
+function updTotal(){
+  const o=curOrder;if(!o)return;
+  let tot=0;
+  (o.items||[]).forEach(it=>{
+    const v=parseFloat(document.getElementById('aq-'+it.code)?.value)||0;
+    tot+=v*it.price;
+    const el=document.getElementById('at-'+it.code);
+    if(el)el.textContent=fi(v*it.price);
+  });
+  document.getElementById('accept-total').textContent=fi(tot);
+}
+async function submitAccept(){
+  const o=curOrder;if(!o)return;
+  const qs={};
+  (o.items||[]).forEach(it=>{const v=parseFloat(document.getElementById('aq-'+it.code)?.value);if(!isNaN(v))qs[it.code]=v;});
+  const notes=document.getElementById('accept-notes').value;
+  const btn=document.querySelector('#sec-accept .btn.success');
+  btn.disabled=true;btn.textContent='Accepting…';
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'distModifyOrder',orderId:o.oid,distId,distName,acceptedQtys:qs,notes})});
+    const idx=allOrders.findIndex(x=>x.oid===o.oid);
+    if(idx>=0){allOrders[idx].status='Accepted';(allOrders[idx].items||[]).forEach(it=>{if(qs[it.code]!==undefined)it.acceptedQty=qs[it.code];});}
+    toast('✅ Order accepted!','ok');closeModal();renderViews();
+  }catch(e){toast('⚠️ Error — retry','er');}
+  btn.disabled=false;btn.textContent='✅ Accept Order';
+}
+
+// Dispatch
+function showDispatch(isUpdate){
+  dispMode=isUpdate?'update':'new';
+  document.getElementById('disp-sec-title').textContent=isUpdate?'✏️ Update Dispatch Details':'📦 Dispatch Details';
+  document.getElementById('dispBtn').textContent=isUpdate?'💾 Update Dispatch':'📦 Confirm Dispatch';
+  hideSec();document.getElementById('sec-dispatch').style.display='block';
+  const today=new Date().toISOString().slice(0,10);
+  const o=curOrder;
+  if(isUpdate&&o){
+    document.getElementById('d-inv').value=o.invoiceNo||'';
+    document.getElementById('d-invdate').value=o.invoiceDate||today;
+    document.getElementById('d-dispdate').value=o.dispatchDate||today;
+    document.getElementById('d-transport').value=o.transport||'';
+    document.getElementById('d-tracking').value=o.trackingNo||'';
+    document.getElementById('d-notes').value=o.dispatchNotes||'';
+  }else{
+    ['d-inv','d-transport','d-tracking','d-notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('d-invdate').value=today;
+    document.getElementById('d-dispdate').value=today;
+  }
+  setTimeout(()=>document.getElementById('sec-dispatch').scrollIntoView({behavior:'smooth'}),80);
+}
+async function submitDispatch(){
+  const o=curOrder;if(!o)return;
+  const inv=document.getElementById('d-inv').value.trim();
+  if(!inv){toast('Invoice number required','er');return;}
+  const dispatch={
+    invoiceNo:inv,
+    invoiceDate:document.getElementById('d-invdate').value,
+    dispatchDate:document.getElementById('d-dispdate').value,
+    transport:document.getElementById('d-transport').value.trim(),
+    trackingNo:document.getElementById('d-tracking').value.trim(),
+    notes:document.getElementById('d-notes').value.trim()
+  };
+  const btn=document.getElementById('dispBtn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const action=dispMode==='update'?'updateDispatch':'saveDispatch';
+    await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action,orderId:o.oid,distId,distName,dispatch})});
+    const idx=allOrders.findIndex(x=>x.oid===o.oid);
+    if(idx>=0){allOrders[idx].status='Dispatched';Object.assign(allOrders[idx],{invoiceNo:dispatch.invoiceNo,invoiceDate:dispatch.invoiceDate,transport:dispatch.transport,trackingNo:dispatch.trackingNo,dispatchDate:dispatch.dispatchDate,dispatchNotes:dispatch.notes});}
+    toast(dispMode==='update'?'✏️ Dispatch updated!':'📦 Order dispatched!','ok');
+    closeModal();renderViews();
+  }catch(e){toast('⚠️ Error — retry','er');}
+  btn.disabled=false;btn.textContent=dispMode==='update'?'💾 Update Dispatch':'📦 Confirm Dispatch';
+}
+
+// Cancel
+async function submitCancel(){
+  const o=curOrder;if(!o)return;
+  const reason=document.getElementById('cancel-reason').value.trim();
+  const btn=document.querySelector('#sec-cancel .btn.danger');
+  btn.disabled=true;btn.textContent='Cancelling…';
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'distCancelOrder',orderId:o.oid,distId,distName,reason})});
+    const idx=allOrders.findIndex(x=>x.oid===o.oid);
+    if(idx>=0)allOrders[idx].status='Cancelled';
+    toast('⛔ Order cancelled','er');closeModal();renderViews();
+  }catch(e){toast('⚠️ Error — retry','er');}
+  btn.disabled=false;btn.textContent='⛔ Confirm Cancel';
+}
+
+setInterval(()=>{if(distId)loadData();},60000);
 </script>
 </body>
 </html>
