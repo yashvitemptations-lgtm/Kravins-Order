@@ -543,9 +543,10 @@ function getIndianDate() {
 }
 
 // ═══ CONFIG ═══════════════════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWom2LgZbHfINY31GTmZOYdVva_rWxES-xrmVCDZ_hxolGf6SSxt0P_UIPDi-MaOOg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz70y3yn3VHlpV1yFrLP0l5L3CduXtDoU0tl_TbBhzCnXQZlIrNoEm4DHgZkmbVIabg/exec';
 const SID   = 'SM003';  // Will be replaced per salesman
 const SNAME = 'Satish';  // Will be replaced per salesman
+const DIST_ID = 'D001'; // Distributor this salesman belongs to
 const LK = {b:`B_${SID}`, o:`O_${SID}`};
 let lastDashData = null; // Store latest dashboard data for KPI modals
 const EDIT_WINDOW_MINS = 30; // Edit/cancel window for salesmen
@@ -559,9 +560,16 @@ function getBuyers(){return LS.get(LK.b)||[];}
 function saveBuyers(b){LS.set(LK.b,b);}
 function getOrders(){return LS.get(LK.o)||[];}
 function saveOrders(o){LS.set(LK.o,o);}
-function nextOID(){const orders=getOrders();if(!orders.length)return 'ORD001';
-  const n=orders.map(o=>parseInt(o.oid.replace('ORD',''))||0);
-  return 'ORD'+String(Math.max(...n)+1).padStart(3,'0');}
+function nextOID(){
+  // Use salesman-prefixed IDs to prevent collision across salesmen
+  const prefix=SID+'-';
+  const localOrds=getOrders().map(o=>o.oid);
+  const serverOrds=(lastDashData&&lastDashData.allOrders)?lastDashData.allOrders.map(o=>o.oid):[];
+  const allOids=[...new Set([...localOrds,...serverOrds])].filter(o=>o.startsWith(prefix));
+  if(!allOids.length)return prefix+'001';
+  const nums=allOids.map(o=>parseInt(o.replace(prefix,''))||0);
+  return prefix+String(Math.max(...nums)+1).padStart(3,'0');
+}
 function nextBID(){const buyers=getBuyers();
   const n=buyers.map(b=>parseInt(b.id.replace('B',''))||0);
   return 'B'+String(Math.max(...n)+1).padStart(3,'0');}
@@ -846,6 +854,7 @@ async function submitOrder(){
     items,gt:items.reduce((s,i)=>s+i.total,0),
     tc:items.reduce((s,i)=>s+i.commAmt,0),
     notes:document.getElementById('onotes').value.trim(),
+    distributor:DIST_ID,
     status:'Pending',at:new Date().toISOString(),synced:false
   };
   
