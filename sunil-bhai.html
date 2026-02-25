@@ -584,6 +584,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadBuyers();
   addLine();
   loadDashboard();
+  autoSyncPending();
 });
 
 // ═══ TABS ═════════════════════════════════════════════════════════════
@@ -888,7 +889,7 @@ async function submitOrder(){
   
   btn.disabled=false;btn.textContent='✅  Submit Order';
   clearForm(true);
-  setTimeout(()=>{go('history');loadDashboard();},1200);
+  setTimeout(()=>{go('history');loadDashboard();},3000);
 }
 
 // ═══ CLEAR ════════════════════════════════════════════════════════════
@@ -948,6 +949,7 @@ function renderHistory(){
     const d=dateStr?new Date(dateStr).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'-';
     const isCancelled=o.status==='Cancelled';
     const items=o.items||[];
+    const syncBadge=o.synced===false?`<span style="font-size:9px;padding:2px 6px;border-radius:10px;background:rgba(234,179,8,.12);color:var(--ylw);border:1px solid rgba(234,179,8,.2);cursor:pointer" onclick="event.stopPropagation();retrySyncOrder('${o.oid}')">⚠️ Sync</span>`:'';
     return `<div class="hi" onclick="openModal('${o.oid}')" style="${isCancelled?'opacity:.6':''}">
       <div class="hh"><span class="hoid">${o.oid}</span><span class="hd">${d}</span></div>
       <div class="hb">${o.bname}</div>
@@ -955,6 +957,7 @@ function renderHistory(){
         <span>${items.length} item${items.length>1?'s':''}</span>
         <span style="color:${isCancelled?'var(--red)':'var(--a2)'};font-family:var(--m)">₹${(o.gt||0).toLocaleString('en-IN')}</span>
         <span class="sb ${o.status==='Dispatched'?'sd':isCancelled?'sc':'sp'}">${o.status}</span>
+        ${syncBadge}
       </div>
     </div>`;
   }).join('');
@@ -1134,6 +1137,43 @@ async function addParty(){
   fillBuyerSel();
   toast(`✅ ${newB.name} added as ${newB.id}`,'ok');
   setTimeout(()=>{go('order');document.getElementById('bsel').value=newB.id;onBuyer();},1500);
+}
+
+
+// ═══ SYNC RETRY ════════════════════════════════════════════════════════
+async function retrySyncOrder(oid){
+  const orders=getOrders();
+  const o=orders.find(x=>x.oid===oid);
+  if(!o||o.synced){return;}
+  toast('🔄 Retrying sync…','in');
+  try{
+    const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'submitOrder',order:o})});
+    const res=await r.json();
+    if(res.ok){
+      const idx=orders.findIndex(x=>x.oid===oid);
+      if(idx>=0){orders[idx].synced=true;saveOrders(orders);}
+      toast(`✅ ${oid} synced!`,'ok');
+      renderHistory();
+      loadDashboard();
+    }else{toast('❌ Sync failed — will retry later','er');}
+  }catch(e){toast('❌ No connection — will retry later','er');}
+}
+
+async function autoSyncPending(){
+  const orders=getOrders().filter(o=>o.synced===false&&o.status!=='Cancelled');
+  for(const o of orders){
+    try{
+      const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify({action:'submitOrder',order:o})});
+      const res=await r.json();
+      if(res.ok){
+        const all=getOrders();
+        const idx=all.findIndex(x=>x.oid===o.oid);
+        if(idx>=0){all[idx].synced=true;saveOrders(all);}
+      }
+    }catch(e){break;}
+  }
 }
 
 // ═══ TOAST ════════════════════════════════════════════════════════════
