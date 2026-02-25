@@ -467,6 +467,7 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <select class="fi" id="ostf" onchange="renderOrders()">
         <option value="">All Status</option>
         <option value="Pending">Pending</option>
+        <option value="Accepted">Accepted</option>
         <option value="Dispatched">Dispatched</option>
         <option value="Cancelled">Cancelled</option>
       </select>
@@ -508,7 +509,7 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div id="editSec" style="display:none;margin-top:10px">
       <div style="font-size:10px;color:var(--mut);margin-bottom:5px;text-transform:uppercase">Update Status</div>
       <select id="editStatus" class="fi" style="width:100%;margin-bottom:8px">
-        <option>Pending</option><option>Dispatched</option><option>Cancelled</option>
+        <option>Pending</option><option>Accepted</option><option>Dispatched</option><option>Cancelled</option>
       </select>
       <div style="font-size:10px;color:var(--mut);margin-bottom:4px;text-transform:uppercase">Notes</div>
       <textarea id="editNotes" class="fi" style="width:100%;resize:none;min-height:58px"></textarea>
@@ -698,12 +699,11 @@ function goDistInd(distId){
 // ═══════════════════════════════════════════════════════
 async function loadAll(){
   try{
-    const [r1,r2,r3,r4,r5] = await Promise.all([
+    const [r1,r2,r3,r4] = await Promise.all([
       fetch(`${SCRIPT_URL}?action=orders&t=${Date.now()}`),
       fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`),
       fetch(`${SCRIPT_URL}?action=salesmen&t=${Date.now()}`),
-      fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`),
-      fetch(`${SCRIPT_URL}?action=dashboard&t=${Date.now()}`)
+      fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`)
     ]);
     const [od,pd,sd,dd] = await Promise.all([r1.json(),r2.json(),r3.json(),r4.json()]);
 
@@ -722,6 +722,8 @@ async function loadAll(){
     renderOverview();
     renderAllSalesmen();
     renderAllDistributors();
+    renderOrders();
+    renderParties();
 
     const t=new Date(); document.getElementById('lastSync').textContent=
       'Updated '+t.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
