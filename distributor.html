@@ -345,8 +345,11 @@ function fmtTs(s){if(!s)return '—';try{return new Date(s).toLocaleDateString('
 let _tt;function toast(m,t='ok'){const el=document.getElementById('toast');clearTimeout(_tt);el.textContent=m;el.className=`toast ${t} on`;_tt=setTimeout(()=>el.classList.remove('on'),2800);}
 
 document.addEventListener('DOMContentLoaded',()=>{
-  const s=localStorage.getItem('kravins_dist_id');
-  if(s){distId=s;initApp();}
+  // Support ?dist=D001 URL param for auto-login (e.g. from admin console)
+  const urlParam = new URLSearchParams(window.location.search).get('dist');
+  const stored = localStorage.getItem('kravins_dist_id');
+  const id = urlParam || stored;
+  if(id){distId=id; if(urlParam) localStorage.setItem('kravins_dist_id',urlParam); initApp();}
   const today=new Date().toISOString().slice(0,10);
   document.getElementById('d-invdate').value=today;
   document.getElementById('d-dispdate').value=today;
