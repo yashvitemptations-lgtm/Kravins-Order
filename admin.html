@@ -548,7 +548,7 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 // ═══════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWom2LgZbHfINY31GTmZOYdVva_rWxES-xrmVCDZ_hxolGf6SSxt0P_UIPDi-MaOOg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz70y3yn3VHlpV1yFrLP0l5L3CduXtDoU0tl_TbBhzCnXQZlIrNoEm4DHgZkmbVIabg/exec';
 const PALETTE = ['#3b82f6','#8b5cf6','#22c55e','#f97316','#eab308','#ec4899','#14b8a6','#f43f5e','#06b6d4','#84cc16'];
 const SM_PALETTE = ['#3b82f6','#8b5cf6','#22c55e','#f97316','#eab308','#ec4899','#14b8a6','#f43f5e'];
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -707,10 +707,14 @@ async function loadAll(){
     ]);
     const [od,pd,sd,dd] = await Promise.all([r1.json(),r2.json(),r3.json(),r4.json()]);
 
-    if(od.ok) allOrders=(od.orders||[]).map(o=>({...o,date:normDate(o.date)}));
-    if(pd.ok) allParties=pd.parties||[];
     if(sd.ok) allSalesmen=sd.salesmen||[];
     if(dd.ok) allDistributors=dd.distributors||[];
+    if(pd.ok) allParties=pd.parties||[];
+    if(od.ok) allOrders=(od.orders||[]).map(o=>{
+      // Normalize smName from allSalesmen lookup (fixes corrupted rows where smId/smName are swapped)
+      const sm = allSalesmen.find(s=>s.id===o.smId);
+      return {...o, date:normDate(o.date), smName: sm ? sm.name : (o.smName||o.smId||'')};
+    });
 
     // Populate SM dropdowns
     const smOpts=allSalesmen.map(s=>`<option value="${s.id}">${s.id} · ${s.name}</option>`).join('');
