@@ -542,9 +542,10 @@ function getIndianDate() {
 }
 
 // ═══ CONFIG ═══════════════════════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWom2LgZbHfINY31GTmZOYdVva_rWxES-xrmVCDZ_hxolGf6SSxt0P_UIPDi-MaOOg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz70y3yn3VHlpV1yFrLP0l5L3CduXtDoU0tl_TbBhzCnXQZlIrNoEm4DHgZkmbVIabg/exec';
 const SID   = 'SM001';  // Will be replaced per salesman
 const SNAME = 'Sunil Bhai';  // Will be replaced per salesman
+const DIST_ID = 'D001'; // Distributor this salesman belongs to
 const LK = {b:`B_${SID}`, o:`O_${SID}`};
 let lastDashData = null; // Store latest dashboard data for KPI modals
 const EDIT_WINDOW_MINS = 30; // Edit/cancel window for salesmen
@@ -559,17 +560,24 @@ function saveBuyers(b){LS.set(LK.b,b);}
 function getOrders(){return LS.get(LK.o)||[];}
 function saveOrders(o){LS.set(LK.o,o);}
 async function getNextOID(){
+  // Use salesman-prefixed IDs to prevent collision across salesmen
+  const prefix=SID+'-';
   try{
-    const r=await fetch(`${SCRIPT_URL}?action=orders&t=${Date.now()}`);
+    const r=await fetch(`${SCRIPT_URL}?action=orders&smId=${SID}&t=${Date.now()}`);
     const d=await r.json();
-    if(d.ok&&d.orders&&d.orders.length){
-      const nums=d.orders.map(o=>parseInt((o.oid||'').replace('ORD',''))||0);
-      const localNums=getOrders().map(o=>parseInt((o.oid||'').replace('ORD',''))||0);
-      const max=Math.max(...nums,...localNums,0);
-      return 'ORD'+String(max+1).padStart(3,'0');
+    const serverOids=(d.ok&&d.orders)?d.orders.map(o=>o.oid):[];
+    const localOids=getOrders().map(o=>o.oid);
+    const allOids=[...new Set([...serverOids,...localOids])].filter(o=>o.startsWith(prefix));
+    if(allOids.length){
+      const nums=allOids.map(o=>parseInt(o.replace(prefix,''))||0);
+      return prefix+String(Math.max(...nums)+1).padStart(3,'0');
     }
   }catch(e){}
-  return nextOID();
+  // Fallback to local only
+  const localOids=getOrders().filter(o=>o.oid.startsWith(prefix)).map(o=>o.oid);
+  if(!localOids.length)return prefix+'001';
+  const nums=localOids.map(o=>parseInt(o.replace(prefix,''))||0);
+  return prefix+String(Math.max(...nums)+1).padStart(3,'0');
 }
 function nextBID(){const buyers=getBuyers();
   const n=buyers.map(b=>parseInt(b.id.replace('B',''))||0);
@@ -863,6 +871,7 @@ async function submitOrder(){
     items,gt:items.reduce((s,i)=>s+i.total,0),
     tc:items.reduce((s,i)=>s+i.commAmt,0),
     notes:document.getElementById('onotes').value.trim(),
+    distributor:DIST_ID,
     status:'Pending',at:new Date().toISOString(),synced:false
   };
   
@@ -919,7 +928,7 @@ function shareWA(){
   const b=getBuyers().find(x=>x.id===bid);
   const items=fl.map(ln=>{const p=window.PRODS.find(x=>x.code===ln.code);
     return {...p,qty:ln.qty,total:p.price*ln.qty,commAmt:p.price*ln.qty*p.comm};});
-  const tmp={oid:nextOID(),date:new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"})).toISOString().split('T')[0],
+  const tmp={oid:'PREVIEW',date:new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"})).toISOString().split('T')[0],
     bid,bname:b?.name||bid,bphone:b?.phone||'',baddress:b?.address||'',items,
     gt:items.reduce((s,i)=>s+i.total,0),tc:items.reduce((s,i)=>s+i.commAmt,0),
     notes:document.getElementById('onotes').value};
