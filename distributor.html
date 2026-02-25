@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#050a14">
+<title>Distributor Portal · Kravins</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050a14;--s1:#0a1222;--s2:#0f1a2e;--s3:#152238;--bdr:#1e3152;
+  --acc:#a855f7;--a2:#c084fc;--a3:#7c3aed;
+  --grn:#22c55e;--org:#f97316;--red:#ef4444;--ylw:#eab308;--blu:#3b82f6;
+  --txt:#f1f5f9;--mut:#64748b;
+  --f:'Outfit',sans-serif;--m:'JetBrains Mono',monospace
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--f);background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+/* ── Login Screen ── */
+#loginScreen{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:24px;
+  background:radial-gradient(ellipse at 30% 20%, rgba(124,58,237,.15) 0%, transparent 60%),
+             radial-gradient(ellipse at 70% 80%, rgba(168,85,247,.1) 0%, transparent 60%),
+             var(--bg)
+}
+.login-logo{
+  width:72px;height:72px;border-radius:20px;
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;margin-bottom:20px;
+  box-shadow:0 8px 32px rgba(124,58,237,.4)
+}
+.login-title{font-size:24px;font-weight:800;margin-bottom:6px;text-align:center}
+.login-sub{font-size:13px;color:var(--mut);margin-bottom:32px;text-align:center}
+.login-card{
+  width:100%;max-width:360px;background:var(--s1);
+  border:1.5px solid var(--bdr);border-radius:18px;padding:24px
+}
+.lbl{font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;
+  letter-spacing:.05em;margin-bottom:6px}
+.fi{width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:10px;
+  padding:11px 13px;font-family:var(--f);font-size:13px;color:var(--txt);outline:none;
+  -webkit-appearance:none;transition:border-color .2s}
+.fi:focus{border-color:var(--acc)}
+select.fi{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath fill='%2364748b' d='M5 7L0 2h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:30px
+}
+.btn{
+  width:100%;padding:13px;border:none;border-radius:10px;
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  color:#fff;font-family:var(--f);font-size:14px;font-weight:700;
+  cursor:pointer;margin-top:16px;transition:all .15s;
+  box-shadow:0 4px 16px rgba(124,58,237,.3)
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.4)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.login-hint{
+  margin-top:16px;padding:11px 13px;background:rgba(168,85,247,.08);
+  border:1px solid rgba(168,85,247,.2);border-radius:9px;
+  font-size:11px;color:var(--mut);line-height:1.6
+}
+
+/* ── Main App ── */
+#mainApp{display:none}
+.hdr{
+  background:linear-gradient(135deg,#0a1222,#0f1a2e);
+  padding:14px 16px 0;border-bottom:1px solid var(--bdr);
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)
+}
+.htop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hlogo{display:flex;align-items:center;gap:10px}
+.hav{
+  width:40px;height:40px;border-radius:11px;
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  display:flex;align-items:center;justify-content:center;font-size:17px
+}
+.htitle{font-size:15px;font-weight:700}
+.hsub{font-size:10px;color:var(--a2);margin-top:1px;font-family:var(--m)}
+.hright{display:flex;align-items:center;gap:7px}
+.hbtn{
+  display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:16px;
+  font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:var(--f)
+}
+.hbtn.refresh{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:var(--grn)}
+.hbtn.logout{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex-shrink:0;padding:10px 14px;font-size:11px;font-weight:600;
+  color:var(--mut);border-bottom:2px solid transparent;cursor:pointer;
+  transition:all .2s;white-space:nowrap
+}
+.tab.on{color:var(--a2);border-bottom-color:var(--acc)}
+
+/* ── Pages ── */
+.scr{padding-bottom:50px}
+.page{display:none;animation:fadein .25s}.page.on{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sec{padding:12px 15px 6px}
+.sl{
+  font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mut);margin-bottom:10px;display:flex;align-items:center;gap:8px
+}
+.sl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+
+/* ── KPI Cards ── */
+.kg3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.kg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.kcard{
+  border-radius:13px;padding:12px 11px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--s2),var(--s1));border:1.5px solid var(--bdr)
+}
+.kcard::before{
+  content:'';position:absolute;top:-15px;right:-15px;width:65px;height:65px;
+  border-radius:50%;filter:blur(26px);opacity:.2
+}
+.kcard.pu{border-color:rgba(168,85,247,.3)}.kcard.pu::before{background:var(--acc)}
+.kcard.gr{border-color:rgba(34,197,94,.25)}.kcard.gr::before{background:var(--grn)}
+.kcard.or{border-color:rgba(249,115,22,.25)}.kcard.or::before{background:var(--org)}
+.kcard.bl{border-color:rgba(59,130,246,.25)}.kcard.bl::before{background:var(--blu)}
+.kcard.yl{border-color:rgba(234,179,8,.25)}.kcard.yl::before{background:var(--ylw)}
+.kico{font-size:17px;margin-bottom:5px}
+.kval{font-size:16px;font-weight:800;font-family:var(--m);line-height:1.1;margin-bottom:2px}
+.klbl{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+
+/* ── Order Cards ── */
+.ocard{
+  background:var(--s1);border:1.5px solid var(--bdr);border-radius:14px;
+  margin-bottom:10px;overflow:hidden;transition:all .15s
+}
+.ocard:active{transform:scale(.99)}
+.ocard-head{
+  padding:12px 13px;cursor:pointer;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px
+}
+.ocard-left{flex:1;min-width:0}
+.ocard-oid{font-family:var(--m);font-size:11px;color:var(--a2);font-weight:600;margin-bottom:3px}
+.ocard-party{font-size:14px;font-weight:700;margin-bottom:2px}
+.ocard-meta{font-size:11px;color:var(--mut)}
+.ocard-right{text-align:right;flex-shrink:0}
+.ocard-amt{font-family:var(--m);font-size:15px;font-weight:800;color:var(--grn)}
+.ocard-date{font-size:10px;color:var(--mut);margin-top:2px}
+
+/* Status badges */
+.sb{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:14px;font-size:9px;font-weight:700}
+.s-pending  {background:rgba(234,179,8,.12);color:var(--ylw)}
+.s-accepted {background:rgba(168,85,247,.15);color:var(--a2)}
+.s-dispatched{background:rgba(34,197,94,.12);color:var(--grn)}
+.s-cancelled{background:rgba(239,68,68,.12);color:var(--red)}
+
+/* ── Action Buttons ── */
+.abtns{display:flex;gap:7px;padding:0 13px 12px;flex-wrap:wrap}
+.abtn{
+  flex:1;min-width:90px;padding:10px 8px;border-radius:9px;
+  font-family:var(--f);font-size:12px;font-weight:700;
+  cursor:pointer;border:none;transition:all .15s;text-align:center
+}
+.abtn:disabled{opacity:.35;cursor:not-allowed}
+.abtn.accept {background:rgba(168,85,247,.18);color:var(--a2);border:1.5px solid rgba(168,85,247,.35)}
+.abtn.dispatch{background:rgba(34,197,94,.15);color:var(--grn);border:1.5px solid rgba(34,197,94,.3)}
+.abtn.cancel {background:rgba(239,68,68,.12);color:var(--red);border:1.5px solid rgba(239,68,68,.25)}
+.abtn.edit   {background:rgba(59,130,246,.12);color:var(--blu);border:1.5px solid rgba(59,130,246,.25)}
+
+/* ── Order Items ── */
+.items-wrap{padding:0 13px 12px;display:none}
+.items-wrap.open{display:block}
+.item-row{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;
+  background:var(--s2);border-radius:8px;margin-bottom:6px
+}
+.item-name{flex:1;min-width:0}
+.item-nm{font-size:12px;font-weight:600}
+.item-cd{font-size:10px;font-family:var(--m);color:var(--a2)}
+.item-qty{
+  display:flex;align-items:center;gap:6px;flex-shrink:0
+}
+.qty-inp{
+  width:52px;background:var(--s1);border:1.5px solid var(--bdr);
+  border-radius:7px;padding:5px 6px;font-family:var(--m);font-size:13px;
+  font-weight:600;color:var(--txt);text-align:center;outline:none
+}
+.qty-inp:focus{border-color:var(--acc)}
+.qty-inp:disabled{opacity:.5;background:var(--bg)}
+.item-total{font-family:var(--m);font-size:12px;font-weight:700;color:var(--a2);min-width:60px;text-align:right}
+
+/* ── Dispatch info card ── */
+.dinfo{
+  margin:0 13px 12px;padding:10px 12px;
+  background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);
+  border-radius:10px;font-size:11px
+}
+.dinfo-row{display:flex;justify-content:space-between;padding:3px 0;gap:8px}
+.dinfo-lbl{color:var(--mut)}
+.dinfo-val{font-family:var(--m);color:var(--a2);font-weight:600;text-align:right}
+
+/* ── Filters ── */
+.fbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.fi-s{flex:1;min-width:130px}
+
+/* ── Modals ── */
+.ov{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);
+  z-index:500;display:none;align-items:flex-end
+}
+.ov.on{display:flex}
+.mo{
+  background:var(--s1);border-radius:18px 18px 0 0;border-top:1px solid var(--bdr);
+  padding:16px 16px max(env(safe-area-inset-bottom,22px),22px);
+  width:100%;max-height:90dvh;overflow-y:auto;animation:slideup .22s ease
+}
+@keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mh{width:34px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 14px}
+.mt{font-size:16px;font-weight:700;margin-bottom:4px}
+.msub{font-size:12px;color:var(--mut);margin-bottom:16px}
+.mfld{margin-bottom:14px}
+.mfld .lbl{display:block;margin-bottom:5px}
+.mrow{display:flex;gap:8px}
+.mrow .mfld{flex:1}
+.mbtns{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.mbtn{
+  flex:1;padding:12px;border-radius:10px;font-family:var(--f);
+  font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s
+}
+.mbtn.primary{
+  background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;
+  box-shadow:0 4px 14px rgba(124,58,237,.3)
+}
+.mbtn.primary:hover{box-shadow:0 6px 18px rgba(124,58,237,.4)}
+.mbtn.secondary{background:var(--s2);color:var(--mut);border:1.5px solid var(--bdr)}
+.mbtn.danger{background:rgba(239,68,68,.12);color:var(--red);border:1.5px solid rgba(239,68,68,.3)}
+
+/* ── Empty / Toast ── */
+.empty{text-align:center;padding:40px 16px;color:var(--mut);font-size:13px}
+.empty-ico{font-size:36px;margin-bottom:8px;opacity:.4}
+.toast{
+  position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-10px);
+  background:var(--s2);border:1px solid var(--bdr);border-radius:10px;
+  padding:8px 16px;font-size:12px;font-weight:500;opacity:0;
+  transition:all .25s;z-index:9999;pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);white-space:nowrap
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(34,197,94,.4);color:var(--grn)}
+.toast.er{border-color:rgba(239,68,68,.4);color:var(--red)}
+.toast.in{border-color:rgba(168,85,247,.4);color:var(--a2)}
+
+/* ── Salesman cards (dashboard) ── */
+.smrow{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;background:var(--s1);
+  border:1px solid var(--bdr);border-radius:11px;margin-bottom:7px
+}
+.smav{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#fff
+}
+.smnm{font-size:13px;font-weight:700}
+.smid{font-size:10px;font-family:var(--m);color:var(--a2);margin-top:1px}
+.smst{text-align:right;flex-shrink:0}
+.smstv{font-family:var(--m);font-size:13px;font-weight:700;color:var(--a2)}
+.smstl{font-size:9px;color:var(--mut)}
+
+/* ── Loading spinner ── */
+.spin-wrap{display:flex;flex-direction:column;align-items:center;padding:40px}
+.spin{
+  width:28px;height:28px;border:3px solid var(--bdr);
+  border-top-color:var(--acc);border-radius:50%;
+  animation:spin .7s linear infinite;margin-bottom:10px
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Section tag ── */
+.stag{
+  display:inline-block;padding:2px 8px;border-radius:5px;
+  font-size:10px;font-weight:700;font-family:var(--m);margin-left:6px
+}
+.stag.pend{background:rgba(234,179,8,.15);color:var(--ylw)}
+.stag.acc{background:rgba(168,85,247,.15);color:var(--a2)}
+.stag.disp{background:rgba(34,197,94,.12);color:var(--grn)}
+.stag.canc{background:rgba(239,68,68,.12);color:var(--red)}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-logo">🚚</div>
+  <div class="login-title">Distributor Portal</div>
+  <div class="login-sub">Kravins Order Management</div>
+
+  <div class="login-card">
+    <div class="mfld">
+      <div class="lbl">Select Your Company</div>
+      <select class="fi" id="distSelect">
+        <option value="">Loading distributors…</option>
+      </select>
+    </div>
+    <button class="btn" id="loginBtn" onclick="doLogin()" disabled>Enter Portal</button>
+    <div class="login-hint">
+      💡 Select your distributor name from the list above.<br>
+      Contact admin to be added if you don't appear.
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MAIN APP
+════════════════════════════════════════════════ -->
+<div id="mainApp">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="htop">
+      <div class="hlogo">
+        <div class="hav">🚚</div>
+        <div>
+          <div class="htitle" id="hDistName">Distributor</div>
+          <div class="hsub" id="hDistId">—</div>
+        </div>
+      </div>
+      <div class="hright">
+        <button class="hbtn refresh" onclick="refreshAll()">
+          <div class="dot"></div>Refresh
+        </button>
+        <button class="hbtn logout" onclick="doLogout()">Exit</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab on" onclick="goTab('orders')">📋 Orders</div>
+      <div class="tab"    onclick="goTab('dashboard')">📊 Dashboard</div>
+      <div class="tab"    onclick="goTab('salesmen')">👤 My Team</div>
+    </div>
+  </div>
+
+  <div class="scr">
+
+    <!-- ══ ORDERS TAB ══ -->
+    <div class="page on" id="pg-orders">
+
+      <!-- Quick KPIs -->
+      <div class="sec">
+        <div class="kg3">
+          <div class="kcard yl">
+            <div class="kico">⏳</div>
+            <div class="kval" id="cnt-pending">0</div>
+            <div class="klbl">Pending</div>
+          </div>
+          <div class="kcard pu">
+            <div class="kico">✅</div>
+            <div class="kval" id="cnt-accepted">0</div>
+            <div class="klbl">Accepted</div>
+          </div>
+          <div class="kcard gr">
+            <div class="kico">🚚</div>
+            <div class="kval" id="cnt-dispatched">0</div>
+            <div class="klbl">Dispatched</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="sec">
+        <div class="fbar">
+          <input class="fi fi-s" type="search" id="osearch"
+            placeholder="Search order, party…" oninput="renderOrders()">
+          <select class="fi fi-s" id="smFilter" onchange="renderOrders()">
+            <option value="">All Salesmen</option>
+          </select>
+          <select class="fi fi-s" id="stFilter" onchange="renderOrders()">
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Accepted">Accepted</option>
+            <option value="Dispatched">Dispatched</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Orders list -->
+      <div class="sec">
+        <div class="sl">Orders <span class="stag pend" id="pendingBadge" style="display:none"></span></div>
+        <div id="ordersList">
+          <div class="spin-wrap"><div class="spin"></div><div style="color:var(--mut);font-size:12px">Loading orders…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DASHBOARD TAB ══ -->
+    <div class="page" id="pg-dashboard">
+      <div class="sec">
+        <div class="sl">Today</div>
+        <div class="kg3">
+          <div class="kcard pu"><div class="kico">💰</div><div class="kval" id="d-todaySales">₹0</div><div class="klbl">Sales</div></div>
+          <div class="kcard bl"><div class="kico">📦</div><div class="kval" id="d-todayOrders">0</div><div class="klbl">Orders</div></div>
+          <div class="kcard gr"><div class="kico">🏪</div><div class="kval" id="d-todayShops">0</div><div class="klbl">Shops</div></div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sl">Month to Date · <span id="d-mtdLabel"></span></div>
+        <div class="kg2">
+          <div class="kcard pu"><div class="kico">📅</div><div class="kval" id="d-mtdSales">₹0</div><div class="klbl">MTD Sales</div></div>
+          <div class="kcard bl"><div class="kico">🏪</div><div class="kval" id="d-mtdShops">0</div><div class="klbl">MTD Shops</div></div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sl">Year to Date · <span id="d-ytdLabel"></span></div>
+        <div class="kg2">
+          <div class="kcard gr"><div class="kico">📈</div><div class="kval" id="d-ytdSales">₹0</div><div class="klbl">YTD Sales</div></div>
+          <div class="kcard or"><div class="kico">🏬</div><div class="kval" id="d-ytdShops">0</div><div class="klbl">YTD Shops</div></div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sl">Order Pipeline</div>
+        <div class="kg2">
+          <div class="kcard yl"><div class="kico">⏳</div><div class="kval" id="d-pendingAmt">₹0</div><div class="klbl">Pending Value</div></div>
+          <div class="kcard pu"><div class="kico">✅</div><div class="kval" id="d-acceptedAmt">₹0</div><div class="klbl">Accepted Value</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SALESMEN TAB ══ -->
+    <div class="page" id="pg-salesmen">
+      <div class="sec">
+        <div class="sl">Salesmen Under You</div>
+        <div id="smList">
+          <div class="spin-wrap"><div class="spin"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /scr -->
+</div><!-- /mainApp -->
+
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════════════════════
+     ACCEPT MODAL (with qty edit)
+════════════════════════════════════════════════ -->
+<div class="ov" id="acceptOv" onclick="if(event.target===this)closeModal('acceptOv')">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mt">✅ Accept Order</div>
+    <div class="msub" id="acceptOvSub"></div>
+    <div style="font-size:11px;color:var(--mut);margin-bottom:12px;
+      padding:9px 11px;background:rgba(168,85,247,.07);border-radius:8px;
+      border:1px solid rgba(168,85,247,.15)">
+      💡 Review quantities below. You can modify them before accepting.
+    </div>
+    <div id="acceptItemsWrap"></div>
+    <div class="mfld" style="margin-top:8px">
+      <div class="lbl">Notes (optional)</div>
+      <textarea class="fi" id="acceptNotes" rows="2" placeholder="Any notes for this acceptance…"></textarea>
+    </div>
+    <div class="mbtns">
+      <button class="mbtn secondary" onclick="closeModal('acceptOv')">Cancel</button>
+      <button class="mbtn primary" id="acceptBtn" onclick="submitAccept()">✅ Accept Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     DISPATCH MODAL
+════════════════════════════════════════════════ -->
+<div class="ov" id="dispatchOv" onclick="if(event.target===this)closeModal('dispatchOv')">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mt" id="dispatchTitle">🚚 Dispatch Order</div>
+    <div class="msub" id="dispatchOvSub"></div>
+    <div class="mrow">
+      <div class="mfld">
+        <label class="lbl">Invoice Number *</label>
+        <input class="fi" type="text" id="dInvoiceNo" placeholder="e.g. INV-2026-001">
+      </div>
+      <div class="mfld">
+        <label class="lbl">Invoice Date *</label>
+        <input class="fi" type="date" id="dInvoiceDate">
+      </div>
+    </div>
+    <div class="mfld">
+      <label class="lbl">Vehicle / Transport Details</label>
+      <input class="fi" type="text" id="dVehicle" placeholder="e.g. GJ 01 AB 1234 / DTDC Tracking">
+    </div>
+    <div class="mfld">
+      <label class="lbl">Dispatch Notes</label>
+      <textarea class="fi" id="dNotes" rows="2" placeholder="Any additional dispatch info…"></textarea>
+    </div>
+    <div class="mbtns">
+      <button class="mbtn secondary" onclick="closeModal('dispatchOv')">Cancel</button>
+      <button class="mbtn primary" id="dispatchBtn" onclick="submitDispatch()">🚚 Mark Dispatched</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     CANCEL MODAL
+════════════════════════════════════════════════ -->
+<div class="ov" id="cancelOv" onclick="if(event.target===this)closeModal('cancelOv')">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mt">⛔ Cancel Order</div>
+    <div class="msub" id="cancelOvSub"></div>
+    <div class="mfld">
+      <label class="lbl">Reason for Cancellation *</label>
+      <textarea class="fi" id="cancelReason" rows="3" placeholder="Please provide a reason…"></textarea>
+    </div>
+    <div class="mbtns">
+      <button class="mbtn secondary" onclick="closeModal('cancelOv')">Go Back</button>
+      <button class="mbtn danger" id="cancelBtn" onclick="submitCancel()">⛔ Confirm Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWom2LgZbHfINY31GTmZOYdVva_rWxES-xrmVCDZ_hxolGf6SSxt0P_UIPDi-MaOOg/exec';
+const SM_COLORS  = ['#a855f7','#3b82f6','#22c55e','#f97316','#eab308','#ec4899','#14b8a6','#f43f5e'];
+const MONTHS     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// State
+let distInfo     = null; // {id, name, ...}
+let allOrders    = [];
+let mySalesmen   = [];
+let allDistributors = [];
+let modalOid     = null;
+let isDispatchEdit = false; // true when updating existing dispatch
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════
+const fi = n => '₹' + Number(n||0).toLocaleString('en-IN');
+
+function normDate(d){
+  if (!d) return '';
+  try{
+    const dt = new Date(d);
+    if (!isNaN(dt)){
+      return new Date(dt.getTime()+330*60000).toISOString().slice(0,10);
+    }
+  }catch(e){}
+  return String(d).slice(0,10);
+}
+function getToday(){
+  return new Date(Date.now()+330*60000).toISOString().slice(0,10);
+}
+function getCurMY(){
+  const ist = new Date(Date.now()+330*60000);
+  return {m:ist.getUTCMonth()+1, y:ist.getUTCFullYear()};
+}
+function isMTD(date){ const {m,y}=getCurMY(); return date&&parseInt(date.slice(0,4))===y&&parseInt(date.slice(5,7))===m; }
+function isYTD(date){ return date&&parseInt(date.slice(0,4))===getCurMY().y; }
+
+function fmtDate(d){
+  if (!d) return '—';
+  try{ return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
+  catch(e){ return d; }
+}
+
+function statusClass(s){
+  return s==='Pending'?'s-pending':s==='Accepted'?'s-accepted':s==='Dispatched'?'s-dispatched':'s-cancelled';
+}
+function statusIcon(s){
+  return s==='Pending'?'⏳':s==='Accepted'?'✅':s==='Dispatched'?'🚚':'⛔';
+}
+
+let toastT;
+function toast(msg, type='ok'){
+  const el=document.getElementById('toast'); clearTimeout(toastT);
+  el.textContent=msg; el.className=`toast ${type} on`;
+  toastT=setTimeout(()=>el.classList.remove('on'),2800);
+}
+function closeModal(id){ document.getElementById(id).classList.remove('on'); }
+
+async function apiPost(body){
+  const r = await fetch(SCRIPT_URL, {
+    method:'POST', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOGIN / SESSION
+// ═══════════════════════════════════════════════════════════════
+async function initLogin(){
+  try{
+    const r = await fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`);
+    const data = await r.json();
+    allDistributors = (data.distributors||[]).filter(d=>d.active!==false);
+
+    const sel = document.getElementById('distSelect');
+    sel.innerHTML = '<option value="">— Select your distributor —</option>' +
+      allDistributors.map(d=>`<option value="${d.id}">${d.name} (${d.id})</option>`).join('');
+    sel.disabled = false;
+
+    // Restore session
+    const saved = localStorage.getItem('kravins_dist');
+    if (saved){
+      try{
+        const s = JSON.parse(saved);
+        const found = allDistributors.find(d=>d.id===s.id);
+        if (found){ distInfo=found; launchApp(); return; }
+      }catch(e){}
+    }
+
+    document.getElementById('loginBtn').disabled = false;
+    sel.onchange = ()=> document.getElementById('loginBtn').disabled = !sel.value;
+
+  }catch(e){
+    console.error(e);
+    document.getElementById('distSelect').innerHTML = '<option value="">⚠️ Could not load — check connection</option>';
+  }
+}
+
+function doLogin(){
+  const sel = document.getElementById('distSelect');
+  const id  = sel.value;
+  if (!id){ toast('Please select your distributor','er'); return; }
+  const found = allDistributors.find(d=>d.id===id);
+  if (!found){ toast('Distributor not found','er'); return; }
+  distInfo = found;
+  localStorage.setItem('kravins_dist', JSON.stringify(found));
+  launchApp();
+}
+
+function doLogout(){
+  localStorage.removeItem('kravins_dist');
+  location.reload();
+}
+
+function launchApp(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  document.getElementById('hDistName').textContent = distInfo.name;
+  document.getElementById('hDistId').textContent   = distInfo.id + (distInfo.territory?' · '+distInfo.territory:'');
+  loadAll();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function goTab(tab){
+  ['orders','dashboard','salesmen'].forEach((t,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('on', t===tab);
+    document.getElementById('pg-'+t).classList.toggle('on', t===tab);
+  });
+  window.scrollTo({top:0});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOAD ALL DATA
+// ═══════════════════════════════════════════════════════════════
+async function loadAll(){
+  try{
+    const [ordRes, smRes] = await Promise.all([
+      fetch(`${SCRIPT_URL}?action=orders&distId=${distInfo.id}&t=${Date.now()}`),
+      fetch(`${SCRIPT_URL}?action=salesmen&t=${Date.now()}`)
+    ]);
+    const [ordData, smData] = await Promise.all([ordRes.json(), smRes.json()]);
+
+    if (ordData.ok){
+      allOrders = (ordData.orders||[]).map(o=>({...o, date:normDate(o.date)}));
+    }
+    if (smData.ok){
+      mySalesmen = (smData.salesmen||[]).filter(s=>s.distributor===distInfo.id&&s.active!==false);
+    }
+
+    // Populate salesman filter
+    const smSel = document.getElementById('smFilter');
+    smSel.innerHTML = '<option value="">All Salesmen</option>' +
+      mySalesmen.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+
+    renderOrders();
+    renderDashboard();
+    renderSalesmen();
+
+  }catch(e){
+    console.error(e);
+    toast('⚠️ Could not load data','er');
+    document.getElementById('ordersList').innerHTML =
+      '<div class="empty"><div class="empty-ico">⚠️</div>Failed to load. Tap Refresh.</div>';
+  }
+}
+
+function refreshAll(){
+  toast('🔄 Refreshing…','in');
+  loadAll();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER ORDERS
+// ═══════════════════════════════════════════════════════════════
+function renderOrders(){
+  const q   = (document.getElementById('osearch')?.value||'').toLowerCase();
+  const smF = document.getElementById('smFilter')?.value||'';
+  const stF = document.getElementById('stFilter')?.value||'';
+
+  const filtered = allOrders.filter(o=>{
+    const mq = !q || o.oid.toLowerCase().includes(q) || o.bname.toLowerCase().includes(q)
+              || (o.smName||'').toLowerCase().includes(q);
+    return mq && (!smF||o.smId===smF) && (!stF||o.status===stF);
+  });
+
+  // Update counters
+  const pending    = allOrders.filter(o=>o.status==='Pending').length;
+  const accepted   = allOrders.filter(o=>o.status==='Accepted').length;
+  const dispatched = allOrders.filter(o=>o.status==='Dispatched').length;
+  document.getElementById('cnt-pending').textContent    = pending;
+  document.getElementById('cnt-accepted').textContent   = accepted;
+  document.getElementById('cnt-dispatched').textContent = dispatched;
+
+  const badge = document.getElementById('pendingBadge');
+  if (pending > 0){ badge.textContent=pending+' need action'; badge.style.display=''; }
+  else badge.style.display='none';
+
+  if (!filtered.length){
+    document.getElementById('ordersList').innerHTML =
+      '<div class="empty"><div class="empty-ico">📦</div>' +
+      (allOrders.length===0?'No orders yet for your account.':'No orders match the filter.')+'</div>';
+    return;
+  }
+
+  // Group by status for better UX: Pending first, then Accepted, then Dispatched, then Cancelled
+  const order = ['Pending','Accepted','Dispatched','Cancelled'];
+  const grouped = {};
+  order.forEach(s=>grouped[s]=[]);
+  filtered.forEach(o=>{ if (grouped[o.status]) grouped[o.status].push(o); else grouped['Cancelled'].push(o); });
+
+  let html = '';
+  order.forEach(status=>{
+    const grp = grouped[status];
+    if (!grp.length) return;
+    const tagCls = status==='Pending'?'pend':status==='Accepted'?'acc':status==='Dispatched'?'disp':'canc';
+    html += `<div style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;
+      letter-spacing:.1em;padding:4px 2px;margin-bottom:6px;margin-top:8px">
+      ${statusIcon(status)} ${status} <span class="stag ${tagCls}">${grp.length}</span></div>`;
+    grp.forEach(o=>{ html += buildOrderCard(o); });
+  });
+
+  document.getElementById('ordersList').innerHTML = html;
+}
+
+function buildOrderCard(o){
+  const stCls = statusClass(o.status);
+  const canAct = o.status !== 'Cancelled';
+  const isPending   = o.status === 'Pending';
+  const isAccepted  = o.status === 'Accepted';
+  const isDispatched= o.status === 'Dispatched';
+
+  let dispInfoHtml = '';
+  if (isDispatched || isAccepted){
+    if (o.invoiceNo || o.invoiceDate || o.acceptedBy){
+      dispInfoHtml = `<div class="dinfo">`;
+      if (o.acceptedBy)   dispInfoHtml += `<div class="dinfo-row"><span class="dinfo-lbl">Accepted by</span><span class="dinfo-val">${o.acceptedBy} ${o.acceptedAt?'· '+o.acceptedAt.slice(0,10):''}</span></div>`;
+      if (o.invoiceNo)    dispInfoHtml += `<div class="dinfo-row"><span class="dinfo-lbl">Invoice No</span><span class="dinfo-val">${o.invoiceNo}</span></div>`;
+      if (o.invoiceDate)  dispInfoHtml += `<div class="dinfo-row"><span class="dinfo-lbl">Invoice Date</span><span class="dinfo-val">${fmtDate(o.invoiceDate)}</span></div>`;
+      if (o.dispatchNotes)dispInfoHtml += `<div class="dinfo-row"><span class="dinfo-lbl">Notes</span><span class="dinfo-val" style="font-family:var(--f)">${o.dispatchNotes}</span></div>`;
+      dispInfoHtml += `</div>`;
+    }
+  }
+
+  // Items
+  let itemsHtml = '';
+  (o.items||[]).forEach((it,idx)=>{
+    const editable = isPending; // only editable when pending (during accept flow)
+    itemsHtml += `
+      <div class="item-row">
+        <div class="item-name">
+          <div class="item-nm">${it.name}</div>
+          <div class="item-cd">${it.code}</div>
+        </div>
+        <div class="item-qty">
+          <span style="font-size:10px;color:var(--mut)">Qty:</span>
+          <span style="font-family:var(--m);font-size:13px;font-weight:700;color:var(--a2)">${it.qty}</span>
+        </div>
+        <div class="item-total">${fi(it.total)}</div>
+      </div>`;
+  });
+
+  // Action buttons
+  let btnsHtml = '';
+  if (isPending){
+    btnsHtml = `
+      <div class="abtns">
+        <button class="abtn accept" onclick="openAccept('${o.oid}')">✅ Accept</button>
+        <button class="abtn cancel" onclick="openCancel('${o.oid}')">⛔ Cancel</button>
+      </div>`;
+  } else if (isAccepted){
+    btnsHtml = `
+      <div class="abtns">
+        <button class="abtn dispatch" onclick="openDispatch('${o.oid}',false)">🚚 Dispatch</button>
+        <button class="abtn edit"     onclick="openDispatch('${o.oid}',true)">✏️ Update Info</button>
+        <button class="abtn cancel"   onclick="openCancel('${o.oid}')">⛔ Cancel</button>
+      </div>`;
+  } else if (isDispatched){
+    btnsHtml = `
+      <div class="abtns">
+        <button class="abtn edit" onclick="openDispatch('${o.oid}',true)">✏️ Update Dispatch</button>
+      </div>`;
+  }
+
+  return `
+    <div class="ocard" id="card-${o.oid}">
+      <div class="ocard-head" onclick="toggleItems('${o.oid}')">
+        <div class="ocard-left">
+          <div class="ocard-oid">${o.oid} · <span class="sb ${stCls}">${statusIcon(o.status)} ${o.status}</span></div>
+          <div class="ocard-party">${o.bname}</div>
+          <div class="ocard-meta">👤 ${o.smName} &nbsp;·&nbsp; 📍 ${o.baddress||'—'}</div>
+          ${o.notes?`<div style="font-size:10px;color:var(--mut);margin-top:3px">📝 ${o.notes}</div>`:''}
+        </div>
+        <div class="ocard-right">
+          <div class="ocard-amt">${fi(o.gt)}</div>
+          <div class="ocard-date">${fmtDate(o.date)}</div>
+          <div style="font-size:18px;color:var(--mut);margin-top:4px">⌄</div>
+        </div>
+      </div>
+      ${dispInfoHtml}
+      <div class="items-wrap" id="items-${o.oid}">
+        ${itemsHtml}
+        <div style="display:flex;justify-content:space-between;padding:6px 10px;
+          background:var(--s2);border-radius:7px;font-size:12px;font-weight:700;margin-bottom:8px">
+          <span style="color:var(--mut)">Grand Total</span>
+          <span style="font-family:var(--m);color:var(--a2)">${fi(o.gt)}</span>
+        </div>
+      </div>
+      ${btnsHtml}
+    </div>`;
+}
+
+function toggleItems(oid){
+  const wrap = document.getElementById('items-'+oid);
+  if (wrap) wrap.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACCEPT FLOW
+// ═══════════════════════════════════════════════════════════════
+function openAccept(oid){
+  const o = allOrders.find(x=>x.oid===oid); if (!o) return;
+  modalOid = oid;
+
+  document.getElementById('acceptOvSub').textContent =
+    `${oid} · ${o.bname} · ${fi(o.gt)}`;
+
+  // Build editable items
+  let html = '';
+  (o.items||[]).forEach((it,i)=>{
+    html += `
+      <div class="item-row">
+        <div class="item-name">
+          <div class="item-nm">${it.name}</div>
+          <div class="item-cd">${it.code} · ₹${it.price}/unit</div>
+        </div>
+        <div class="item-qty">
+          <span style="font-size:10px;color:var(--mut)">Qty:</span>
+          <input class="qty-inp" type="number" min="0"
+            id="aqty-${i}" value="${it.qty}"
+            data-code="${it.code}" data-price="${it.price}" data-idx="${i}"
+            oninput="updateAcceptTotal()">
+        </div>
+        <div class="item-total" id="atotal-${i}">${fi(it.total)}</div>
+      </div>`;
+  });
+  html += `
+    <div style="display:flex;justify-content:space-between;padding:8px 10px;
+      background:var(--s2);border-radius:8px;font-size:13px;font-weight:700;margin-bottom:10px">
+      <span style="color:var(--mut)">Grand Total</span>
+      <span style="font-family:var(--m);color:var(--a2)" id="acceptGrandTotal">${fi(o.gt)}</span>
+    </div>`;
+
+  document.getElementById('acceptItemsWrap').innerHTML = html;
+  document.getElementById('acceptNotes').value = '';
+  document.getElementById('acceptOv').classList.add('on');
+}
+
+function updateAcceptTotal(){
+  const o = allOrders.find(x=>x.oid===modalOid); if (!o) return;
+  let grand = 0;
+  (o.items||[]).forEach((it,i)=>{
+    const inp = document.getElementById('aqty-'+i);
+    if (!inp) return;
+    const qty = parseFloat(inp.value)||0;
+    const total = qty * (parseFloat(it.price)||0);
+    grand += total;
+    const el = document.getElementById('atotal-'+i);
+    if (el) el.textContent = fi(total);
+  });
+  const gt = document.getElementById('acceptGrandTotal');
+  if (gt) gt.textContent = fi(grand);
+}
+
+async function submitAccept(){
+  const o = allOrders.find(x=>x.oid===modalOid); if (!o) return;
+  const btn = document.getElementById('acceptBtn');
+  btn.disabled=true; btn.textContent='Accepting…';
+
+  // Collect modified items
+  const modifiedItems = (o.items||[]).map((it,i)=>{
+    const inp = document.getElementById('aqty-'+i);
+    return {code:it.code, qty:parseFloat(inp?.value||it.qty)||it.qty};
+  });
+
+  const hasChanges = modifiedItems.some((m,i)=>m.qty !== (o.items[i]?.qty));
+
+  try{
+    const res = await apiPost({
+      action:'distAcceptOrder',
+      orderId: modalOid,
+      distId:  distInfo.id,
+      distName:distInfo.name,
+      modifiedItems: hasChanges ? modifiedItems : []
+    });
+
+    if (res.ok){
+      // Update local state
+      const idx = allOrders.findIndex(x=>x.oid===modalOid);
+      if (idx>=0){
+        allOrders[idx].status = 'Accepted';
+        allOrders[idx].acceptedBy = distInfo.name;
+        allOrders[idx].acceptedAt = new Date().toISOString().slice(0,10);
+        if (hasChanges){
+          modifiedItems.forEach(m=>{
+            const it = allOrders[idx].items.find(x=>x.code===m.code);
+            if (it){ it.qty=m.qty; it.total=m.qty*(it.price||0); }
+          });
+          allOrders[idx].gt = allOrders[idx].items.reduce((s,it)=>s+(it.total||0),0);
+        }
+      }
+      toast('✅ Order accepted successfully','ok');
+      closeModal('acceptOv');
+      renderOrders();
+      renderDashboard();
+    } else {
+      toast('⚠️ '+res.error,'er');
+    }
+  }catch(e){
+    toast('⚠️ Network error','er');
+  }
+
+  btn.disabled=false; btn.textContent='✅ Accept Order';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DISPATCH FLOW
+// ═══════════════════════════════════════════════════════════════
+function openDispatch(oid, isEdit){
+  const o = allOrders.find(x=>x.oid===oid); if (!o) return;
+  modalOid = oid;
+  isDispatchEdit = isEdit;
+
+  document.getElementById('dispatchTitle').textContent =
+    isEdit ? '✏️ Update Dispatch Details' : '🚚 Dispatch Order';
+  document.getElementById('dispatchOvSub').textContent =
+    `${oid} · ${o.bname} · ${fi(o.gt)}`;
+
+  // Pre-fill if editing
+  document.getElementById('dInvoiceNo').value   = isEdit ? (o.invoiceNo||'') : '';
+  document.getElementById('dInvoiceDate').value = isEdit ? (o.invoiceDate||'') : '';
+  document.getElementById('dVehicle').value     = '';
+  document.getElementById('dNotes').value       = isEdit ? (o.dispatchNotes||'') : '';
+
+  // If today's date not set yet, default to today
+  if (!isEdit || !o.invoiceDate){
+    document.getElementById('dInvoiceDate').value = getToday();
+  }
+
+  document.getElementById('dispatchBtn').textContent = isEdit ? '💾 Update Details' : '🚚 Mark Dispatched';
+  document.getElementById('dispatchOv').classList.add('on');
+}
+
+async function submitDispatch(){
+  const invoiceNo   = document.getElementById('dInvoiceNo').value.trim();
+  const invoiceDate = document.getElementById('dInvoiceDate').value;
+  const vehicle     = document.getElementById('dVehicle').value.trim();
+  const notes       = document.getElementById('dNotes').value.trim();
+
+  if (!invoiceNo){ toast('Please enter Invoice Number','er'); return; }
+  if (!invoiceDate){ toast('Please enter Invoice Date','er'); return; }
+
+  const btn = document.getElementById('dispatchBtn');
+  btn.disabled=true; btn.textContent='Saving…';
+
+  const dispatchNotes = [vehicle?'Vehicle: '+vehicle:'', notes].filter(Boolean).join(' | ');
+
+  try{
+    const res = await apiPost({
+      action:   'distDispatch',
+      orderId:  modalOid,
+      distId:   distInfo.id,
+      distName: distInfo.name,
+      dispatch: {invoiceNo, invoiceDate, notes: dispatchNotes}
+    });
+
+    if (res.ok){
+      const idx = allOrders.findIndex(x=>x.oid===modalOid);
+      if (idx>=0){
+        allOrders[idx].status       = 'Dispatched';
+        allOrders[idx].invoiceNo    = invoiceNo;
+        allOrders[idx].invoiceDate  = invoiceDate;
+        allOrders[idx].dispatchNotes= dispatchNotes;
+        allOrders[idx].distAction   = 'Dispatched';
+      }
+      toast(isDispatchEdit?'💾 Dispatch details updated':'🚚 Order marked as dispatched','ok');
+      closeModal('dispatchOv');
+      renderOrders();
+      renderDashboard();
+    } else {
+      toast('⚠️ '+res.error,'er');
+    }
+  }catch(e){
+    toast('⚠️ Network error','er');
+  }
+
+  btn.disabled=false;
+  btn.textContent = isDispatchEdit ? '💾 Update Details' : '🚚 Mark Dispatched';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CANCEL FLOW
+// ═══════════════════════════════════════════════════════════════
+function openCancel(oid){
+  const o = allOrders.find(x=>x.oid===oid); if (!o) return;
+  modalOid = oid;
+  document.getElementById('cancelOvSub').textContent = `${oid} · ${o.bname} · ${fi(o.gt)}`;
+  document.getElementById('cancelReason').value = '';
+  document.getElementById('cancelOv').classList.add('on');
+}
+
+async function submitCancel(){
+  const reason = document.getElementById('cancelReason').value.trim();
+  if (!reason){ toast('Please provide a cancellation reason','er'); return; }
+
+  const btn = document.getElementById('cancelBtn');
+  btn.disabled=true; btn.textContent='Cancelling…';
+
+  try{
+    const res = await apiPost({
+      action:   'distCancelOrder',
+      orderId:  modalOid,
+      distId:   distInfo.id,
+      distName: distInfo.name,
+      reason
+    });
+
+    if (res.ok){
+      const idx = allOrders.findIndex(x=>x.oid===modalOid);
+      if (idx>=0){ allOrders[idx].status='Cancelled'; allOrders[idx].distAction='Cancelled by Dist'; }
+      toast('⛔ Order cancelled','er');
+      closeModal('cancelOv');
+      renderOrders();
+      renderDashboard();
+    } else {
+      toast('⚠️ '+res.error,'er');
+    }
+  }catch(e){
+    toast('⚠️ Network error','er');
+  }
+
+  btn.disabled=false; btn.textContent='⛔ Confirm Cancel';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderDashboard(){
+  const today = getToday();
+  const {m:curM, y:curY} = getCurMY();
+  const active = allOrders.filter(o=>o.status!=='Cancelled');
+
+  // Today
+  const todayOrd = active.filter(o=>o.date===today);
+  document.getElementById('d-todaySales').textContent  = fi(todayOrd.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('d-todayOrders').textContent = todayOrd.length;
+  document.getElementById('d-todayShops').textContent  = new Set(todayOrd.map(o=>o.bid)).size;
+
+  // MTD
+  const mtdOrd = active.filter(o=>isMTD(o.date));
+  document.getElementById('d-mtdSales').textContent = fi(mtdOrd.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('d-mtdShops').textContent = new Set(mtdOrd.map(o=>o.bid)).size;
+  document.getElementById('d-mtdLabel').textContent = MONTHS[curM-1]+' '+curY;
+
+  // YTD
+  const ytdOrd = active.filter(o=>isYTD(o.date));
+  document.getElementById('d-ytdSales').textContent = fi(ytdOrd.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('d-ytdShops').textContent = new Set(ytdOrd.map(o=>o.bid)).size;
+  document.getElementById('d-ytdLabel').textContent = curY;
+
+  // Pipeline
+  const pendAmt = allOrders.filter(o=>o.status==='Pending').reduce((s,o)=>s+(o.gt||0),0);
+  const accAmt  = allOrders.filter(o=>o.status==='Accepted').reduce((s,o)=>s+(o.gt||0),0);
+  document.getElementById('d-pendingAmt').textContent  = fi(pendAmt);
+  document.getElementById('d-acceptedAmt').textContent = fi(accAmt);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SALESMEN LIST
+// ═══════════════════════════════════════════════════════════════
+function renderSalesmen(){
+  const today = getToday();
+  const active = allOrders.filter(o=>o.status!=='Cancelled');
+
+  if (!mySalesmen.length){
+    document.getElementById('smList').innerHTML =
+      '<div class="empty"><div class="empty-ico">👤</div>No salesmen linked to your account.<br><span style="font-size:11px">Contact admin to link salesmen to '+distInfo.id+'</span></div>';
+    return;
+  }
+
+  document.getElementById('smList').innerHTML = mySalesmen.map((sm,i)=>{
+    const smOrd   = active.filter(o=>o.smId===sm.id);
+    const today_s = smOrd.filter(o=>o.date===today).reduce((s,o)=>s+(o.gt||0),0);
+    const pending = allOrders.filter(o=>o.smId===sm.id&&o.status==='Pending').length;
+    const init    = sm.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+    const col     = SM_COLORS[i%SM_COLORS.length];
+    return `
+      <div class="smrow">
+        <div class="smav" style="background:linear-gradient(135deg,${col},${col}99)">${init}</div>
+        <div style="flex:1;min-width:0">
+          <div class="smnm">${sm.name}</div>
+          <div class="smid">${sm.id} · ${sm.territory||''}</div>
+          ${pending>0?`<div style="font-size:10px;color:var(--ylw);margin-top:2px">⏳ ${pending} order${pending>1?'s':''} pending action</div>`:''}
+        </div>
+        <div class="smst">
+          <div class="smstv">${fi(today_s)}</div>
+          <div class="smstl">Today</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', initLogin);
+
+// Auto-refresh every 60 seconds
+setInterval(()=>{ if (distInfo) loadAll(); }, 60000);
+</script>
+</body>
+</html>
