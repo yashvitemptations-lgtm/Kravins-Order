@@ -133,6 +133,7 @@ canvas{max-width:100%;max-height:100%}
 .sp{background:rgba(234,179,8,.12);color:var(--ylw)}
 .sd{background:rgba(34,197,94,.12);color:var(--grn)}
 .sc{background:rgba(239,68,68,.12);color:var(--red)}
+.sa{background:rgba(168,85,247,.15);color:#c084fc}
 /* ── Filters ── */
 .fbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .fi{flex:1;min-width:130px;background:var(--s2);border:1.5px solid var(--bdr);
@@ -937,7 +938,7 @@ function renderSmIndividual(smId){
       <div style="flex:.7;color:var(--mut);font-size:11px">${o.date?new Date(o.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'-'}</div>
       <div style="flex:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.bname}</div>
       <div class="oamt" style="flex:.8">${fi(o.gt)}</div>
-      <div style="flex:.6"><span class="sb ${o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':'sp'}">${o.status}</span></div>
+      <div style="flex:.6"><span class="sb ${o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':o.status==='Accepted'?'sa':'sp'}">${o.status}</span></div>
     </div>`).join('')||'<div class="empty" style="padding:20px">No orders</div>';
 }
 
@@ -1047,7 +1048,7 @@ function orderRow(o){
     <div style="flex:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.bname}</div>
     <div style="flex:1;font-size:10px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.smName||''}</div>
     <div class="oamt" style="flex:.75">${fi(o.gt)}</div>
-    <div style="flex:.5"><span class="sb ${o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':'sp'}">${o.status}</span></div>
+    <div style="flex:.5"><span class="sb ${o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':o.status==='Accepted'?'sa':'sp'}">${o.status}</span></div>
   </div>`;
 }
 
@@ -1081,8 +1082,13 @@ function openOrderModal(oid){
   modalOid=oid;
   const d=o.date?new Date(o.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'-';
   document.getElementById('omTitle').textContent=`${o.oid} · ${o.bname}`;
+  const stCls=o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':o.status==='Accepted'?'sa':'sp';
   let h=`<div style="font-size:11px;color:var(--mut);margin-bottom:8px">📅 ${d} · 👤 ${o.smName||''} (${o.smId||''})</div>`;
-  h+=`<div style="margin-bottom:9px"><span class="sb ${o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':'sp'}">${o.status}</span></div>`;
+  h+=`<div style="margin-bottom:9px;display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+    <span class="sb ${stCls}">${o.status}</span>
+    ${o.distributor?`<span style="font-size:10px;color:var(--mut)">🚚 Dist: ${o.distributor}</span>`:''}
+    ${o.distAction?`<span style="font-size:10px;padding:2px 6px;border-radius:5px;background:rgba(168,85,247,.1);color:#c084fc;font-family:var(--m)">${o.distAction}</span>`:''}
+  </div>`;
   (o.items||[]).forEach(i=>{
     h+=`<div class="mr"><span class="ml" style="flex:1;padding-right:8px">${i.name}<br><span style="font-size:10px">${i.qty} × ₹${i.price}</span></span>
     <span class="mv" style="color:var(--a2)">${fi(i.total)}</span></div>`;
@@ -1093,6 +1099,16 @@ function openOrderModal(oid){
   if(o.notes) h+=`<div style="margin-top:7px;padding:8px;background:var(--s2);border-radius:7px;font-size:11px;color:var(--mut)">📝 ${o.notes}</div>`;
   if(o.bphone) h+=`<div style="margin-top:5px;font-size:11px;color:var(--mut)">📱 ${o.bphone}</div>`;
   if(o.baddress) h+=`<div style="margin-top:3px;font-size:11px;color:var(--mut)">📍 ${o.baddress}</div>`;
+  // Dispatch / Accept details block
+  if(o.acceptedBy||o.invoiceNo||o.invoiceDate||o.dispatchNotes){
+    h+=`<div style="margin-top:10px;padding:10px 12px;background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.2);border-radius:9px">
+      <div style="font-size:10px;font-weight:700;color:#c084fc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px">🚚 Dispatch Details</div>`;
+    if(o.acceptedBy)    h+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--mut)">Accepted By</span><span style="font-family:var(--m);color:#c084fc">${o.acceptedBy}${o.acceptedAt?' · '+o.acceptedAt.slice(0,10):''}</span></div>`;
+    if(o.invoiceNo)     h+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--mut)">Invoice No</span><span style="font-family:var(--m);color:var(--a2)">${o.invoiceNo}</span></div>`;
+    if(o.invoiceDate)   h+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--mut)">Invoice Date</span><span style="font-family:var(--m);color:var(--a2)">${o.invoiceDate}</span></div>`;
+    if(o.dispatchNotes) h+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0"><span style="color:var(--mut)">Dispatch Notes</span><span style="color:var(--a2);text-align:right;max-width:60%">${o.dispatchNotes}</span></div>`;
+    h+=`</div>`;
+  }
   document.getElementById('omBody').innerHTML=h;
   document.getElementById('editSec').style.display='none';
   document.getElementById('cancelSec').style.display='none';
