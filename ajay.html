@@ -592,6 +592,7 @@ function go(tab){
 // ═══ DASHBOARD LOADING ════════════════════════════════════════════════
 let prodChart, prodChartYtd;
 async function loadDashboard(){
+  const now = new Date();
   try{
     const r=await fetch(`${SCRIPT_URL}?action=dashboard&smId=${SID}&t=${Date.now()}`);
     const data=await r.json();
