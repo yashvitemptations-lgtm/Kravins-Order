@@ -843,6 +843,7 @@ async function submitOrder(){
   const fl=lines.filter(l=>l.code&&l.qty>0);
   if(!fl.length){toast('⚠️ Add at least one product','er');return;}
   
+  const btn=document.getElementById('submitBtn');
   btn.disabled=true;btn.textContent='Getting order number…';
   
   const buyers=getBuyers();const b=buyers.find(x=>x.id===bid);
