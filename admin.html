@@ -199,7 +199,7 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       </div>
     </div>
     <div class="hright">
-      <a href="distributor.html" target="_blank" style="text-decoration:none">
+      <a id="distPortalLink" href="distributor.html" target="_blank" style="text-decoration:none">
         <div class="livebadge" style="background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:#c084fc">🚚 Dist Portal</div>
       </a>
       <div class="livebadge" onclick="refresh()"><div class="dot"></div>Refresh</div>
@@ -240,14 +240,14 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <div class="sec">
     <div class="sl">Month to Date — <span id="mtdLabel"></span></div>
     <div class="kg2">
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">MTD Sales</div><div class="ppct hi" id="k-mtdPct">0%</div></div>
+      <div class="pcard" style="cursor:pointer" onclick="showKpiModal('mtdSales')">
+        <div class="ptop"><div class="plbl">MTD Sales ▸</div><div class="ppct hi" id="k-mtdPct">0%</div></div>
         <div class="pamt" id="k-mtdSales">₹0</div>
         <div class="ptgt">Target: <span id="k-mtdTgt">—</span></div>
         <div class="pbar"><div class="pfill bl" id="k-mtdBar" style="width:0%"></div></div>
       </div>
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">MTD Shops</div></div>
+      <div class="pcard" style="cursor:pointer" onclick="showKpiModal('mtdShops')">
+        <div class="ptop"><div class="plbl">MTD Shops ▸</div></div>
         <div class="pamt" id="k-mtdShops">0</div>
         <div class="ptgt" id="k-mtdOrderCount">— orders</div>
         <div style="margin-top:8px;font-size:11px;color:var(--a2)" id="k-mtdSalesmenActive">—</div>
@@ -258,14 +258,14 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <div class="sec">
     <div class="sl">Year to Date — <span id="ytdLabel"></span></div>
     <div class="kg2">
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">YTD Sales</div><div class="ppct hi" id="k-ytdPct">0%</div></div>
+      <div class="pcard" style="cursor:pointer" onclick="showKpiModal('ytdSales')">
+        <div class="ptop"><div class="plbl">YTD Sales ▸</div><div class="ppct hi" id="k-ytdPct">0%</div></div>
         <div class="pamt" id="k-ytdSales">₹0</div>
         <div class="ptgt">Annual Target: <span id="k-ytdTgt">—</span></div>
         <div class="pbar"><div class="pfill gr" id="k-ytdBar" style="width:0%"></div></div>
       </div>
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">YTD Shops</div></div>
+      <div class="pcard" style="cursor:pointer" onclick="showKpiModal('ytdShops')">
+        <div class="ptop"><div class="plbl">YTD Shops ▸</div></div>
         <div class="pamt" id="k-ytdShops">0</div>
         <div class="ptgt" id="k-ytdOrderCount">— orders</div>
         <div style="margin-top:8px;font-size:11px;color:var(--grn)" id="k-newParties">—</div>
@@ -340,14 +340,14 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <div class="sec">
     <div class="sl">Month to Date</div>
     <div class="kg2">
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">MTD Sales</div><div class="ppct hi" id="is-mtdPct">0%</div></div>
+      <div class="pcard" style="cursor:pointer" onclick="showSmKpiModal('mtdSales')">
+        <div class="ptop"><div class="plbl">MTD Sales ▸</div><div class="ppct hi" id="is-mtdPct">0%</div></div>
         <div class="pamt" id="is-mtdSales">₹0</div>
         <div class="ptgt">Target: <span id="is-mtdTgt">—</span></div>
         <div class="pbar"><div class="pfill bl" id="is-mtdBar" style="width:0%"></div></div>
       </div>
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">MTD Shops</div></div>
+      <div class="pcard" style="cursor:pointer" onclick="showSmKpiModal('mtdShops')">
+        <div class="ptop"><div class="plbl">MTD Shops ▸</div></div>
         <div class="pamt" id="is-mtdShops">0</div>
         <div class="ptgt">Shop target: 15</div>
         <div style="margin-top:7px;font-size:11px" id="is-shopGap">—</div>
@@ -357,14 +357,14 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <div class="sec">
     <div class="sl">Year to Date</div>
     <div class="kg2">
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">YTD Sales</div><div class="ppct hi" id="is-ytdPct">0%</div></div>
+      <div class="pcard" style="cursor:pointer" onclick="showSmKpiModal('ytdSales')">
+        <div class="ptop"><div class="plbl">YTD Sales ▸</div><div class="ppct hi" id="is-ytdPct">0%</div></div>
         <div class="pamt" id="is-ytdSales">₹0</div>
         <div class="ptgt">Annual target: <span id="is-ytdTgt">—</span></div>
         <div class="pbar"><div class="pfill gr" id="is-ytdBar" style="width:0%"></div></div>
       </div>
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">YTD Shops</div></div>
+      <div class="pcard" style="cursor:pointer" onclick="showSmKpiModal('ytdShops')">
+        <div class="ptop"><div class="plbl">YTD Shops ▸</div></div>
         <div class="pamt" id="is-ytdShops">0</div>
         <div class="ptgt">Unique shops this year</div>
         <div style="margin-top:7px;font-size:11px;color:var(--grn)" id="is-newParties">—</div>
@@ -430,10 +430,10 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <div class="sec">
     <div class="sl">MTD / YTD</div>
     <div class="kg4">
-      <div class="kcard pu"><div class="kico">📅</div><div class="kval" id="di-mtdSales">₹0</div><div class="klbl">MTD Sales</div></div>
-      <div class="kcard bl"><div class="kico">🏪</div><div class="kval" id="di-mtdShops">0</div><div class="klbl">MTD Shops</div></div>
-      <div class="kcard gr"><div class="kico">📈</div><div class="kval" id="di-ytdSales">₹0</div><div class="klbl">YTD Sales</div></div>
-      <div class="kcard or"><div class="kico">🏬</div><div class="kval" id="di-ytdShops">0</div><div class="klbl">YTD Shops</div></div>
+      <div class="kcard pu" style="cursor:pointer" onclick="showDistKpiModal('mtdSales')"><div class="kico">📅</div><div class="kval" id="di-mtdSales">₹0</div><div class="klbl">MTD Sales ▸</div></div>
+      <div class="kcard bl" style="cursor:pointer" onclick="showDistKpiModal('mtdShops')"><div class="kico">🏪</div><div class="kval" id="di-mtdShops">0</div><div class="klbl">MTD Shops ▸</div></div>
+      <div class="kcard gr" style="cursor:pointer" onclick="showDistKpiModal('ytdSales')"><div class="kico">📈</div><div class="kval" id="di-ytdSales">₹0</div><div class="klbl">YTD Sales ▸</div></div>
+      <div class="kcard or" style="cursor:pointer" onclick="showDistKpiModal('ytdShops')"><div class="kico">🏬</div><div class="kval" id="di-ytdShops">0</div><div class="klbl">YTD Shops ▸</div></div>
     </div>
   </div>
   <div class="sec">
@@ -555,7 +555,7 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 
 let allOrders=[], allParties=[], allSalesmen=[], allDistributors=[];
 let modalOid=null, charts={};
-let curSmId=null, curDistId=null;
+let curSmId=null, curDistId=null, modalSmId=null;
 
 // ═══════════════════════════════════════════════════════
 // UTILITIES
@@ -728,6 +728,12 @@ async function loadAll(){
     renderAllDistributors();
     renderOrders();
     renderParties();
+
+    // Update Dist Portal link with first distributor ID for auto-login
+    if(allDistributors.length){
+      const link=document.getElementById('distPortalLink');
+      if(link) link.href=`distributor.html?dist=${allDistributors[0].id}`;
+    }
 
     const t=new Date(); document.getElementById('lastSync').textContent=
       'Updated '+t.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
@@ -903,7 +909,7 @@ function renderSmIndividual(smId){
   document.getElementById('is-todayShops').textContent=new Set(todayOrd.map(o=>o.bid)).size;
 
   // MTD
-  const mtdOrd=active.filter(o=>isMTD(o.date));
+  const mtdOrd=active.filter(o=>o.smId===smId&&isMTD(o.date));
   const mtdS=mtdOrd.reduce((s,o)=>s+(o.gt||0),0);
   const mtdShops=new Set(mtdOrd.map(o=>o.bid)).size;
   const mtdPct=sm.target>0?Math.round(mtdS/sm.target*100):0;
@@ -919,7 +925,7 @@ function renderSmIndividual(smId){
   document.getElementById('is-mtdChartLbl').textContent=MONTHS[curM-1]+' '+curY;
 
   // YTD
-  const ytdOrd=active.filter(o=>isYTD(o.date));
+  const ytdOrd=active.filter(o=>o.smId===smId&&isYTD(o.date));
   const ytdS=ytdOrd.reduce((s,o)=>s+(o.gt||0),0);
   const ytdTgt=(sm.target||50000)*12;
   const ytdPct=ytdTgt>0?Math.round(ytdS/ytdTgt*100):0;
@@ -942,7 +948,7 @@ function renderSmIndividual(smId){
   // Orders
   const smOrders=allOrders.filter(o=>o.smId===smId).sort((a,b)=>b.oid>a.oid?1:-1).slice(0,25);
   document.getElementById('isOrdersList').innerHTML=smOrders.map(o=>`
-    <div class="otr" onclick="openOrderModal('${o.oid}')">
+    <div class="otr" onclick="openOrderModal('${o.oid}','${o.smId}')">
       <div class="oid2" style="flex:.8">${o.oid}</div>
       <div style="flex:.7;color:var(--mut);font-size:11px">${o.date?new Date(o.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'-'}</div>
       <div style="flex:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.bname}</div>
@@ -1051,7 +1057,7 @@ function renderOrders(){
 
 function orderRow(o){
   const d=o.date?new Date(o.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'-';
-  return `<div class="otr" onclick="openOrderModal('${o.oid}')" style="${o.status==='Cancelled'?'opacity:.6':''}">
+  return `<div class="otr" onclick="openOrderModal('${o.oid}','${o.smId}')" style="${o.status==='Cancelled'?'opacity:.6':''}">
     <div class="oid2" style="flex:.7">${o.oid}</div>
     <div style="flex:.65;color:var(--mut);font-size:11px">${d}</div>
     <div style="flex:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.bname}</div>
@@ -1086,9 +1092,11 @@ function renderParties(){
 // ═══════════════════════════════════════════════════════
 // ORDER MODAL
 // ═══════════════════════════════════════════════════════
-function openOrderModal(oid){
-  const o=allOrders.find(x=>x.oid===oid); if(!o) return;
-  modalOid=oid;
+function openOrderModal(oid,smId){
+  // Support duplicate oids across salesmen by matching smId if provided
+  const o=smId ? allOrders.find(x=>x.oid===oid&&x.smId===smId) : allOrders.find(x=>x.oid===oid);
+  if(!o) return;
+  modalOid=oid; modalSmId=o.smId;
   const d=o.date?new Date(o.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'-';
   document.getElementById('omTitle').textContent=`${o.oid} · ${o.bname}`;
   const stCls=o.status==='Dispatched'?'sd':o.status==='Cancelled'?'sc':o.status==='Accepted'?'sa':'sp';
@@ -1136,7 +1144,7 @@ async function saveEdit(){
   const idx=allOrders.findIndex(x=>x.oid===modalOid);
   if(idx>=0){allOrders[idx].status=status;allOrders[idx].notes=notes;}
   try{await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({action:'editOrder',orderId:modalOid,changes:{status,notes},actor:'ADMIN'})});}catch(e){}
+    body:JSON.stringify({action:'editOrder',orderId:modalOid,smId:modalSmId,changes:{status,notes},actor:'ADMIN'})});}catch(e){}
   btn.disabled=false; btn.textContent='💾 Save';
   toast('✅ Order updated','ok'); closeModal('orderOv'); renderOrders(); renderOverview();
 }
@@ -1148,7 +1156,7 @@ async function confirmCancel(){
   const idx=allOrders.findIndex(x=>x.oid===modalOid);
   if(idx>=0) allOrders[idx].status='Cancelled';
   try{await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify({action:'cancelOrder',orderId:modalOid,reason,actor:'ADMIN'})});}catch(e){}
+    body:JSON.stringify({action:'cancelOrder',orderId:modalOid,smId:modalSmId,reason,actor:'ADMIN'})});}catch(e){}
   btn.disabled=false;
   toast('⛔ Order cancelled','er'); closeModal('orderOv'); renderOrders(); renderOverview();
 }
@@ -1167,7 +1175,7 @@ function showKpiModal(type){
     if(!ord.length){ body='<div style="text-align:center;padding:24px;color:var(--mut)">No sales today yet</div>'; }
     else{
       const total=ord.reduce((s,o)=>s+(o.gt||0),0);
-      body=ord.map(o=>`<div class="kmod-row" onclick="closeKpiThenOrder('${o.oid}')">
+      body=ord.map(o=>`<div class="kmod-row" onclick="closeKpiThenOrder('${o.oid}','${o.smId}')">
         <div><div style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid}</div>
         <div>${o.bname} <span style="font-size:10px;color:var(--mut)">(${o.smName})</span></div></div>
         <span style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(o.gt)}</span></div>`).join('');
@@ -1198,12 +1206,165 @@ function showKpiModal(type){
       ||'<div style="text-align:center;padding:24px;color:var(--mut)">No shops served today</div>';
   }
 
+  // MTD/YTD — company-wide
+  const {m:curM,y:curY}=getCurMY();
+  const active2=allOrders.filter(o=>o.status!=='Cancelled');
+  if(type==='mtdSales'){
+    title=`📅 MTD Sales — ${MONTHS[curM-1]} ${curY}`;
+    const ord=active2.filter(o=>isMTD(o.date)).sort((a,b)=>b.gt-a.gt);
+    const total=ord.reduce((s,o)=>s+(o.gt||0),0);
+    // Group by salesman
+    const map={};
+    ord.forEach(o=>{if(!map[o.smId])map[o.smId]={name:o.smName,sales:0,orders:0};map[o.smId].sales+=(o.gt||0);map[o.smId].orders++;});
+    body=Object.values(map).sort((a,b)=>b.sales-a.sales).map(s=>`
+      <div class="kmod-row"><span>👤 ${s.name}<br><span style="font-size:10px;color:var(--mut)">${s.orders} orders</span></span>
+      <b style="font-family:var(--m);color:var(--a2)">${fi(s.sales)}</b></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No MTD sales</div>';
+    body+=`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:700"><span>${ord.length} total orders</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+  }else if(type==='mtdShops'){
+    title=`🏪 MTD Shops — ${MONTHS[curM-1]} ${curY}`;
+    const ord=active2.filter(o=>isMTD(o.date));
+    const map={};
+    ord.forEach(o=>{if(!map[o.bid])map[o.bid]={name:o.bname,sm:o.smName,total:0,orders:0};map[o.bid].total+=(o.gt||0);map[o.bid].orders++;});
+    const shops=Object.values(map).sort((a,b)=>b.total-a.total);
+    body=shops.map(s=>`<div class="kmod-row"><span><div>${s.name}</div><div style="font-size:10px;color:var(--mut)">${s.sm} · ${s.orders} orders</div></span>
+      <span style="font-family:var(--m);color:var(--a2)">${fi(s.total)}</span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No MTD shops</div>';
+    body=`<div style="padding:8px 0 10px;font-size:12px;color:var(--mut)">${shops.length} unique shops served this month</div>`+body;
+  }else if(type==='ytdSales'){
+    title=`📈 YTD Sales — ${curY}`;
+    const ord=active2.filter(o=>isYTD(o.date)).sort((a,b)=>b.gt-a.gt);
+    const total=ord.reduce((s,o)=>s+(o.gt||0),0);
+    const map={};
+    ord.forEach(o=>{if(!map[o.smId])map[o.smId]={name:o.smName,sales:0,orders:0};map[o.smId].sales+=(o.gt||0);map[o.smId].orders++;});
+    body=Object.values(map).sort((a,b)=>b.sales-a.sales).map(s=>`
+      <div class="kmod-row"><span>👤 ${s.name}<br><span style="font-size:10px;color:var(--mut)">${s.orders} orders</span></span>
+      <b style="font-family:var(--m);color:var(--a2)">${fi(s.sales)}</b></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No YTD sales</div>';
+    body+=`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:700"><span>${ord.length} total orders</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+  }else if(type==='ytdShops'){
+    title=`🏬 YTD Shops — ${curY}`;
+    const ord=active2.filter(o=>isYTD(o.date));
+    const map={};
+    ord.forEach(o=>{if(!map[o.bid])map[o.bid]={name:o.bname,sm:o.smName,total:0,orders:0};map[o.bid].total+=(o.gt||0);map[o.bid].orders++;});
+    const shops=Object.values(map).sort((a,b)=>b.total-a.total);
+    body=shops.map(s=>`<div class="kmod-row"><span><div>${s.name}</div><div style="font-size:10px;color:var(--mut)">${s.sm} · ${s.orders} orders</div></span>
+      <span style="font-family:var(--m);color:var(--a2)">${fi(s.total)}</span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No YTD shops</div>';
+    body=`<div style="padding:8px 0 10px;font-size:12px;color:var(--mut)">${shops.length} unique shops served this year</div>`+body;
+  }
+
   document.getElementById('kpiTitle').textContent=title;
   document.getElementById('kpiBody').innerHTML=body;
   document.getElementById('kpiOv').classList.add('on');
 }
 
-function closeKpiThenOrder(oid){ closeModal('kpiOv'); setTimeout(()=>openOrderModal(oid),150); }
+// KPI modal for individual salesman drill-down
+function showSmKpiModal(type){
+  if(!curSmId) return;
+  const sm=allSalesmen.find(x=>x.id===curSmId)||{name:curSmId};
+  const {m:curM,y:curY}=getCurMY();
+  const active=allOrders.filter(o=>o.smId===curSmId&&o.status!=='Cancelled');
+  let title='',body='';
+  if(type==='mtdSales'){
+    title=`📅 ${sm.name} — MTD Sales (${MONTHS[curM-1]} ${curY})`;
+    const ord=active.filter(o=>isMTD(o.date)).sort((a,b)=>b.gt-a.gt);
+    const total=ord.reduce((s,o)=>s+(o.gt||0),0);
+    body=ord.map(o=>`<div class="kmod-row" onclick="closeKpiThenOrder('${o.oid}','${o.smId}')">
+      <div><div style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid}</div><div>${o.bname}</div></div>
+      <span style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(o.gt)}</span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No MTD orders</div>';
+    body+=`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:700"><span>${ord.length} orders</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+  }else if(type==='mtdShops'){
+    title=`🏪 ${sm.name} — MTD Shops (${MONTHS[curM-1]} ${curY})`;
+    const ord=active.filter(o=>isMTD(o.date));
+    const map={};
+    ord.forEach(o=>{if(!map[o.bid])map[o.bid]={name:o.bname,total:0,orders:0};map[o.bid].total+=(o.gt||0);map[o.bid].orders++;});
+    const shops=Object.values(map).sort((a,b)=>b.total-a.total);
+    body=shops.map(s=>`<div class="kmod-row"><span><div>${s.name}</div><div style="font-size:10px;color:var(--mut)">${s.orders} orders</div></span>
+      <span style="font-family:var(--m);color:var(--a2)">${fi(s.total)}</span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No MTD shops</div>';
+    body=`<div style="padding:8px 0 10px;font-size:12px;color:var(--mut)">${shops.length} shops served this month</div>`+body;
+  }else if(type==='ytdSales'){
+    title=`📈 ${sm.name} — YTD Sales (${curY})`;
+    const ord=active.filter(o=>isYTD(o.date)).sort((a,b)=>b.gt-a.gt);
+    const total=ord.reduce((s,o)=>s+(o.gt||0),0);
+    body=ord.map(o=>`<div class="kmod-row" onclick="closeKpiThenOrder('${o.oid}','${o.smId}')">
+      <div><div style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid}</div><div>${o.bname}</div></div>
+      <span style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(o.gt)}</span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No YTD orders</div>';
+    body+=`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:700"><span>${ord.length} orders</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+  }else if(type==='ytdShops'){
+    title=`🏬 ${sm.name} — YTD Shops (${curY})`;
+    const ord=active.filter(o=>isYTD(o.date));
+    const map={};
+    ord.forEach(o=>{if(!map[o.bid])map[o.bid]={name:o.bname,total:0,orders:0};map[o.bid].total+=(o.gt||0);map[o.bid].orders++;});
+    const shops=Object.values(map).sort((a,b)=>b.total-a.total);
+    body=shops.map(s=>`<div class="kmod-row"><span><div>${s.name}</div><div style="font-size:10px;color:var(--mut)">${s.orders} orders</div></span>
+      <span style="font-family:var(--m);color:var(--a2)">${fi(s.total)}</span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No YTD shops</div>';
+    body=`<div style="padding:8px 0 10px;font-size:12px;color:var(--mut)">${shops.length} shops served this year</div>`+body;
+  }
+  document.getElementById('kpiTitle').textContent=title;
+  document.getElementById('kpiBody').innerHTML=body;
+  document.getElementById('kpiOv').classList.add('on');
+}
+
+// KPI modal for individual distributor drill-down
+function showDistKpiModal(type){
+  if(!curDistId) return;
+  const dist=allDistributors.find(x=>x.id===curDistId)||{name:curDistId};
+  const {m:curM,y:curY}=getCurMY();
+  const dSmIds=new Set(allSalesmen.filter(s=>s.distributor===curDistId).map(s=>s.id));
+  const active=allOrders.filter(o=>dSmIds.has(o.smId)&&o.status!=='Cancelled');
+  let title='',body='';
+  if(type==='mtdSales'){
+    title=`📅 ${dist.name} — MTD Sales (${MONTHS[curM-1]} ${curY})`;
+    const ord=active.filter(o=>isMTD(o.date)).sort((a,b)=>b.gt-a.gt);
+    const total=ord.reduce((s,o)=>s+(o.gt||0),0);
+    body=ord.map(o=>`<div class="kmod-row" onclick="closeKpiThenOrder('${o.oid}','${o.smId}')">
+      <div><div style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid}</div>
+      <div>${o.bname} <span style="font-size:10px;color:var(--mut)">(${o.smName})</span></div></div>
+      <span style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(o.gt)}</span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No MTD orders</div>';
+    body+=`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:700"><span>${ord.length} orders</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+  }else if(type==='mtdShops'){
+    title=`🏪 ${dist.name} — MTD Shops (${MONTHS[curM-1]} ${curY})`;
+    const ord=active.filter(o=>isMTD(o.date));
+    const map={};
+    ord.forEach(o=>{if(!map[o.bid])map[o.bid]={name:o.bname,sm:o.smName,total:0,orders:0};map[o.bid].total+=(o.gt||0);map[o.bid].orders++;});
+    const shops=Object.values(map).sort((a,b)=>b.total-a.total);
+    body=shops.map(s=>`<div class="kmod-row"><span><div>${s.name}</div><div style="font-size:10px;color:var(--mut)">${s.sm} · ${s.orders} orders</div></span>
+      <span style="font-family:var(--m);color:var(--a2)">${fi(s.total)}</span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No MTD shops</div>';
+    body=`<div style="padding:8px 0 10px;font-size:12px;color:var(--mut)">${shops.length} shops served this month</div>`+body;
+  }else if(type==='ytdSales'){
+    title=`📈 ${dist.name} — YTD Sales (${curY})`;
+    const ord=active.filter(o=>isYTD(o.date)).sort((a,b)=>b.gt-a.gt);
+    const total=ord.reduce((s,o)=>s+(o.gt||0),0);
+    body=ord.map(o=>`<div class="kmod-row" onclick="closeKpiThenOrder('${o.oid}','${o.smId}')">
+      <div><div style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid}</div>
+      <div>${o.bname} <span style="font-size:10px;color:var(--mut)">(${o.smName})</span></div></div>
+      <span style="font-family:var(--m);color:var(--a2);font-weight:700">${fi(o.gt)}</span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No YTD orders</div>';
+    body+=`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:700"><span>${ord.length} orders</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+  }else if(type==='ytdShops'){
+    title=`🏬 ${dist.name} — YTD Shops (${curY})`;
+    const ord=active.filter(o=>isYTD(o.date));
+    const map={};
+    ord.forEach(o=>{if(!map[o.bid])map[o.bid]={name:o.bname,sm:o.smName,total:0,orders:0};map[o.bid].total+=(o.gt||0);map[o.bid].orders++;});
+    const shops=Object.values(map).sort((a,b)=>b.total-a.total);
+    body=shops.map(s=>`<div class="kmod-row"><span><div>${s.name}</div><div style="font-size:10px;color:var(--mut)">${s.sm} · ${s.orders} orders</div></span>
+      <span style="font-family:var(--m);color:var(--a2)">${fi(s.total)}</span></div>`).join('')
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No YTD shops</div>';
+    body=`<div style="padding:8px 0 10px;font-size:12px;color:var(--mut)">${shops.length} shops served this year</div>`+body;
+  }
+  document.getElementById('kpiTitle').textContent=title;
+  document.getElementById('kpiBody').innerHTML=body;
+  document.getElementById('kpiOv').classList.add('on');
+}
+
+function closeKpiThenOrder(oid,smId){ closeModal('kpiOv'); setTimeout(()=>openOrderModal(oid,smId),150); }
 
 // Auto-refresh every 60s
 setInterval(()=>loadAll(), 60000);
