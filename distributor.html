@@ -380,13 +380,19 @@ async function initApp(){
       const r=await fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`);
       const d=await r.json();
       const f=(d.distributors||[]).find(x=>x.id===distId);
-      if(!f){doLogout();return;}
-      distInfo=f;distName=f.name;
-    }catch(e){doLogout();return;}
+      if(f){distInfo=f;distName=f.name;}
+      else{
+        // distId not found in list — use distId as display name, proceed anyway
+        distName=distId;
+      }
+    }catch(e){
+      // Network error — use distId as display name, proceed with loadData
+      distName=distId;
+    }
   }
   document.getElementById('setupScreen').style.display='none';
   document.getElementById('app').style.display='block';
-  const init=distName.split(' ').map(w=>w[0]).join('').slice(0,2);
+  const init=distName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('hAv').textContent=init;
   document.getElementById('hName').textContent=distName;
   document.getElementById('hId').textContent=distId+(distInfo.territory?' · '+distInfo.territory:'');
