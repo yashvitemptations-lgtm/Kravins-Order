@@ -540,14 +540,14 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div class="sec">
       <div class="sl">Month &amp; Year Performance</div>
       <div class="kpi2" style="margin-bottom:12px">
-        <div class="pcard">
-          <div class="ptop"><div class="plbl">MTD Sales</div><div class="ppct" id="sv-mtd-pct">0%</div></div>
+        <div class="pcard" style="cursor:pointer" onclick="svOpenDrill('mtd','sales')">
+          <div class="ptop"><div class="plbl">MTD SALES ▸</div><div class="ppct" id="sv-mtd-pct">0%</div></div>
           <div class="pamt" id="sv-mtd-sales">₹0</div>
           <div class="ptgt">Target: <span id="sv-mtd-target">₹50,000</span></div>
           <div class="pbar"><div class="pfill bl" id="sv-mtd-bar" style="width:0%"></div></div>
         </div>
-        <div class="pcard">
-          <div class="ptop"><div class="plbl">YTD Sales</div><div class="ppct" id="sv-ytd-pct">0%</div></div>
+        <div class="pcard" style="cursor:pointer" onclick="svOpenDrill('ytd','sales')">
+          <div class="ptop"><div class="plbl">YTD SALES ▸</div><div class="ppct" id="sv-ytd-pct">0%</div></div>
           <div class="pamt" id="sv-ytd-sales">₹0</div>
           <div class="ptgt">Annual: <span id="sv-ytd-target">₹6,00,000</span></div>
           <div class="pbar"><div class="pfill gr" id="sv-ytd-bar" style="width:0%"></div></div>
@@ -564,14 +564,14 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div class="sec">
       <div class="sl">Coverage &amp; Growth</div>
       <div class="kpi2" style="margin-bottom:12px">
-        <div class="pcard">
-          <div class="ptop"><div class="plbl">MTD Shops</div></div>
+        <div class="pcard" style="cursor:pointer" onclick="svOpenDrill('mtd','shops')">
+          <div class="ptop"><div class="plbl">MTD SHOPS ▸</div></div>
           <div class="pamt" id="sv-mtd-shops">0</div>
           <div class="ptgt">Target: 15 shops</div>
           <div class="ptgt" id="sv-mtd-shops-gap" style="color:var(--ylw);margin-top:3px">—</div>
         </div>
-        <div class="pcard">
-          <div class="ptop"><div class="plbl">YTD Shops</div></div>
+        <div class="pcard" style="cursor:pointer" onclick="svOpenDrill('ytd','shops')">
+          <div class="ptop"><div class="plbl">YTD SHOPS ▸</div></div>
           <div class="pamt" id="sv-ytd-shops">0</div>
           <div class="ptgt">Unique shops this year</div>
         </div>
@@ -1134,6 +1134,90 @@ function svRenderParties(){
 function closeSmView(){
   document.getElementById('smView').classList.remove('on');
   curSmId = '';
+}
+
+// ── SALESMAN VIEW DRILL-DOWN (reuses the same drill sheet) ──
+function svOpenDrill(period, type){
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  const curMonth = now.getMonth()+1, curYear = now.getFullYear();
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  let orders = allOrders.filter(o => o.smId===curSmId && o.status!=='Cancelled');
+
+  if(period === 'ytd'){
+    orders = orders.filter(o => new Date(o.date).getFullYear()===curYear);
+    const title = type==='shops' ? `🏪 YTD Shops — ${curYear}` : `💰 YTD Sales — ${curYear}`;
+    document.getElementById('drill-title').textContent = title;
+
+    const monthMap = {};
+    orders.forEach(o => {
+      const d = new Date(o.date+'T00:00:00');
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      const label = d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+      if(!monthMap[key]) monthMap[key] = {key, label, orders:[], total:0, shops:new Set()};
+      monthMap[key].orders.push(o);
+      monthMap[key].total += (o.gt||0);
+      monthMap[key].shops.add(o.bid);
+    });
+    const mGroups = Object.values(monthMap).sort((a,b) => b.key.localeCompare(a.key));
+    window._svYtdGroups = mGroups;
+
+    let html = '';
+    if(!mGroups.length){
+      html = '<div class="empty" style="padding:24px">No data for this year.</div>';
+    } else {
+      html = mGroups.map(g => `
+        <div class="drill-row" style="cursor:pointer;border-radius:9px;padding:11px 4px;transition:background .15s"
+             onmouseover="this.style.background='rgba(59,130,246,.07)'" onmouseout="this.style.background=''"
+             onclick="svOpenMonthDrill('${g.key}','${type}')">
+          <div>
+            <div style="font-size:13px;font-weight:700">${g.label}</div>
+            <div style="font-size:10px;color:var(--mut);margin-top:2px">${g.orders.length} order${g.orders.length>1?'s':''} · ${g.shops.size} shop${g.shops.size>1?'s':''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+            <div style="font-family:var(--m);font-size:13px;font-weight:800;color:var(--grn)">${fi(g.total)}</div>
+            <span style="color:var(--mut);font-size:14px">›</span>
+          </div>
+        </div>`).join('');
+      const grandTotal = mGroups.reduce((s,g)=>s+g.total,0);
+      const totalOrds  = mGroups.reduce((s,g)=>s+g.orders.length,0);
+      html += `<div class="drill-foot"><span>${totalOrds} orders · ${mGroups.length} months</span><span style="color:var(--grn);font-family:var(--m)">${fi(grandTotal)}</span></div>`;
+    }
+    document.getElementById('drill-body').innerHTML = html;
+    document.getElementById('drillOv').classList.add('on');
+    return;
+  }
+
+  // MTD — flat list
+  if(period === 'mtd'){
+    orders = orders.filter(o => { const d=new Date(o.date); return d.getMonth()+1===curMonth && d.getFullYear()===curYear; });
+  }
+  const title = type==='shops'
+    ? `🏪 ${period==='mtd'?'MTD':'Today'} Shops — ${MONTHS[curMonth-1]} ${curYear}`
+    : `💰 ${period==='mtd'?'MTD':'Today'} Sales — ${MONTHS[curMonth-1]} ${curYear}`;
+  document.getElementById('drill-title').textContent = title;
+  document.getElementById('drill-body').innerHTML = buildOrderOrShopList(orders, type);
+  document.getElementById('drillOv').classList.add('on');
+}
+
+function svOpenMonthDrill(monthKey, type){
+  const [yr, mo] = monthKey.split('-').map(Number);
+  const grp = (window._svYtdGroups||[]).find(g => g.key===monthKey);
+  const monthLabel = grp ? grp.label : monthKey;
+  const monthOrders = allOrders.filter(o => {
+    if(o.smId!==curSmId || o.status==='Cancelled') return false;
+    const d = new Date(o.date+'T00:00:00');
+    return d.getFullYear()===yr && d.getMonth()+1===mo;
+  });
+  const title = type==='shops' ? `🏪 ${monthLabel} — Shops` : `💰 ${monthLabel} — Sales`;
+  document.getElementById('drill-title').textContent = title;
+  document.getElementById('drill-body').innerHTML =
+    `<button onclick="svOpenDrill('ytd','${type}')"
+       style="display:flex;align-items:center;gap:6px;background:var(--s2);border:1.5px solid var(--bdr);
+              border-radius:8px;padding:7px 14px;font-family:var(--f);font-size:11px;font-weight:600;
+              color:var(--mut);cursor:pointer;margin-bottom:14px">‹ Back to YTD</button>` +
+    buildOrderOrShopList(monthOrders, type);
 }
 
 // ── ORDER MODAL ──
