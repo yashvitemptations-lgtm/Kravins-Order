@@ -66,7 +66,22 @@ body{font-family:var(--f);background:var(--bg);color:var(--txt);overflow-x:hidde
 .kpi3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
 .kpi2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .kcard{background:linear-gradient(135deg,var(--s2),var(--s1));border:1.5px solid var(--bdr);
-  border-radius:13px;padding:12px;position:relative;overflow:hidden}
+  border-radius:13px;padding:12px;position:relative;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s}
+.kcard:active{transform:scale(.97)}
+/* ── DRILL-DOWN SHEET ── */
+.drill-ov{display:none;position:fixed;inset:0;z-index:400;background:rgba(5,10,20,.75);backdrop-filter:blur(6px)}
+.drill-ov.on{display:flex;align-items:flex-end;justify-content:center}
+.drill-sheet{background:var(--s1);border-radius:20px 20px 0 0;width:100%;max-width:600px;
+  max-height:88vh;overflow-y:auto;padding:16px 16px 24px;border-top:1px solid var(--bdr)}
+.drill-drag{width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 14px}
+.drill-title{font-size:16px;font-weight:800;margin-bottom:12px}
+.drill-row{display:flex;align-items:center;justify-content:space-between;
+  padding:9px 0;border-bottom:1px solid rgba(30,49,82,.5);font-size:12px}
+.drill-row:last-child{border-bottom:none}
+.drill-foot{display:flex;justify-content:space-between;padding:11px 0 0;
+  border-top:2px solid var(--bdr);margin-top:4px;font-size:13px;font-weight:700}
+.drill-close{width:100%;margin-top:14px;padding:12px;background:var(--s2);border:1.5px solid var(--bdr);
+  border-radius:10px;font-family:var(--f);font-size:13px;font-weight:700;color:var(--red);cursor:pointer}
 .kcard::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;
   border-radius:50%;filter:blur(30px);opacity:.15}
 .kcard.bl::before{background:var(--acc)}.kcard.gr::before{background:var(--grn)}
@@ -273,20 +288,20 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div class="sec">
       <div class="sl">Today — Company Wide</div>
       <div class="kpi3">
-        <div class="kcard bl">
+        <div class="kcard bl" onclick="openDrill('today','sales')">
           <div class="kico">💰</div>
           <div class="kval" id="ov-today-sales">₹0</div>
-          <div class="klbl">Sales</div>
+          <div class="klbl">SALES ▸</div>
         </div>
-        <div class="kcard gr">
+        <div class="kcard gr" onclick="openDrill('today','orders')">
           <div class="kico">📦</div>
           <div class="kval" id="ov-today-orders">0</div>
-          <div class="klbl">Orders</div>
+          <div class="klbl">ORDERS ▸</div>
         </div>
-        <div class="kcard or">
+        <div class="kcard or" onclick="openDrill('today','shops')">
           <div class="kico">🏪</div>
           <div class="kval" id="ov-today-shops">0</div>
-          <div class="klbl">Shops</div>
+          <div class="klbl">SHOPS ▸</div>
         </div>
       </div>
     </div>
@@ -295,18 +310,18 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div class="sec">
       <div class="sl">Month to Date — <span id="ov-mtd-label">Mar 2026</span></div>
       <div class="kpi2">
-        <div class="pcard">
+        <div class="pcard" style="cursor:pointer" onclick="openDrill('mtd','sales')">
           <div class="ptop">
-            <div class="plbl">MTD Sales</div>
+            <div class="plbl">MTD SALES ▸</div>
             <div class="ppct" id="ov-mtd-pct">0%</div>
           </div>
           <div class="pamt" id="ov-mtd-sales">₹0</div>
           <div class="ptgt">Target: <span id="ov-mtd-target">₹2,50,000</span></div>
           <div class="pbar"><div class="pfill bl" id="ov-mtd-bar" style="width:0%"></div></div>
         </div>
-        <div class="pcard">
+        <div class="pcard" style="cursor:pointer" onclick="openDrill('mtd','shops')">
           <div class="ptop">
-            <div class="plbl">MTD Shops</div>
+            <div class="plbl">MTD SHOPS ▸</div>
             <div class="ppct" id="ov-mtd-shops-pct">0</div>
           </div>
           <div class="pamt" id="ov-mtd-shops">0</div>
@@ -320,18 +335,18 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <div class="sec">
       <div class="sl">Year to Date — <span id="ov-ytd-label">2026</span></div>
       <div class="kpi2">
-        <div class="pcard">
+        <div class="pcard" style="cursor:pointer" onclick="openDrill('ytd','sales')">
           <div class="ptop">
-            <div class="plbl">YTD Sales</div>
+            <div class="plbl">YTD SALES ▸</div>
             <div class="ppct" id="ov-ytd-pct">0%</div>
           </div>
           <div class="pamt" id="ov-ytd-sales">₹0</div>
           <div class="ptgt">Annual target: <span id="ov-ytd-target">₹30,00,000</span></div>
           <div class="pbar"><div class="pfill gr" id="ov-ytd-bar" style="width:0%"></div></div>
         </div>
-        <div class="pcard">
+        <div class="pcard" style="cursor:pointer" onclick="openDrill('ytd','shops')">
           <div class="ptop">
-            <div class="plbl">YTD Shops</div>
+            <div class="plbl">YTD SHOPS ▸</div>
             <div class="ppct" id="ov-ytd-shops-cnt">0</div>
           </div>
           <div class="pamt" id="ov-ytd-orders">0</div>
@@ -480,6 +495,16 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
   </div><!-- /scr -->
 </div><!-- /app -->
+
+<!-- DRILL-DOWN SHEET -->
+<div class="drill-ov" id="drillOv" onclick="if(event.target===this)closeDrill()">
+  <div class="drill-sheet">
+    <div class="drill-drag"></div>
+    <div class="drill-title" id="drill-title">Orders</div>
+    <div id="drill-body"></div>
+    <button class="drill-close" onclick="closeDrill()">Close</button>
+  </div>
+</div>
 
 <!-- SALESMAN VIEW OVERLAY (read-only) -->
 <div class="sm-view" id="smView">
@@ -1195,6 +1220,92 @@ async function submitCancel(){
   }catch(e){toast('⚠️ Error — retry','er');}
   btn.disabled=false;btn.textContent='⛔ Confirm Cancel';
 }
+
+// ── OVERVIEW DRILL-DOWN ──
+function openDrill(period, type){
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  const curMonth = now.getMonth()+1, curYear = now.getFullYear();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  let orders = allOrders.filter(o => o.status !== 'Cancelled');
+  let title = '';
+
+  if(period === 'today'){
+    orders = orders.filter(o => o.date === todayStr);
+    title = type==='shops'
+      ? `🏪 Today's Shops — ${fmtDate(todayStr)}`
+      : type==='orders'
+      ? `📦 Today's Orders — ${fmtDate(todayStr)}`
+      : `💰 Today's Sales — ${fmtDate(todayStr)}`;
+  } else if(period === 'mtd'){
+    orders = orders.filter(o => { const d=new Date(o.date); return d.getMonth()+1===curMonth && d.getFullYear()===curYear; });
+    title = type==='shops'
+      ? `🏪 MTD Shops — ${months[curMonth-1]} ${curYear}`
+      : `💰 MTD Sales — ${months[curMonth-1]} ${curYear}`;
+  } else if(period === 'ytd'){
+    orders = orders.filter(o => new Date(o.date).getFullYear() === curYear);
+    title = type==='shops'
+      ? `🏪 YTD Shops — ${curYear}`
+      : `💰 YTD Sales — ${curYear}`;
+  }
+
+  document.getElementById('drill-title').textContent = title;
+
+  let html = '';
+  if(type === 'shops'){
+    // Group by unique shop (buyer)
+    const shopMap = {};
+    orders.forEach(o => {
+      if(!shopMap[o.bid]) shopMap[o.bid] = {name:o.bname, orders:0, total:0};
+      shopMap[o.bid].orders++;
+      shopMap[o.bid].total += (o.gt||0);
+    });
+    const shops = Object.values(shopMap).sort((a,b) => b.total-a.total);
+    if(!shops.length){
+      html = '<div class="empty" style="padding:24px">No shops for this period.</div>';
+    } else {
+      html = shops.map(s => `
+        <div class="drill-row">
+          <div>
+            <div style="font-size:12px;font-weight:600">${s.name}</div>
+            <div style="font-size:10px;color:var(--mut)">${s.orders} order${s.orders>1?'s':''}</div>
+          </div>
+          <div style="font-family:var(--m);font-size:12px;font-weight:700;color:var(--grn)">${fi(s.total)}</div>
+        </div>`).join('');
+      const totalAmt = shops.reduce((s,x)=>s+x.total,0);
+      html += `<div class="drill-foot"><span>${shops.length} shops</span><span style="color:var(--grn);font-family:var(--m)">${fi(totalAmt)}</span></div>`;
+    }
+  } else {
+    // Sales / Orders — list individual orders
+    const sorted = orders.sort((a,b) => b.date.localeCompare(a.date));
+    if(!sorted.length){
+      html = '<div class="empty" style="padding:24px">No orders for this period.</div>';
+    } else {
+      html = sorted.map(o => {
+        const sc = o.status.toLowerCase();
+        return `<div class="drill-row" style="cursor:pointer" onclick="closeDrill();openOrder('${o.oid}')">
+          <div>
+            <div style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid} · ${fmtDateShort(o.date)}</div>
+            <div style="font-size:12px;font-weight:600">${o.bname}</div>
+            <div style="font-size:10px;color:var(--mut)">${o.smName}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:var(--m);font-size:12px;font-weight:700;color:var(--grn)">${fi(o.gt)}</div>
+            <span class="stbadge ${sc}" style="margin-top:3px;display:inline-block">${o.status}</span>
+          </div>
+        </div>`;
+      }).join('');
+      const totalAmt = sorted.reduce((s,o)=>s+(o.gt||0),0);
+      html += `<div class="drill-foot"><span>${sorted.length} total orders</span><span style="color:var(--grn);font-family:var(--m)">${fi(totalAmt)}</span></div>`;
+    }
+  }
+
+  document.getElementById('drill-body').innerHTML = html;
+  document.getElementById('drillOv').classList.add('on');
+}
+
+function closeDrill(){ document.getElementById('drillOv').classList.remove('on'); }
 
 setInterval(()=>{if(distId)loadData();},60000);
 </script>
