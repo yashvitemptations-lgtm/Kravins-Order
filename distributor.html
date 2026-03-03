@@ -1226,83 +1226,162 @@ function openDrill(period, type){
   const now = new Date();
   const todayStr = now.toISOString().slice(0,10);
   const curMonth = now.getMonth()+1, curYear = now.getFullYear();
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   let orders = allOrders.filter(o => o.status !== 'Cancelled');
-  let title = '';
 
+  // ── YTD: show month-wise summary rows, each clickable ──
+  if(period === 'ytd'){
+    orders = orders.filter(o => new Date(o.date).getFullYear() === curYear);
+    const title = type==='shops' ? `🏪 YTD Shops — ${curYear}` : `💰 YTD Sales — ${curYear}`;
+    document.getElementById('drill-title').textContent = title;
+
+    // Group by month
+    const monthMap = {};
+    orders.forEach(o => {
+      const d = new Date(o.date+'T00:00:00');
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      const label = d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+      if(!monthMap[key]) monthMap[key] = {key, label, orders:[], total:0, shops: new Set()};
+      monthMap[key].orders.push(o);
+      monthMap[key].total += (o.gt||0);
+      monthMap[key].shops.add(o.bid);
+    });
+
+    const mGroups = Object.values(monthMap).sort((a,b) => b.key.localeCompare(a.key));
+    // Store month data globally so onclick can reference by key without string escaping issues
+    window._ytdGroups = mGroups;
+
+    let html = '';
+    if(!mGroups.length){
+      html = '<div class="empty" style="padding:24px">No data for this year.</div>';
+    } else {
+      html = mGroups.map(g => `
+        <div class="drill-row" style="cursor:pointer;border-radius:9px;padding:11px 4px;transition:background .15s"
+             onmouseover="this.style.background='rgba(59,130,246,.07)'" onmouseout="this.style.background=''"
+             onclick="openMonthDrill('${g.key}','${type}')">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--txt)">${g.label}</div>
+            <div style="font-size:10px;color:var(--mut);margin-top:2px">
+              ${g.orders.length} order${g.orders.length>1?'s':''} · ${g.shops.size} shop${g.shops.size>1?'s':''}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+            <div style="text-align:right">
+              <div style="font-family:var(--m);font-size:13px;font-weight:800;color:var(--grn)">${fi(g.total)}</div>
+            </div>
+            <span style="color:var(--mut);font-size:14px">›</span>
+          </div>
+        </div>`).join('');
+      const grandTotal = mGroups.reduce((s,g) => s+g.total, 0);
+      const totalOrders = mGroups.reduce((s,g) => s+g.orders.length, 0);
+      html += `<div class="drill-foot">
+        <span>${totalOrders} orders · ${mGroups.length} months</span>
+        <span style="color:var(--grn);font-family:var(--m)">${fi(grandTotal)}</span>
+      </div>`;
+    }
+
+    document.getElementById('drill-body').innerHTML = html;
+    document.getElementById('drillOv').classList.add('on');
+    return;
+  }
+
+  // ── TODAY / MTD: show flat order or shop list ──
+  let title = '';
   if(period === 'today'){
     orders = orders.filter(o => o.date === todayStr);
-    title = type==='shops'
-      ? `🏪 Today's Shops — ${fmtDate(todayStr)}`
-      : type==='orders'
-      ? `📦 Today's Orders — ${fmtDate(todayStr)}`
-      : `💰 Today's Sales — ${fmtDate(todayStr)}`;
+    title = type==='shops' ? `🏪 Today's Shops — ${fmtDate(todayStr)}`
+          : type==='orders' ? `📦 Today's Orders — ${fmtDate(todayStr)}`
+          : `💰 Today's Sales — ${fmtDate(todayStr)}`;
   } else if(period === 'mtd'){
     orders = orders.filter(o => { const d=new Date(o.date); return d.getMonth()+1===curMonth && d.getFullYear()===curYear; });
-    title = type==='shops'
-      ? `🏪 MTD Shops — ${months[curMonth-1]} ${curYear}`
-      : `💰 MTD Sales — ${months[curMonth-1]} ${curYear}`;
-  } else if(period === 'ytd'){
-    orders = orders.filter(o => new Date(o.date).getFullYear() === curYear);
-    title = type==='shops'
-      ? `🏪 YTD Shops — ${curYear}`
-      : `💰 YTD Sales — ${curYear}`;
+    title = type==='shops' ? `🏪 MTD Shops — ${MONTHS[curMonth-1]} ${curYear}`
+          : `💰 MTD Sales — ${MONTHS[curMonth-1]} ${curYear}`;
   }
 
   document.getElementById('drill-title').textContent = title;
+  document.getElementById('drill-body').innerHTML = buildOrderOrShopList(orders, type);
+  document.getElementById('drillOv').classList.add('on');
+}
 
-  let html = '';
+// ── MONTH DRILL (level 2): called when a month row is tapped in YTD view ──
+function openMonthDrill(monthKey, type){
+  const [yr, mo] = monthKey.split('-').map(Number);
+  // Get label from stored groups
+  const grp = (window._ytdGroups||[]).find(g => g.key === monthKey);
+  const monthLabel = grp ? grp.label : monthKey;
+
+  const monthOrders = allOrders.filter(o => {
+    if(o.status === 'Cancelled') return false;
+    const d = new Date(o.date+'T00:00:00');
+    return d.getFullYear() === yr && d.getMonth()+1 === mo;
+  });
+
+  const title = type==='shops' ? `🏪 ${monthLabel} — Shops` : `💰 ${monthLabel} — Sales`;
+
+  document.getElementById('drill-title').textContent = title;
+  document.getElementById('drill-body').innerHTML =
+    `<button onclick="openDrill('ytd','${type}')"
+       style="display:flex;align-items:center;gap:6px;background:var(--s2);border:1.5px solid var(--bdr);
+              border-radius:8px;padding:7px 14px;font-family:var(--f);font-size:11px;font-weight:600;
+              color:var(--mut);cursor:pointer;margin-bottom:14px">
+       ‹ Back to YTD
+     </button>` +
+    buildOrderOrShopList(monthOrders, type);
+}
+
+// ── SHARED: build order list or shop list HTML ──
+function buildOrderOrShopList(orders, type){
   if(type === 'shops'){
-    // Group by unique shop (buyer)
     const shopMap = {};
     orders.forEach(o => {
-      if(!shopMap[o.bid]) shopMap[o.bid] = {name:o.bname, orders:0, total:0};
-      shopMap[o.bid].orders++;
+      if(!shopMap[o.bid]) shopMap[o.bid] = {name:o.bname, orders:[], total:0};
+      shopMap[o.bid].orders.push(o);
       shopMap[o.bid].total += (o.gt||0);
     });
     const shops = Object.values(shopMap).sort((a,b) => b.total-a.total);
-    if(!shops.length){
-      html = '<div class="empty" style="padding:24px">No shops for this period.</div>';
-    } else {
-      html = shops.map(s => `
-        <div class="drill-row">
-          <div>
-            <div style="font-size:12px;font-weight:600">${s.name}</div>
-            <div style="font-size:10px;color:var(--mut)">${s.orders} order${s.orders>1?'s':''}</div>
-          </div>
-          <div style="font-family:var(--m);font-size:12px;font-weight:700;color:var(--grn)">${fi(s.total)}</div>
-        </div>`).join('');
-      const totalAmt = shops.reduce((s,x)=>s+x.total,0);
-      html += `<div class="drill-foot"><span>${shops.length} shops</span><span style="color:var(--grn);font-family:var(--m)">${fi(totalAmt)}</span></div>`;
-    }
-  } else {
-    // Sales / Orders — list individual orders
-    const sorted = orders.sort((a,b) => b.date.localeCompare(a.date));
-    if(!sorted.length){
-      html = '<div class="empty" style="padding:24px">No orders for this period.</div>';
-    } else {
-      html = sorted.map(o => {
-        const sc = o.status.toLowerCase();
-        return `<div class="drill-row" style="cursor:pointer" onclick="closeDrill();openOrder('${o.oid}')">
-          <div>
-            <div style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid} · ${fmtDateShort(o.date)}</div>
-            <div style="font-size:12px;font-weight:600">${o.bname}</div>
-            <div style="font-size:10px;color:var(--mut)">${o.smName}</div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-family:var(--m);font-size:12px;font-weight:700;color:var(--grn)">${fi(o.gt)}</div>
-            <span class="stbadge ${sc}" style="margin-top:3px;display:inline-block">${o.status}</span>
-          </div>
-        </div>`;
-      }).join('');
-      const totalAmt = sorted.reduce((s,o)=>s+(o.gt||0),0);
-      html += `<div class="drill-foot"><span>${sorted.length} total orders</span><span style="color:var(--grn);font-family:var(--m)">${fi(totalAmt)}</span></div>`;
-    }
-  }
+    if(!shops.length) return '<div class="empty" style="padding:24px">No shops for this period.</div>';
 
-  document.getElementById('drill-body').innerHTML = html;
-  document.getElementById('drillOv').classList.add('on');
+    let html = shops.map(s => `
+      <div class="drill-row" style="cursor:pointer;border-radius:8px;padding:10px 4px;transition:background .15s"
+           onmouseover="this.style.background='rgba(59,130,246,.07)'" onmouseout="this.style.background=''">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600">${s.name}</div>
+          <div style="font-size:10px;color:var(--mut);margin-top:2px">
+            ${s.orders.map(o=>`<span style="font-family:var(--m);color:var(--a2)">${o.oid}</span>`).join(' · ')}
+          </div>
+          <div style="font-size:10px;color:var(--mut)">${s.orders.length} order${s.orders.length>1?'s':''}</div>
+        </div>
+        <div style="font-family:var(--m);font-size:12px;font-weight:700;color:var(--grn);flex-shrink:0">${fi(s.total)}</div>
+      </div>`).join('');
+    const totalAmt = shops.reduce((s,x) => s+x.total, 0);
+    html += `<div class="drill-foot"><span>${shops.length} shops</span><span style="color:var(--grn);font-family:var(--m)">${fi(totalAmt)}</span></div>`;
+    return html;
+  } else {
+    // Sales — individual orders, clickable
+    const sorted = [...orders].sort((a,b) => b.date.localeCompare(a.date));
+    if(!sorted.length) return '<div class="empty" style="padding:24px">No orders for this period.</div>';
+
+    let html = sorted.map(o => {
+      const sc = o.status.toLowerCase();
+      return `<div class="drill-row" style="cursor:pointer;border-radius:8px;padding:10px 4px;transition:background .15s"
+           onmouseover="this.style.background='rgba(59,130,246,.07)'" onmouseout="this.style.background=''"
+           onclick="closeDrill();openOrder('${o.oid}')">
+        <div style="flex:1;min-width:0">
+          <div style="font-family:var(--m);font-size:10px;color:var(--a2)">${o.oid} · ${fmtDateShort(o.date)}</div>
+          <div style="font-size:12px;font-weight:600">${o.bname}</div>
+          <div style="font-size:10px;color:var(--mut)">${o.smName}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:var(--m);font-size:12px;font-weight:700;color:var(--grn)">${fi(o.gt)}</div>
+          <span class="stbadge ${sc}" style="margin-top:3px;display:inline-block">${o.status}</span>
+        </div>
+      </div>`;
+    }).join('');
+    const totalAmt = sorted.reduce((s,o) => s+(o.gt||0), 0);
+    html += `<div class="drill-foot"><span>${sorted.length} orders</span><span style="color:var(--grn);font-family:var(--m)">${fi(totalAmt)}</span></div>`;
+    return html;
+  }
 }
 
 function closeDrill(){ document.getElementById('drillOv').classList.remove('on'); }
