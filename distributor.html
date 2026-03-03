@@ -2,354 +2,631 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<meta name="theme-color" content="#0b0d17">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#050a14">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Distributor Portal · Kravins</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root{
-  --bg:#0b0d17;--s1:#111320;--s2:#171a2e;--bdr:#252a45;
-  --acc:#7c3aed;--a2:#a78bfa;
-  --grn:#10b981;--org:#f59e0b;--red:#ef4444;--blu:#3b82f6;
-  --txt:#f0f0ff;--mut:#6b7280;--sub:#9ca3af;
-  --f:'Plus Jakarta Sans',sans-serif;--m:'JetBrains Mono',monospace
-}
+:root{--bg:#050a14;--s1:#0a1222;--s2:#0f1a2e;--s3:#152238;--bdr:#1e3152;
+  --acc:#3b82f6;--a2:#60a5fa;--grn:#22c55e;--org:#f97316;--red:#ef4444;
+  --ylw:#eab308;--pur:#a855f7;--txt:#f1f5f9;--mut:#64748b;--sub:#475569;
+  --f:'Outfit',sans-serif;--m:'JetBrains Mono',monospace}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:var(--f);background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
-#setupScreen{position:fixed;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(124,58,237,.15) 0%,transparent 60%),var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px}
-.setup-box{width:100%;max-width:400px;text-align:center}
-.setup-logo{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;box-shadow:0 8px 32px rgba(124,58,237,.4)}
-.setup-title{font-size:26px;font-weight:800;margin-bottom:6px;background:linear-gradient(135deg,#a78bfa,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.setup-sub{font-size:13px;color:var(--sub);margin-bottom:28px;line-height:1.7}
-.setup-lbl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;text-align:left;display:block}
-.setup-input{width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:10px;padding:13px 14px;font-family:var(--f);font-size:14px;color:var(--txt);outline:none;transition:border-color .2s;margin-bottom:14px}
-.setup-input:focus{border-color:var(--acc)}
-.setup-btn{width:100%;padding:14px;border-radius:10px;border:none;cursor:pointer;font-family:var(--f);font-size:14px;font-weight:700;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,.35);transition:all .2s}
-.setup-btn:hover{transform:translateY(-1px)}
-.setup-err{color:var(--red);font-size:12px;margin-bottom:12px;display:none}
-/* Header */
-.hdr{background:linear-gradient(180deg,var(--s1),rgba(17,19,32,.96));padding:14px 16px 0;border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:100;backdrop-filter:blur(16px)}
-.htop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.hinfo{display:flex;align-items:center;gap:10px}
-.hav{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff}
-.hname{font-size:15px;font-weight:700}
-.hdid{font-size:10px;color:var(--a2);font-family:var(--m);margin-top:1px}
-.hbtn{padding:6px 13px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:var(--f)}
-.hbtn.sync{background:rgba(16,185,129,.12);color:var(--grn);border:1px solid rgba(16,185,129,.25)}
-.hbtn.out{background:rgba(107,114,128,.1);color:var(--sub);border:1px solid var(--bdr);margin-left:6px}
-/* Tabs */
-.tabs{display:flex;overflow-x:auto;scrollbar-width:none}
+body{font-family:var(--f);background:var(--bg);color:var(--txt);overflow-x:hidden;min-height:100vh;padding-bottom:env(safe-area-inset-bottom,80px)}
+/* ── SETUP SCREEN ── */
+.setup{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.setup-box{background:var(--s1);border:1.5px solid var(--bdr);border-radius:18px;padding:28px 24px;width:100%;max-width:380px}
+.setup-logo{font-size:36px;text-align:center;margin-bottom:8px}
+.setup-title{font-size:20px;font-weight:800;text-align:center;margin-bottom:4px}
+.setup-sub{font-size:12px;color:var(--mut);text-align:center;margin-bottom:22px;line-height:1.6}
+.setup-inp{width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:10px;
+  padding:12px 14px;font-family:var(--f);font-size:14px;color:var(--txt);outline:none;
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.setup-inp:focus{border-color:var(--acc)}
+.setup-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--acc),#1d4ed8);
+  border:none;border-radius:10px;font-family:var(--f);font-size:14px;font-weight:700;
+  color:#fff;cursor:pointer}
+.setup-err{color:var(--red);font-size:11px;margin-bottom:10px;display:none}
+/* ── HEADER ── */
+.hdr{background:linear-gradient(135deg,#0a1222,#0f1a2e,#152238);
+  padding:max(env(safe-area-inset-top),14px) 16px 0;border-bottom:1px solid var(--bdr);
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.htop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:0}
+.hav{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--acc),var(--pur));
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;
+  box-shadow:0 4px 12px rgba(59,130,246,.3)}
+.hinf{flex:1;margin-left:11px}
+.hn{font-size:16px;font-weight:700}.hid{font-size:10px;color:var(--mut);font-family:var(--m);margin-top:1px}
+.hbtns{display:flex;gap:7px;align-items:center}
+.hbtn{display:flex;align-items:center;gap:4px;padding:5px 11px;border-radius:16px;
+  font-size:10px;font-weight:600;cursor:pointer;border:1px solid}
+.hbtn.sync{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.25);color:var(--grn)}
+.hbtn.exit{background:rgba(100,116,139,.1);border-color:var(--bdr);color:var(--mut)}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* ── TABS ── */
+.tabs{display:flex;background:var(--s1);overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--bdr)}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex-shrink:0;padding:10px 15px;font-size:11px;font-weight:700;color:var(--mut);border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap;text-transform:uppercase;letter-spacing:.03em}
+.tab{flex:1;min-width:72px;padding:10px 6px;text-align:center;font-size:10.5px;
+  font-weight:600;color:var(--mut);border-bottom:2px solid transparent;cursor:pointer;
+  transition:all .2s;white-space:nowrap;position:relative}
 .tab.on{color:var(--a2);border-bottom-color:var(--acc)}
-.badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;border-radius:8px;font-size:9px;font-weight:800;margin-left:5px;background:var(--red);color:#fff;vertical-align:middle}
-/* Pages */
-.scr{padding-bottom:50px}
-.page{display:none;animation:fadein .25s}.page.on{display:block}
-@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.badge{display:inline-flex;align-items:center;justify-content:center;
+  background:var(--red);color:#fff;border-radius:9px;font-size:8px;font-weight:800;
+  min-width:14px;height:14px;padding:0 3px;margin-left:3px;vertical-align:middle}
+/* ── PAGES ── */
+.scr{overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px}
+.page{display:none;animation:fadein .3s}.page.on{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .sec{padding:13px 15px 8px}
-.sl{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.sl::after{content:'';flex:1;height:1px;background:var(--bdr)}
-/* KPI */
-.kg3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.kcard{border-radius:13px;padding:12px 10px;position:relative;overflow:hidden;border:1px solid var(--bdr);background:linear-gradient(135deg,var(--s2),var(--s1))}
-.kcard::before{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;filter:blur(28px);opacity:.2}
-.kcard.or::before{background:var(--org)}.kcard.bl::before{background:var(--blu)}.kcard.gr::before{background:var(--grn)}.kcard.rd::before{background:var(--red)}
-.kico{font-size:16px;margin-bottom:5px}
-.kval{font-size:18px;font-weight:800;font-family:var(--m);line-height:1.1;margin-bottom:2px}
-.klbl{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
-/* Order cards */
-.ocard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;margin-bottom:9px;overflow:hidden;cursor:pointer;transition:border-color .2s}
-.ocard:hover{border-color:var(--acc)}
-.ocard-top{padding:12px 13px;display:flex;align-items:flex-start;gap:10px}
-.status-ico{flex-shrink:0;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px}
-.status-ico.pending{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.2)}
-.status-ico.accepted{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.2)}
-.status-ico.dispatched{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.2)}
-.status-ico.cancelled{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.12)}
+.sl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:10px}
+/* ── OVERVIEW KPI CARDS ── */
+.kpi3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.kpi2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.kcard{background:linear-gradient(135deg,var(--s2),var(--s1));border:1.5px solid var(--bdr);
+  border-radius:13px;padding:12px;position:relative;overflow:hidden}
+.kcard::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;
+  border-radius:50%;filter:blur(30px);opacity:.15}
+.kcard.bl::before{background:var(--acc)}.kcard.gr::before{background:var(--grn)}
+.kcard.or::before{background:var(--org)}.kcard.pu::before{background:var(--pur)}
+.kcard.yl::before{background:var(--ylw)}
+.kico{font-size:18px;margin-bottom:6px;opacity:.9}
+.kval{font-size:18px;font-weight:800;font-family:var(--m);line-height:1;margin-bottom:2px}
+.kcard.bl .kval{color:var(--a2)}.kcard.gr .kval{color:var(--grn)}
+.kcard.or .kval{color:var(--org)}.kcard.pu .kval{color:var(--pur)}.kcard.yl .kval{color:var(--ylw)}
+.klbl{font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+/* ── PERFORMANCE BARS ── */
+.pcard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;padding:13px 15px;margin-bottom:9px}
+.ptop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
+.plbl{font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+.ppct{font-size:11px;font-weight:700;font-family:var(--m);padding:2px 7px;border-radius:5px;background:rgba(34,197,94,.12);color:var(--grn)}
+.pamt{font-size:18px;font-weight:800;font-family:var(--m);color:var(--txt);margin-bottom:2px}
+.ptgt{font-size:10px;color:var(--mut)}
+.pbar{height:5px;background:rgba(255,255,255,.05);border-radius:8px;overflow:hidden;margin-top:8px}
+.pfill{height:100%;border-radius:8px;transition:width .6s ease}
+.pfill.bl{background:linear-gradient(90deg,var(--acc),var(--a2))}
+.pfill.gr{background:linear-gradient(90deg,var(--grn),#16a34a)}
+/* ── PIPELINE STRIP ── */
+.pipeline{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.pp{background:var(--s1);border:1.5px solid var(--bdr);border-radius:11px;padding:10px 12px;text-align:center;cursor:pointer;transition:all .15s}
+.pp:active{transform:scale(.97)}
+.pp.pend{border-color:rgba(234,179,8,.3)}.pp.acc{border-color:rgba(59,130,246,.3)}.pp.disp{border-color:rgba(34,197,94,.3)}
+.ppv{font-size:20px;font-weight:800;font-family:var(--m);margin:2px 0}
+.pp.pend .ppv{color:var(--ylw)}.pp.acc .ppv{color:var(--a2)}.pp.disp .ppv{color:var(--grn)}
+.ppl{font-size:8.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+/* ── CHART ── */
+.ccard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:13px;padding:14px;margin-bottom:10px}
+.ctitle{font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.cwrap{position:relative;height:180px;display:flex;align-items:center;justify-content:center}
+canvas{max-width:100%;max-height:100%}
+/* ── SUB-TABS (MTD/YTD) ── */
+.stabs{display:flex;gap:6px;margin-bottom:12px;background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:4px}
+.stab{flex:1;padding:7px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--mut);border-radius:7px;cursor:pointer;transition:all .18s}
+.stab.on{background:var(--s2);color:var(--a2);border:1px solid var(--bdr)}
+/* ── ORDER CARDS ── */
+.ocard{background:var(--s1);border:1.5px solid var(--bdr);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all .15s;overflow:hidden}
+.ocard:active{transform:scale(.99)}
+.ocard-top{display:flex;align-items:flex-start;gap:10px;padding:11px 12px 8px}
+.status-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.status-ico.pending{background:rgba(234,179,8,.12)}.status-ico.accepted{background:rgba(34,197,94,.12)}
+.status-ico.dispatched{background:rgba(59,130,246,.12)}.status-ico.cancelled{background:rgba(239,68,68,.08)}
 .ocard-body{flex:1;min-width:0}
-.ocard-r1{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
-.o-oid{font-family:var(--m);font-size:11px;font-weight:600;color:var(--a2)}
-.o-amt{font-family:var(--m);font-size:14px;font-weight:800;color:var(--grn)}
+.ocard-r1{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.o-oid{font-family:var(--m);font-size:11px;color:var(--a2);font-weight:600}
+.o-amt{font-family:var(--m);font-size:13px;font-weight:800;color:var(--grn)}
 .o-party{font-size:13px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.o-meta{font-size:10px;color:var(--sub);display:flex;gap:8px;flex-wrap:wrap}
-.ocard-foot{padding:7px 13px;background:var(--s2);border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;font-size:10px}
-.stbadge{display:inline-block;padding:2px 7px;border-radius:16px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-.stbadge.pending{background:rgba(245,158,11,.12);color:var(--org)}
-.stbadge.accepted{background:rgba(59,130,246,.12);color:var(--blu)}
-.stbadge.dispatched{background:rgba(16,185,129,.12);color:var(--grn)}
+.o-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:10px;color:var(--mut)}
+.ocard-foot{display:flex;align-items:center;justify-content:space-between;
+  padding:7px 12px 8px;border-top:1px solid var(--bdr);font-size:10px;color:var(--sub)}
+.stbadge{display:inline-block;padding:2px 8px;border-radius:14px;font-size:9px;font-weight:700}
+.stbadge.pending{background:rgba(234,179,8,.12);color:var(--ylw)}
+.stbadge.accepted{background:rgba(34,197,94,.12);color:var(--grn)}
+.stbadge.dispatched{background:rgba(59,130,246,.12);color:var(--a2)}
 .stbadge.cancelled{background:rgba(239,68,68,.08);color:var(--red)}
-/* Filters */
-.fbar{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap}
-.fi{flex:1;min-width:120px;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;padding:8px 10px;font-family:var(--f);font-size:12px;color:var(--txt);outline:none;-webkit-appearance:none}
+/* ── MONTH GROUP ── */
+.mgroup{margin-bottom:14px}
+.mhead{font-size:10px;font-weight:700;color:var(--a2);letter-spacing:.07em;text-transform:uppercase;
+  padding:6px 4px;border-bottom:1px solid var(--bdr);margin-bottom:8px;display:flex;justify-content:space-between}
+.mhead span{color:var(--mut);font-weight:500;font-family:var(--m)}
+/* ── FILTERS ── */
+.fbar{display:flex;gap:7px;margin-bottom:11px;flex-wrap:wrap}
+.fi{flex:1;min-width:120px;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;
+  padding:8px 11px;font-family:var(--f);font-size:11px;color:var(--txt);outline:none;-webkit-appearance:none}
 .fi:focus{border-color:var(--acc)}
-select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath fill='%236b7280' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px}
-/* Empty */
-.empty{text-align:center;padding:42px 20px;color:var(--sub);font-size:13px;line-height:2}
-.empty-ico{font-size:36px;display:block;margin-bottom:8px}
-/* Modal */
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:500;display:none;align-items:flex-end}
-.ov.on{display:flex}
-.mo{background:var(--s1);border-radius:20px 20px 0 0;border-top:1px solid var(--bdr);padding:18px 16px max(env(safe-area-inset-bottom,24px),24px);width:100%;max-height:92dvh;overflow-y:auto;animation:up .22s ease}
-@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.mhandle{width:36px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 15px}
-.mtitle{font-size:16px;font-weight:800;margin-bottom:3px}
-.msub{font-size:11px;color:var(--sub);margin-bottom:14px}
-/* Item edit rows */
-.irow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr)}
-.irow:last-child{border-bottom:none}
-.iinfo{flex:1;min-width:0}
-.iname{font-size:12px;font-weight:600;margin-bottom:2px}
-.icode{font-size:10px;color:var(--a2);font-family:var(--m)}
-.iorig{font-size:10px;color:var(--sub)}
-.qty-in{width:70px;background:var(--s2);border:1.5px solid var(--bdr);border-radius:8px;padding:7px 8px;font-family:var(--m);font-size:13px;font-weight:700;color:var(--txt);outline:none;text-align:center}
+select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath fill='%2364748b' d='M5 7L0 2h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+/* ── SALESMEN LIST ── */
+.smrow{background:var(--s1);border:1.5px solid var(--bdr);border-radius:12px;
+  padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:11px;cursor:pointer;transition:all .15s}
+.smrow:hover{border-color:var(--acc);transform:translateY(-1px)}
+.smrow:active{transform:scale(.99)}
+.smav{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#fff;flex-shrink:0}
+/* ── SALESMAN VIEW OVERLAY ── */
+.sm-view{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;overflow-y:auto}
+.sm-view.on{display:block;animation:fadein .25s}
+.sv-hdr{background:linear-gradient(135deg,#0a1222,#0f1a2e);padding:14px 16px;
+  display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:10}
+.sv-back{background:var(--s2);border:1.5px solid var(--bdr);border-radius:8px;
+  padding:6px 12px;font-size:11px;font-weight:600;color:var(--mut);cursor:pointer}
+.sv-back:hover{border-color:var(--acc);color:var(--a2)}
+.sv-title{font-size:15px;font-weight:700}
+.sv-id{font-size:10px;color:var(--a2);font-family:var(--m)}
+.sv-badge{background:rgba(100,116,139,.15);border:1px solid var(--bdr);border-radius:6px;
+  padding:2px 8px;font-size:9px;color:var(--mut);font-weight:600;margin-left:auto}
+/* ── ORDER MODAL ── */
+.ov{display:none;position:fixed;inset:0;z-index:300;background:rgba(5,10,20,.7);backdrop-filter:blur(6px)}
+.ov.on{display:flex;align-items:flex-end;justify-content:center}
+.osheet{background:var(--s1);border-radius:20px 20px 0 0;width:100%;max-width:600px;
+  max-height:92vh;overflow-y:auto;padding:16px;border-top:1px solid var(--bdr)}
+.osheet-drag{width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 14px}
+.om-title{font-size:17px;font-weight:800;margin-bottom:2px}
+.om-sub{font-size:11px;color:var(--mut);margin-bottom:12px}
+.ir{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(30,49,82,.6)}
+.irl{font-size:12px;flex:1}.irv{font-size:12px;font-family:var(--m);text-align:right}
+.disp-box{background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:11px 13px;margin-bottom:10px}
+.disp-title{font-size:11px;font-weight:700;margin-bottom:8px;color:var(--a2)}
+.disp-row{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(30,49,82,.4)}
+.disp-row:last-child{border-bottom:none}
+.disp-lbl{color:var(--mut)}.disp-val{font-weight:600;font-family:var(--m)}
+/* ── ACTIONS ── */
+.act-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn{flex:1;min-width:100px;padding:11px 14px;border:none;border-radius:10px;font-family:var(--f);
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;text-align:center}
+.btn.success{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff}
+.btn.primary{background:linear-gradient(135deg,var(--acc),#1d4ed8);color:#fff}
+.btn.warn{background:rgba(234,179,8,.15);border:1.5px solid rgba(234,179,8,.3);color:var(--ylw)}
+.btn.danger{background:rgba(239,68,68,.12);border:1.5px solid rgba(239,68,68,.25);color:var(--red)}
+.btn.ghost{background:var(--s2);border:1.5px solid var(--bdr);color:var(--mut)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+/* ── SECTIONS (accept/dispatch/cancel) ── */
+.sec-block{background:var(--s2);border:1.5px solid var(--bdr);border-radius:12px;padding:14px;margin-top:12px}
+.sec-block-title{font-size:12px;font-weight:700;margin-bottom:12px;color:var(--a2)}
+.irow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(30,49,82,.6)}
+.iinfo{flex:1;min-width:0}.iname{font-size:12px;font-weight:600}
+.icode{font-size:9px;font-family:var(--m);color:var(--a2);margin-top:1px}
+.iorig{font-size:9px;color:var(--mut)}
+.qty-in{width:70px;background:var(--s1);border:1.5px solid var(--bdr);border-radius:7px;
+  padding:6px 8px;font-family:var(--m);font-size:13px;color:var(--txt);text-align:center;outline:none}
 .qty-in:focus{border-color:var(--acc)}
-.itotal{font-family:var(--m);font-size:12px;font-weight:700;color:var(--a2);min-width:68px;text-align:right;flex-shrink:0}
-/* Inforows */
-.ir{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px}
-.ir:last-child{border-bottom:none}
-.irl{color:var(--sub)}.irv{font-weight:600;max-width:60%;text-align:right}
-/* Dispatch form */
-.dlbl{font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:block;margin-top:12px}
-.din{width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;padding:10px 12px;font-family:var(--f);font-size:13px;color:var(--txt);outline:none}
-.din:focus{border-color:var(--acc)}
-.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-/* Buttons */
-.btn{padding:12px 16px;border-radius:10px;font-family:var(--f);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s;flex:1}
-.btn:active{transform:scale(.97)}
-.btn.primary{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;box-shadow:0 4px 16px rgba(124,58,237,.3)}
-.btn.success{background:linear-gradient(135deg,#059669,#047857);color:#fff;box-shadow:0 4px 16px rgba(5,150,105,.25)}
-.btn.warn{background:rgba(245,158,11,.15);color:var(--org);border:1.5px solid rgba(245,158,11,.3)}
-.btn.danger{background:rgba(239,68,68,.12);color:var(--red);border:1.5px solid rgba(239,68,68,.25)}
-.btn.ghost{background:var(--s2);color:var(--sub);border:1.5px solid var(--bdr)}
-.btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-/* Divider */
-.mdiv{height:1px;background:var(--bdr);margin:14px 0}
-/* Dispatch badge */
-.disp-box{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:10px;padding:10px 12px;margin:10px 0}
-.disp-title{font-size:11px;font-weight:800;color:var(--grn);margin-bottom:7px}
-.disp-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0}
-.disp-lbl{color:var(--sub)}.disp-val{font-family:var(--m);font-weight:600}
-/* Audit */
-.arow{padding:7px 0;border-bottom:1px solid var(--bdr);font-size:11px}
-.arow:last-child{border-bottom:none}
-.atag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:800;margin-right:5px;font-family:var(--m);text-transform:uppercase}
-.atag.SUBMIT{background:rgba(59,130,246,.1);color:var(--blu)}
-.atag.ACCEPT,.atag.DIST_MODIFY{background:rgba(124,58,237,.1);color:var(--a2)}
-.atag.DISPATCH,.atag.DISPATCH_UPDATE{background:rgba(16,185,129,.1);color:var(--grn)}
-.atag.CANCEL,.atag.DIST_CANCEL{background:rgba(239,68,68,.08);color:var(--red)}
-.atag.EDIT{background:rgba(245,158,11,.08);color:var(--org)}
-/* SM cards */
-.smrow{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px}
-.smav{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
-/* Toast */
-.toast{position:fixed;top:72px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:9px 18px;font-size:12px;font-weight:600;opacity:0;transition:all .25s;z-index:9999;pointer-events:none;box-shadow:0 8px 28px rgba(0,0,0,.5)}
+.itotal{font-size:12px;font-family:var(--m);color:var(--grn);min-width:70px;text-align:right}
+.accept-tot{display:flex;justify-content:space-between;padding:10px 0 0;
+  font-size:13px;font-weight:700;border-top:2px solid var(--bdr);margin-top:6px}
+.finp{width:100%;background:var(--s1);border:1.5px solid var(--bdr);border-radius:9px;
+  padding:9px 12px;font-family:var(--f);font-size:12px;color:var(--txt);outline:none;margin-bottom:9px}
+.finp:focus{border-color:var(--acc)}
+.finp-lbl{font-size:10px;font-weight:600;color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+/* ── AUDIT LOG ── */
+.audit-wrap{margin-top:12px;display:none}
+.audit-title{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.arow{background:var(--s2);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:11px}
+.atag{display:inline-block;padding:1px 7px;border-radius:5px;font-size:9px;font-weight:700;margin-right:5px;text-transform:uppercase}
+.atag.SUBMIT{background:rgba(34,197,94,.12);color:var(--grn)}
+.atag.DIST_MODIFY,.atag.MODIFY{background:rgba(234,179,8,.12);color:var(--ylw)}
+.atag.DISPATCH{background:rgba(59,130,246,.12);color:var(--a2)}
+.atag.CANCEL{background:rgba(239,68,68,.1);color:var(--red)}
+/* ── EMPTY / LOAD ── */
+.empty{text-align:center;padding:40px 18px;color:var(--mut);font-size:13px;line-height:1.9}
+.empty-ico{display:block;font-size:32px;margin-bottom:8px}
+.load{text-align:center;padding:36px;color:var(--mut)}
+.spin{display:inline-block;width:24px;height:24px;border:3px solid var(--bdr);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ── TOAST ── */
+.toast{position:fixed;top:72px;left:50%;transform:translateX(-50%) translateY(-10px);
+  background:var(--s2);border:1px solid var(--bdr);border-radius:10px;
+  padding:8px 16px;font-size:12px;font-weight:500;opacity:0;transition:all .25s;
+  z-index:9999;white-space:nowrap;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.ok{border-color:rgba(16,185,129,.4);color:var(--grn)}
+.toast.ok{border-color:rgba(34,197,94,.4);color:var(--grn)}
 .toast.er{border-color:rgba(239,68,68,.4);color:var(--red)}
-.toast.in{border-color:rgba(124,58,237,.4);color:var(--a2)}
+/* ── READ-ONLY BADGE ── */
+.ro-note{background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.2);border-radius:8px;
+  padding:7px 12px;font-size:10px;color:var(--ylw);text-align:center;margin-bottom:12px}
 </style>
 </head>
 <body>
 
-<!-- Setup Screen -->
-<div id="setupScreen">
+<!-- SETUP SCREEN -->
+<div class="setup" id="setupScreen">
   <div class="setup-box">
     <div class="setup-logo">🚚</div>
     <div class="setup-title">Distributor Portal</div>
     <div class="setup-sub">Enter your Distributor ID to access your orders dashboard.<br>Contact admin if you need your ID.</div>
-    <span class="setup-lbl">Distributor ID</span>
-    <input id="setupId" class="setup-input" placeholder="e.g. D001" autocomplete="off" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')doSetup()">
     <div class="setup-err" id="setupErr">Distributor not found. Please check your ID.</div>
+    <input class="setup-inp" id="setupId" placeholder="Distributor ID" maxlength="10" onkeydown="if(event.key==='Enter')doSetup()">
     <button class="setup-btn" onclick="doSetup()">Access My Portal →</button>
   </div>
 </div>
 
-<!-- App -->
+<!-- MAIN APP -->
 <div id="app" style="display:none">
+  <!-- HEADER -->
   <div class="hdr">
     <div class="htop">
-      <div class="hinfo">
-        <div class="hav" id="hAv">D</div>
-        <div>
-          <div class="hname" id="hName">—</div>
-          <div class="hdid" id="hId">—</div>
-        </div>
+      <div class="hav" id="hAv">MD</div>
+      <div class="hinf">
+        <div class="hn" id="hName">Distributor</div>
+        <div class="hid" id="hId">D001</div>
       </div>
-      <div>
-        <button class="hbtn sync" onclick="loadData()">↻ Sync</button>
-        <button class="hbtn out" onclick="doLogout()">Exit</button>
+      <div class="hbtns">
+        <div class="hbtn sync" onclick="syncData()"><div class="dot"></div><span>↻ Sync</span></div>
+        <div class="hbtn exit" onclick="doLogout()">Exit</div>
       </div>
     </div>
     <div class="tabs">
-      <div class="tab on"  onclick="goTab('pending')">⏳ Pending<span class="badge" id="bPending" style="display:none">0</span></div>
-      <div class="tab"     onclick="goTab('accepted')">✅ Accepted</div>
-      <div class="tab"     onclick="goTab('dispatched')">📦 Dispatched</div>
-      <div class="tab"     onclick="goTab('all')">📋 All Orders</div>
-      <div class="tab"     onclick="goTab('salesmen')">👤 Salesmen</div>
+      <div class="tab on" onclick="goTab('overview')">🏠 Overview</div>
+      <div class="tab" onclick="goTab('pending')">⏳ Pending<span class="badge" id="bPending" style="display:none">0</span></div>
+      <div class="tab" onclick="goTab('accepted')">✅ Accepted</div>
+      <div class="tab" onclick="goTab('dispatched')">📦 Dispatched</div>
+      <div class="tab" onclick="goTab('all')">📋 All Orders</div>
+      <div class="tab" onclick="goTab('salesmen')">👤 Salesmen</div>
     </div>
   </div>
 
   <div class="scr">
 
-    <!-- PENDING -->
-    <div class="page on" id="pg-pending">
-      <div class="sec">
-        <div class="kg3">
-          <div class="kcard or"><div class="kico">⏳</div><div class="kval" id="k-p">0</div><div class="klbl">Pending</div></div>
-          <div class="kcard bl"><div class="kico">✅</div><div class="kval" id="k-a">0</div><div class="klbl">Accepted</div></div>
-          <div class="kcard gr"><div class="kico">📦</div><div class="kval" id="k-d">0</div><div class="klbl">Dispatched</div></div>
+  <!-- ══════════ OVERVIEW PAGE ══════════ -->
+  <div class="page on" id="pg-overview">
+    <!-- Today KPIs -->
+    <div class="sec">
+      <div class="sl">Today — Company Wide</div>
+      <div class="kpi3">
+        <div class="kcard bl">
+          <div class="kico">💰</div>
+          <div class="kval" id="ov-today-sales">₹0</div>
+          <div class="klbl">Sales</div>
         </div>
-        <div class="sl">Awaiting Your Action</div>
-        <div id="pendingList"><div class="empty"><span class="empty-ico">🔄</span>Loading orders...</div></div>
+        <div class="kcard gr">
+          <div class="kico">📦</div>
+          <div class="kval" id="ov-today-orders">0</div>
+          <div class="klbl">Orders</div>
+        </div>
+        <div class="kcard or">
+          <div class="kico">🏪</div>
+          <div class="kval" id="ov-today-shops">0</div>
+          <div class="klbl">Shops</div>
+        </div>
       </div>
     </div>
 
-    <!-- ACCEPTED -->
-    <div class="page" id="pg-accepted">
-      <div class="sec">
-        <div class="sl">Accepted — Ready to Dispatch</div>
-        <div id="acceptedList"><div class="empty"><span class="empty-ico">✅</span>No accepted orders</div></div>
+    <!-- MTD -->
+    <div class="sec">
+      <div class="sl">Month to Date — <span id="ov-mtd-label">Mar 2026</span></div>
+      <div class="kpi2">
+        <div class="pcard">
+          <div class="ptop">
+            <div class="plbl">MTD Sales</div>
+            <div class="ppct" id="ov-mtd-pct">0%</div>
+          </div>
+          <div class="pamt" id="ov-mtd-sales">₹0</div>
+          <div class="ptgt">Target: <span id="ov-mtd-target">₹2,50,000</span></div>
+          <div class="pbar"><div class="pfill bl" id="ov-mtd-bar" style="width:0%"></div></div>
+        </div>
+        <div class="pcard">
+          <div class="ptop">
+            <div class="plbl">MTD Shops</div>
+            <div class="ppct" id="ov-mtd-shops-pct">0</div>
+          </div>
+          <div class="pamt" id="ov-mtd-shops">0</div>
+          <div class="ptgt" id="ov-mtd-orders-sub">0 orders</div>
+          <div class="ptgt" id="ov-mtd-parties" style="color:var(--a2);margin-top:3px">0 new parties</div>
+        </div>
       </div>
     </div>
 
-    <!-- DISPATCHED -->
-    <div class="page" id="pg-dispatched">
-      <div class="sec">
-        <div class="sl">Dispatched Orders</div>
-        <div id="dispatchedList"><div class="empty"><span class="empty-ico">📦</span>No dispatched orders yet</div></div>
+    <!-- YTD -->
+    <div class="sec">
+      <div class="sl">Year to Date — <span id="ov-ytd-label">2026</span></div>
+      <div class="kpi2">
+        <div class="pcard">
+          <div class="ptop">
+            <div class="plbl">YTD Sales</div>
+            <div class="ppct" id="ov-ytd-pct">0%</div>
+          </div>
+          <div class="pamt" id="ov-ytd-sales">₹0</div>
+          <div class="ptgt">Annual target: <span id="ov-ytd-target">₹30,00,000</span></div>
+          <div class="pbar"><div class="pfill gr" id="ov-ytd-bar" style="width:0%"></div></div>
+        </div>
+        <div class="pcard">
+          <div class="ptop">
+            <div class="plbl">YTD Shops</div>
+            <div class="ppct" id="ov-ytd-shops-cnt">0</div>
+          </div>
+          <div class="pamt" id="ov-ytd-orders">0</div>
+          <div class="ptgt">Unique shops this year</div>
+        </div>
       </div>
     </div>
 
-    <!-- ALL -->
-    <div class="page" id="pg-all">
-      <div class="sec">
+    <!-- Order Pipeline -->
+    <div class="sec">
+      <div class="sl">Order Pipeline — Click to Jump</div>
+      <div class="pipeline">
+        <div class="pp pend" onclick="goTab('pending')">
+          <div class="ppl">⏳ Pending</div>
+          <div class="ppv" id="ov-pend">0</div>
+          <div class="ppl" id="ov-pend-val">₹0</div>
+        </div>
+        <div class="pp acc" onclick="goTab('accepted')">
+          <div class="ppl">✅ Accepted</div>
+          <div class="ppv" id="ov-acc">0</div>
+          <div class="ppl" id="ov-acc-val">₹0</div>
+        </div>
+        <div class="pp disp" onclick="goTab('dispatched')">
+          <div class="ppl">📦 Dispatched</div>
+          <div class="ppv" id="ov-disp">0</div>
+          <div class="ppl" id="ov-disp-val">₹0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Mix MTD -->
+    <div class="sec">
+      <div class="sl">Product Mix — MTD</div>
+      <div class="ccard">
+        <div class="ctitle"><span>MTD Sales by Product</span><span id="ov-mix-mtd-lbl" style="font-size:10px;color:var(--mut);font-weight:500"></span></div>
+        <div class="cwrap"><canvas id="chartMtd"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Product Mix YTD -->
+    <div class="sec">
+      <div class="sl">Product Mix — YTD</div>
+      <div class="ccard">
+        <div class="ctitle"><span>YTD Sales by Product</span><span id="ov-mix-ytd-lbl" style="font-size:10px;color:var(--mut);font-weight:500"></span></div>
+        <div class="cwrap"><canvas id="chartYtd"></canvas></div>
+        <div id="chartYtdLegend" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PENDING PAGE ══════════ -->
+  <div class="page" id="pg-pending">
+    <div class="sec">
+      <div class="kpi3" style="margin-bottom:14px">
+        <div class="kcard yl" onclick="goTab('pending')">
+          <div class="kval" id="k-p" style="font-size:22px">0</div>
+          <div class="klbl">⏳ Pending</div>
+        </div>
+        <div class="kcard bl" onclick="goTab('accepted')">
+          <div class="kval" id="k-a" style="font-size:22px">0</div>
+          <div class="klbl">✅ Accepted</div>
+        </div>
+        <div class="kcard gr" onclick="goTab('dispatched')">
+          <div class="kval" id="k-d" style="font-size:22px">0</div>
+          <div class="klbl">📦 Dispatched</div>
+        </div>
+      </div>
+      <div class="sl">Awaiting Your Action</div>
+      <div id="pendingList"><div class="load"><div class="spin"></div><br>Loading orders…</div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ ACCEPTED PAGE ══════════ -->
+  <div class="page" id="pg-accepted">
+    <div class="sec">
+      <div class="sl">Accepted — Ready to Dispatch</div>
+      <div class="stabs" id="acc-stabs">
+        <div class="stab on" onclick="setSubTab('acc','mtd')">📅 MTD Orders</div>
+        <div class="stab" onclick="setSubTab('acc','ytd')">📆 YTD</div>
+      </div>
+      <!-- MTD sub-view -->
+      <div id="acc-mtd">
+        <div id="acceptedList"></div>
+      </div>
+      <!-- YTD sub-view (month groups → orders) -->
+      <div id="acc-ytd" style="display:none">
+        <div id="acceptedYtdList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ DISPATCHED PAGE ══════════ -->
+  <div class="page" id="pg-dispatched">
+    <div class="sec">
+      <div class="sl">Dispatched Orders</div>
+      <div class="stabs" id="disp-stabs">
+        <div class="stab on" onclick="setSubTab('disp','mtd')">📅 MTD Orders</div>
+        <div class="stab" onclick="setSubTab('disp','ytd')">📆 YTD</div>
+      </div>
+      <div id="disp-mtd">
+        <div id="dispatchedList"></div>
+      </div>
+      <div id="disp-ytd" style="display:none">
+        <div id="dispatchedYtdList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ ALL ORDERS PAGE ══════════ -->
+  <div class="page" id="pg-all">
+    <div class="sec">
+      <div class="stabs" id="all-stabs">
+        <div class="stab on" onclick="setSubTab('all','mtd')">📅 MTD Orders</div>
+        <div class="stab" onclick="setSubTab('all','ytd')">📆 YTD</div>
+      </div>
+      <!-- MTD view with filters -->
+      <div id="all-mtd">
         <div class="fbar">
-          <input class="fi" type="search" id="asearch" placeholder="Order, party, salesman..." oninput="renderAll()">
+          <input class="fi" type="search" id="asearch" placeholder="Order, party, salesman…" oninput="renderAll()">
           <select class="fi" id="asmf" onchange="renderAll()"><option value="">All Salesmen</option></select>
           <select class="fi" id="astf" onchange="renderAll()">
             <option value="">All Status</option>
-            <option>Pending</option><option>Accepted</option><option>Dispatched</option><option>Cancelled</option>
+            <option value="Pending">Pending</option>
+            <option value="Accepted">Accepted</option>
+            <option value="Dispatched">Dispatched</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
         </div>
-        <div class="sl">All Orders (<span id="allCnt">0</span>)</div>
+        <div style="font-size:10px;color:var(--mut);margin-bottom:10px">All Orders (<span id="allCnt">0</span>)</div>
         <div id="allList"></div>
       </div>
-    </div>
-
-    <!-- SALESMEN -->
-    <div class="page" id="pg-salesmen">
-      <div class="sec">
-        <div class="sl">Salesmen Linked to You</div>
-        <div id="smList"></div>
+      <!-- YTD view -->
+      <div id="all-ytd" style="display:none">
+        <div id="allYtdList"></div>
       </div>
     </div>
+  </div>
 
+  <!-- ══════════ SALESMEN PAGE ══════════ -->
+  <div class="page" id="pg-salesmen">
+    <div class="sec">
+      <div class="sl">Salesmen Linked to You</div>
+      <div id="smList"></div>
+    </div>
+  </div>
+
+  </div><!-- /scr -->
+</div><!-- /app -->
+
+<!-- SALESMAN VIEW OVERLAY (read-only) -->
+<div class="sm-view" id="smView">
+  <div class="sv-hdr">
+    <button class="sv-back" onclick="closeSmView()">← Back</button>
+    <div style="flex:1;margin-left:12px">
+      <div class="sv-title" id="sv-name">Salesman</div>
+      <div class="sv-id" id="sv-id">SM001</div>
+    </div>
+    <div class="sv-badge">👁 View Only</div>
+  </div>
+  <div style="padding:14px 15px 80px">
+    <div class="ro-note">📋 Read-only view — you cannot place or modify orders here</div>
+    <!-- Today -->
+    <div class="sl">Today</div>
+    <div class="kpi3" style="margin-bottom:12px">
+      <div class="kcard bl"><div class="kico">💰</div><div class="kval" id="sv-today-sales">₹0</div><div class="klbl">Sales</div></div>
+      <div class="kcard gr"><div class="kico">📦</div><div class="kval" id="sv-today-orders">0</div><div class="klbl">Orders</div></div>
+      <div class="kcard or"><div class="kico">🏪</div><div class="kval" id="sv-today-shops">0</div><div class="klbl">Shops</div></div>
+    </div>
+    <!-- MTD -->
+    <div class="sl">Month to Date</div>
+    <div class="kpi2" style="margin-bottom:12px">
+      <div class="pcard">
+        <div class="ptop"><div class="plbl">MTD Sales</div><div class="ppct" id="sv-mtd-pct">0%</div></div>
+        <div class="pamt" id="sv-mtd-sales">₹0</div>
+        <div class="ptgt">Target: <span id="sv-mtd-target">₹50,000</span></div>
+        <div class="pbar"><div class="pfill bl" id="sv-mtd-bar" style="width:0%"></div></div>
+      </div>
+      <div class="pcard">
+        <div class="ptop"><div class="plbl">MTD Shops</div></div>
+        <div class="pamt" id="sv-mtd-shops">0</div>
+        <div class="ptgt">Shop target: 15</div>
+        <div class="ptgt" id="sv-mtd-shops-gap" style="color:var(--ylw);margin-top:3px">—</div>
+      </div>
+    </div>
+    <!-- YTD -->
+    <div class="sl">Year to Date</div>
+    <div class="kpi2" style="margin-bottom:12px">
+      <div class="pcard">
+        <div class="ptop"><div class="plbl">YTD Sales</div><div class="ppct" id="sv-ytd-pct">0%</div></div>
+        <div class="pamt" id="sv-ytd-sales">₹0</div>
+        <div class="ptgt">Annual target: <span id="sv-ytd-target">₹6,00,000</span></div>
+        <div class="pbar"><div class="pfill gr" id="sv-ytd-bar" style="width:0%"></div></div>
+      </div>
+      <div class="pcard">
+        <div class="ptop"><div class="plbl">YTD Shops</div></div>
+        <div class="pamt" id="sv-ytd-shops">0</div>
+        <div class="ptgt">Unique shops this year</div>
+      </div>
+    </div>
+    <!-- Product Mix -->
+    <div class="sl">Product Mix — MTD</div>
+    <div class="ccard" style="margin-bottom:12px">
+      <div class="ctitle"><span id="sv-chart-lbl">MTD Sales by Product</span></div>
+      <div class="cwrap"><canvas id="svChartMtd"></canvas></div>
+    </div>
+    <div class="sl">Product Mix — YTD</div>
+    <div class="ccard" style="margin-bottom:12px">
+      <div class="ctitle"><span>YTD Sales by Product</span></div>
+      <div class="cwrap"><canvas id="svChartYtd"></canvas></div>
+    </div>
+    <!-- Recent Orders (read only) -->
+    <div class="sl">Recent Orders</div>
+    <div id="sv-orders"></div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
 <!-- ORDER MODAL -->
 <div class="ov" id="orderOv" onclick="if(event.target===this)closeModal()">
-  <div class="mo">
-    <div class="mhandle"></div>
-    <div class="mtitle" id="om-title">Order</div>
-    <div class="msub" id="om-sub"></div>
+  <div class="osheet">
+    <div class="osheet-drag"></div>
+    <div class="om-title" id="om-title">ORD001</div>
+    <div class="om-sub" id="om-sub"></div>
     <div id="om-details"></div>
-    <div id="om-disp-info" style="display:none"></div>
-
-    <!-- Accept/Modify -->
-    <div id="sec-accept" style="display:none">
-      <div class="mdiv"></div>
-      <div class="sl">Accept / Adjust Quantities</div>
+    <div id="om-disp-info"></div>
+    <div class="act-row" id="om-actions"></div>
+    <!-- Accept Section -->
+    <div class="sec-block" id="sec-accept" style="display:none">
+      <div class="sec-block-title">✅ Accept / Adjust Quantities</div>
       <div id="accept-items"></div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--bdr);margin-top:4px">
-        <span style="font-size:12px;color:var(--sub)">Accepted Total</span>
-        <span id="accept-total" style="font-family:var(--m);font-size:16px;font-weight:800;color:var(--grn)">₹0</span>
-      </div>
-      <textarea id="accept-notes" class="fi" placeholder="Optional notes to salesman..." style="width:100%;resize:none;min-height:50px;margin-top:8px"></textarea>
-      <div class="btn-row">
-        <button class="btn success" onclick="submitAccept()">✅ Accept Order</button>
-        <button class="btn ghost" onclick="hideSec()">Cancel</button>
-      </div>
+      <div class="accept-tot"><span>Accepted Total</span><span id="accept-total">₹0</span></div>
+      <textarea class="finp" id="accept-notes" placeholder="Notes (optional)…" rows="2" style="margin-top:10px"></textarea>
+      <button class="btn success" style="width:100%;margin-top:6px" onclick="submitAccept()">✅ Accept Order</button>
+      <button class="btn ghost" style="width:100%;margin-top:6px" onclick="hideSec()">Cancel</button>
     </div>
-
-    <!-- Dispatch form -->
-    <div id="sec-dispatch" style="display:none">
-      <div class="mdiv"></div>
-      <div class="sl" id="disp-sec-title">Dispatch Details</div>
-      <div class="dgrid">
-        <div>
-          <label class="dlbl">Invoice No *</label>
-          <input id="d-inv" class="din" placeholder="INV-2026-001">
-        </div>
-        <div>
-          <label class="dlbl">Invoice Date *</label>
-          <input id="d-invdate" class="din" type="date">
-        </div>
-      </div>
-      <div class="dgrid">
-        <div>
-          <label class="dlbl">Dispatch Date</label>
-          <input id="d-dispdate" class="din" type="date">
-        </div>
-        <div>
-          <label class="dlbl">Transport / Courier</label>
-          <input id="d-transport" class="din" placeholder="DTDC, vehicle, etc.">
-        </div>
-      </div>
-      <label class="dlbl">Tracking / LR Number</label>
-      <input id="d-tracking" class="din" placeholder="Optional">
-      <label class="dlbl">Notes</label>
-      <textarea id="d-notes" class="din" style="resize:none;min-height:50px;margin-bottom:0" placeholder="Optional..."></textarea>
-      <div class="btn-row">
-        <button class="btn success" id="dispBtn" onclick="submitDispatch()">📦 Confirm Dispatch</button>
-        <button class="btn ghost" onclick="hideSec()">Cancel</button>
-      </div>
+    <!-- Dispatch Section -->
+    <div class="sec-block" id="sec-dispatch" style="display:none">
+      <div class="sec-block-title" id="disp-sec-title">📦 Dispatch Details</div>
+      <div class="finp-lbl">Invoice No *</div>
+      <input class="finp" id="d-inv" placeholder="e.g. 2026-015" type="text">
+      <div class="finp-lbl">Invoice Date *</div>
+      <input class="finp" id="d-invdate" type="date">
+      <div class="finp-lbl">Dispatch Date</div>
+      <input class="finp" id="d-dispdate" type="date">
+      <div class="finp-lbl">Transport / Courier</div>
+      <input class="finp" id="d-transport" placeholder="e.g. DTDC, Own Vehicle…" type="text">
+      <div class="finp-lbl">Tracking / LR Number</div>
+      <input class="finp" id="d-tracking" placeholder="Optional" type="text">
+      <div class="finp-lbl">Notes</div>
+      <textarea class="finp" id="d-notes" placeholder="Optional notes…" rows="2"></textarea>
+      <button class="btn primary" id="dispBtn" style="width:100%" onclick="submitDispatch()">📦 Confirm Dispatch</button>
+      <button class="btn ghost" style="width:100%;margin-top:6px" onclick="hideSec()">Cancel</button>
     </div>
-
-    <!-- Cancel -->
-    <div id="sec-cancel" style="display:none">
-      <div class="mdiv"></div>
-      <div class="sl">Cancel Order</div>
-      <textarea id="cancel-reason" class="fi" placeholder="Reason for cancellation..." style="width:100%;resize:none;min-height:58px"></textarea>
-      <div class="btn-row">
-        <button class="btn danger" onclick="submitCancel()">⛔ Confirm Cancel</button>
-        <button class="btn ghost" onclick="hideSec()">Back</button>
-      </div>
+    <!-- Cancel Section -->
+    <div class="sec-block" id="sec-cancel" style="display:none">
+      <div class="sec-block-title">⛔ Cancel Order</div>
+      <div class="finp-lbl">Reason for cancellation</div>
+      <textarea class="finp" id="cancel-reason" placeholder="Enter reason…" rows="3"></textarea>
+      <button class="btn danger" style="width:100%" onclick="submitCancel()">⛔ Confirm Cancel</button>
+      <button class="btn ghost" style="width:100%;margin-top:6px" onclick="hideSec()">Back</button>
     </div>
-
-    <!-- Action bar -->
-    <div id="om-actions" class="btn-row" style="margin-top:16px;border-top:1px solid var(--bdr);padding-top:14px"></div>
-
-    <!-- History -->
-    <div id="audit-wrap" style="margin-top:14px;display:none">
-      <div class="sl">Order History</div>
+    <!-- Audit Log -->
+    <div class="audit-wrap" id="audit-wrap">
+      <div class="audit-title">📋 Order History</div>
       <div id="audit-body"></div>
     </div>
   </div>
 </div>
 
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbz70y3yn3VHlpV1yFrLP0l5L3CduXtDoU0tl_TbBhzCnXQZlIrNoEm4DHgZkmbVIabg/exec';
+const CHART_COLORS=['#3b82f6','#8b5cf6','#22c55e','#f97316','#eab308','#14b8a6','#f43f5e','#84cc16','#a855f7','#06b6d4'];
 const SM_COLORS=['#7c3aed','#3b82f6','#10b981','#f59e0b','#ec4899','#14b8a6','#f43f5e','#84cc16'];
+
 let distId='',distName='',distInfo={};
 let allOrders=[],allSalesmen=[];
 let curOrder=null,dispMode='new';
+let chartMtd=null,chartYtd=null,svChartMtd=null,svChartYtd=null;
+// Sub-tab state
+let accSubTab='mtd', dispSubTab='mtd', allSubTab='mtd';
 
 const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
 function normDate(d){if(!d)return '';try{const dt=new Date(d);if(!isNaN(dt)){const i=new Date(dt.getTime()+330*60000);return i.toISOString().slice(0,10);}}catch(e){}return String(d).slice(0,10);}
 function fmtDate(s){if(!s)return '—';try{return new Date(s+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}catch(e){return s;}}
+function fmtDateShort(s){if(!s)return '—';try{return new Date(s+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'});}catch(e){return s;}}
 function fmtTs(s){if(!s)return '—';try{return new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return s;}}
 let _tt;function toast(m,t='ok'){const el=document.getElementById('toast');clearTimeout(_tt);el.textContent=m;el.className=`toast ${t} on`;_tt=setTimeout(()=>el.classList.remove('on'),2800);}
 
 document.addEventListener('DOMContentLoaded',()=>{
-  // Support ?dist=D001 URL param for auto-login (e.g. from admin console)
-  const urlParam = new URLSearchParams(window.location.search).get('dist');
-  const stored = localStorage.getItem('kravins_dist_id');
-  const id = urlParam || stored;
-  if(id){distId=id; if(urlParam) localStorage.setItem('kravins_dist_id',urlParam); initApp();}
+  const urlParam=new URLSearchParams(window.location.search).get('dist');
+  const stored=localStorage.getItem('kravins_dist_id');
+  const id=urlParam||stored;
+  if(id){distId=id;if(urlParam)localStorage.setItem('kravins_dist_id',urlParam);initApp();}
   const today=new Date().toISOString().slice(0,10);
   document.getElementById('d-invdate').value=today;
   document.getElementById('d-dispdate').value=today;
@@ -372,6 +649,7 @@ async function doSetup(){
     document.getElementById('setupErr').style.display='block';
   }
 }
+
 function doLogout(){localStorage.removeItem('kravins_dist_id');location.reload();}
 
 async function initApp(){
@@ -380,15 +658,8 @@ async function initApp(){
       const r=await fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`);
       const d=await r.json();
       const f=(d.distributors||[]).find(x=>x.id===distId);
-      if(f){distInfo=f;distName=f.name;}
-      else{
-        // distId not found in list — use distId as display name, proceed anyway
-        distName=distId;
-      }
-    }catch(e){
-      // Network error — use distId as display name, proceed with loadData
-      distName=distId;
-    }
+      if(f){distInfo=f;distName=f.name;}else{distName=distId;}
+    }catch(e){distName=distId;}
   }
   document.getElementById('setupScreen').style.display='none';
   document.getElementById('app').style.display='block';
@@ -406,26 +677,130 @@ async function loadData(){
       fetch(`${SCRIPT_URL}?action=salesmen&t=${Date.now()}`)
     ]);
     const [od,sd]=await Promise.all([r1.json(),r2.json()]);
-    if(od.ok) allOrders=(od.orders||[]).map(o=>({...o,date:normDate(o.date)}));
-    if(sd.ok) allSalesmen=(sd.salesmen||[]).filter(s=>s.distributor===distId);
+    if(od.ok)allOrders=(od.orders||[]).map(o=>({...o,date:normDate(o.date)}));
+    if(sd.ok)allSalesmen=(sd.salesmen||[]).filter(s=>s.distributor===distId);
     // Update SM filter
     const opts=allSalesmen.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
     document.getElementById('asmf').innerHTML='<option value="">All Salesmen</option>'+opts;
-    renderViews();
+    renderAll();renderSalesmen();renderViews();renderOverview();
     toast('✓ Synced','ok');
   }catch(e){toast('⚠️ Sync failed','er');}
 }
 
+function syncData(){toast('↻ Syncing…','ok');loadData();}
+
+// ── TAB NAVIGATION ──
 function goTab(tab){
-  const tabs=['pending','accepted','dispatched','all','salesmen'];
+  const tabs=['overview','pending','accepted','dispatched','all','salesmen'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',tabs[i]===tab));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.getElementById('pg-'+tab).classList.add('on');
-  if(tab==='all') renderAll();
-  if(tab==='salesmen') renderSalesmen();
+  if(tab==='all')renderAll();
+  if(tab==='salesmen')renderSalesmen();
+  if(tab==='accepted')renderAccepted();
+  if(tab==='dispatched')renderDispatched();
   window.scrollTo({top:0});
 }
 
+// ── SUB-TAB SWITCHING ──
+function setSubTab(page,tab){
+  if(page==='acc'){
+    accSubTab=tab;
+    document.querySelectorAll('#acc-stabs .stab').forEach((t,i)=>t.classList.toggle('on',['mtd','ytd'][i]===tab));
+    document.getElementById('acc-mtd').style.display=tab==='mtd'?'block':'none';
+    document.getElementById('acc-ytd').style.display=tab==='ytd'?'block':'none';
+    renderAccepted();
+  }else if(page==='disp'){
+    dispSubTab=tab;
+    document.querySelectorAll('#disp-stabs .stab').forEach((t,i)=>t.classList.toggle('on',['mtd','ytd'][i]===tab));
+    document.getElementById('disp-mtd').style.display=tab==='mtd'?'block':'none';
+    document.getElementById('disp-ytd').style.display=tab==='ytd'?'block':'none';
+    renderDispatched();
+  }else if(page==='all'){
+    allSubTab=tab;
+    document.querySelectorAll('#all-stabs .stab').forEach((t,i)=>t.classList.toggle('on',['mtd','ytd'][i]===tab));
+    document.getElementById('all-mtd').style.display=tab==='mtd'?'block':'none';
+    document.getElementById('all-ytd').style.display=tab==='ytd'?'block':'none';
+    renderAll();
+  }
+}
+
+// ── OVERVIEW ──
+function renderOverview(){
+  const now=new Date();
+  const todayStr=now.toISOString().slice(0,10);
+  const curMonth=now.getMonth()+1, curYear=now.getFullYear();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const active=allOrders.filter(o=>o.status!=='Cancelled');
+  const todayOrds=active.filter(o=>o.date===todayStr);
+  const mtdOrds=active.filter(o=>{const d=new Date(o.date);return d.getMonth()+1===curMonth&&d.getFullYear()===curYear;});
+  const ytdOrds=active.filter(o=>new Date(o.date).getFullYear()===curYear);
+
+  // Today
+  document.getElementById('ov-today-sales').textContent=fi(todayOrds.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('ov-today-orders').textContent=todayOrds.length;
+  document.getElementById('ov-today-shops').textContent=new Set(todayOrds.map(o=>o.bid)).size;
+
+  // MTD
+  const mtdSales=mtdOrds.reduce((s,o)=>s+(o.gt||0),0);
+  const totalTarget=allSalesmen.reduce((s,sm)=>s+(sm.target||50000),0);
+  const mtdPct=totalTarget?Math.round(mtdSales/totalTarget*100):0;
+  document.getElementById('ov-mtd-label').textContent=months[curMonth-1]+' '+curYear;
+  document.getElementById('ov-mtd-sales').textContent=fi(mtdSales);
+  document.getElementById('ov-mtd-pct').textContent=mtdPct+'%';
+  document.getElementById('ov-mtd-target').textContent=fi(totalTarget);
+  document.getElementById('ov-mtd-bar').style.width=Math.min(mtdPct,100)+'%';
+  document.getElementById('ov-mtd-shops').textContent=new Set(mtdOrds.map(o=>o.bid)).size;
+  document.getElementById('ov-mtd-shops-pct').textContent=mtdOrds.length+' orders';
+  document.getElementById('ov-mtd-orders-sub').textContent=mtdOrds.length+' orders';
+
+  // YTD
+  const ytdSales=ytdOrds.reduce((s,o)=>s+(o.gt||0),0);
+  const annTarget=totalTarget*12;
+  const ytdPct=annTarget?Math.round(ytdSales/annTarget*100):0;
+  document.getElementById('ov-ytd-label').textContent=curYear;
+  document.getElementById('ov-ytd-sales').textContent=fi(ytdSales);
+  document.getElementById('ov-ytd-pct').textContent=ytdPct+'%';
+  document.getElementById('ov-ytd-target').textContent=fi(annTarget);
+  document.getElementById('ov-ytd-bar').style.width=Math.min(ytdPct,100)+'%';
+  document.getElementById('ov-ytd-orders').textContent=new Set(ytdOrds.map(o=>o.bid)).size;
+  document.getElementById('ov-ytd-shops-cnt').textContent=ytdOrds.length+' orders';
+
+  // Pipeline
+  const pend=allOrders.filter(o=>o.status==='Pending');
+  const acc=allOrders.filter(o=>o.status==='Accepted');
+  const disp=allOrders.filter(o=>o.status==='Dispatched');
+  document.getElementById('ov-pend').textContent=pend.length;
+  document.getElementById('ov-pend-val').textContent=fi(pend.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('ov-acc').textContent=acc.length;
+  document.getElementById('ov-acc-val').textContent=fi(acc.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('ov-disp').textContent=disp.length;
+  document.getElementById('ov-disp-val').textContent=fi(disp.reduce((s,o)=>s+(o.gt||0),0));
+
+  // Charts
+  document.getElementById('ov-mix-mtd-lbl').textContent=months[curMonth-1]+' '+curYear;
+  document.getElementById('ov-mix-ytd-lbl').textContent=curYear;
+  buildMixChart('chartMtd',mtdOrds,chartMtd,c=>chartMtd=c);
+  buildMixChart('chartYtd',ytdOrds,chartYtd,c=>chartYtd=c);
+}
+
+function buildMixChart(canvasId,orders,existing,setter){
+  const map={};
+  orders.forEach(o=>(o.items||[]).forEach(it=>{map[it.code]=(map[it.code]||{code:it.code,name:it.name,val:0});map[it.code].val+=((it.acceptedQty!==undefined?it.acceptedQty:it.qty)||0)*(it.price||0);}));
+  const mix=Object.values(map).sort((a,b)=>b.val-a.val).slice(0,9);
+  const ctx=document.getElementById(canvasId);
+  if(!ctx)return;
+  if(existing)existing.destroy();
+  if(!mix.length){ctx.getContext('2d').clearRect(0,0,ctx.width,ctx.height);setter(null);return;}
+  setter(new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:mix.map(m=>m.code),datasets:[{data:mix.map(m=>m.val),backgroundColor:CHART_COLORS,borderColor:'#0a1222',borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:10,family:'Outfit'},padding:10,usePointStyle:true,pointStyle:'circle'}}},cutout:'65%'}
+  }));
+}
+
+// ── RENDER VIEWS ──
 function renderViews(){
   const pend=allOrders.filter(o=>o.status==='Pending');
   const acc=allOrders.filter(o=>o.status==='Accepted');
@@ -436,15 +811,14 @@ function renderViews(){
   const b=document.getElementById('bPending');
   if(pend.length>0){b.textContent=pend.length;b.style.display='inline-flex';}else b.style.display='none';
   document.getElementById('pendingList').innerHTML=pend.length?pend.map(oCard).join(''):'<div class="empty"><span class="empty-ico">🎉</span>All caught up! No pending orders.</div>';
-  document.getElementById('acceptedList').innerHTML=acc.length?acc.map(oCard).join(''):'<div class="empty"><span class="empty-ico">📭</span>No accepted orders yet.</div>';
-  document.getElementById('dispatchedList').innerHTML=disp.length?disp.map(oCard).join(''):'<div class="empty"><span class="empty-ico">📦</span>No dispatched orders yet.</div>';
-  renderAll();renderSalesmen();
+  renderAccepted();renderDispatched();renderAll();renderSalesmen();
 }
 
+// ── ORDER CARD ──
 function oCard(o){
   const sc=o.status.toLowerCase();
   const ico=o.status==='Pending'?'⏳':o.status==='Accepted'?'✅':o.status==='Dispatched'?'📦':'✕';
-  const items=(o.items||[]).slice(0,2).map(it=>`${it.code}×${it.acceptedQty||it.qty}`).join(', ')+(o.items.length>2?` +${o.items.length-2}`:'');
+  const items=(o.items||[]).slice(0,2).map(it=>`${it.code}×${it.acceptedQty!==undefined?it.acceptedQty:it.qty}`).join(', ')+(o.items.length>2?` +${o.items.length-2}`:'');
   const inv=o.status==='Dispatched'&&o.invoiceNo?`· ${o.invoiceNo}`:'';
   return `<div class="ocard" onclick="openOrder('${o.oid}')">
     <div class="ocard-top">
@@ -454,7 +828,7 @@ function oCard(o){
         <div class="o-party">${o.bname}</div>
         <div class="o-meta">
           <span>👤 ${o.smName}</span>
-          <span>📅 ${fmtDate(o.date)}</span>
+          <span>📅 ${fmtDateShort(o.date)}</span>
           ${o.baddress?`<span>📍 ${o.baddress.slice(0,22)}…</span>`:''}
         </div>
       </div>
@@ -466,26 +840,84 @@ function oCard(o){
   </div>`;
 }
 
+// ── GROUP BY MONTH (for YTD views) ──
+function groupByMonth(orders){
+  const map={};
+  orders.forEach(o=>{
+    const d=new Date(o.date+'T00:00:00');
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label=d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+    if(!map[key])map[key]={key,label,orders:[],total:0};
+    map[key].orders.push(o);
+    map[key].total+=(o.gt||0);
+  });
+  return Object.values(map).sort((a,b)=>b.key.localeCompare(a.key));
+}
+
+function renderYtdGrouped(orders,containerId){
+  const groups=groupByMonth(orders);
+  if(!groups.length){
+    document.getElementById(containerId).innerHTML='<div class="empty"><span class="empty-ico">📭</span>No orders yet this year.</div>';
+    return;
+  }
+  document.getElementById(containerId).innerHTML=groups.map(g=>`
+    <div class="mgroup">
+      <div class="mhead">${g.label} <span>${g.orders.length} orders · ${fi(g.total)}</span></div>
+      ${g.orders.map(oCard).join('')}
+    </div>`).join('');
+}
+
+// ── ACCEPTED ──
+function renderAccepted(){
+  const acc=allOrders.filter(o=>o.status==='Accepted');
+  if(accSubTab==='mtd'){
+    const now=new Date();const m=now.getMonth()+1,y=now.getFullYear();
+    const mtd=acc.filter(o=>{const d=new Date(o.date);return d.getMonth()+1===m&&d.getFullYear()===y;});
+    document.getElementById('acceptedList').innerHTML=mtd.length?mtd.map(oCard).join(''):'<div class="empty"><span class="empty-ico">📭</span>No accepted orders this month.</div>';
+  }else{
+    renderYtdGrouped(acc,'acceptedYtdList');
+  }
+}
+
+// ── DISPATCHED ──
+function renderDispatched(){
+  const disp=allOrders.filter(o=>o.status==='Dispatched');
+  if(dispSubTab==='mtd'){
+    const now=new Date();const m=now.getMonth()+1,y=now.getFullYear();
+    const mtd=disp.filter(o=>{const d=new Date(o.date);return d.getMonth()+1===m&&d.getFullYear()===y;});
+    document.getElementById('dispatchedList').innerHTML=mtd.length?mtd.map(oCard).join(''):'<div class="empty"><span class="empty-ico">📦</span>No dispatched orders this month.</div>';
+  }else{
+    renderYtdGrouped(disp,'dispatchedYtdList');
+  }
+}
+
+// ── ALL ORDERS ──
 function renderAll(){
+  if(allSubTab==='ytd'){
+    renderYtdGrouped(allOrders.filter(o=>o.status!=='Cancelled'),'allYtdList');
+    return;
+  }
   const q=(document.getElementById('asearch')?.value||'').toLowerCase();
   const sf=document.getElementById('asmf')?.value||'';
   const tf=document.getElementById('astf')?.value||'';
+  const now=new Date();const m=now.getMonth()+1,y=now.getFullYear();
   const f=allOrders.filter(o=>{
     const mq=!q||o.oid.toLowerCase().includes(q)||o.bname.toLowerCase().includes(q)||(o.smName||'').toLowerCase().includes(q);
-    return mq&&(!sf||o.smId===sf)&&(!tf||o.status===tf);
+    const mtd=(()=>{const d=new Date(o.date);return d.getMonth()+1===m&&d.getFullYear()===y;})();
+    return mq&&(!sf||o.smId===sf)&&(!tf||o.status===tf)&&mtd;
   });
   document.getElementById('allCnt').textContent=f.length;
   document.getElementById('allList').innerHTML=f.map(oCard).join('')||'<div class="empty"><span class="empty-ico">🔍</span>No orders found</div>';
 }
 
+// ── SALESMEN ──
 function renderSalesmen(){
-  const SMC=['#7c3aed','#3b82f6','#10b981','#f59e0b','#ec4899'];
   document.getElementById('smList').innerHTML=allSalesmen.map((sm,i)=>{
     const orders=allOrders.filter(o=>o.smId===sm.id&&o.status!=='Cancelled').length;
     const pend=allOrders.filter(o=>o.smId===sm.id&&o.status==='Pending').length;
     const init=sm.name.split(' ').map(w=>w[0]).join('').slice(0,2);
-    return `<div class="smrow">
-      <div class="smav" style="background:${SMC[i%SMC.length]}">${init}</div>
+    return `<div class="smrow" onclick="openSmView('${sm.id}')">
+      <div class="smav" style="background:${SM_COLORS[i%SM_COLORS.length]}">${init}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:700">${sm.name}</div>
         <div style="font-size:10px;color:var(--sub)">${sm.id} · ${sm.territory||'—'} · Target: ${fi(sm.target||50000)}/mo</div>
@@ -493,15 +925,93 @@ function renderSalesmen(){
       <div style="text-align:right;flex-shrink:0">
         <div style="font-family:var(--m);font-size:13px;font-weight:700;color:var(--a2)">${orders} orders</div>
         ${pend>0?`<div style="font-size:10px;color:var(--org)">${pend} pending</div>`:'<div style="font-size:10px;color:var(--grn)">✓ Clear</div>'}
+        <div style="font-size:9px;color:var(--mut);margin-top:2px">Tap to view ›</div>
       </div>
     </div>`;
-  }).join('')||'<div class="empty">No salesmen linked to your account.<br>Set the Distributor ID in Master_Salesmen sheet.</div>';
+  }).join('')||'<div class="empty">No salesmen linked to your account.</div>';
 }
+
+// ── SALESMAN VIEW ──
+function openSmView(smId){
+  const sm=allSalesmen.find(s=>s.id===smId);
+  if(!sm)return;
+  const now=new Date();
+  const todayStr=now.toISOString().slice(0,10);
+  const curMonth=now.getMonth()+1,curYear=now.getFullYear();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  document.getElementById('sv-name').textContent=sm.name;
+  document.getElementById('sv-id').textContent=`${sm.id} · ${sm.territory||'—'} · D: ${sm.distributor||'—'}`;
+
+  const smOrders=allOrders.filter(o=>o.smId===smId&&o.status!=='Cancelled');
+  const todayO=smOrders.filter(o=>o.date===todayStr);
+  const mtdO=smOrders.filter(o=>{const d=new Date(o.date);return d.getMonth()+1===curMonth&&d.getFullYear()===curYear;});
+  const ytdO=smOrders.filter(o=>new Date(o.date).getFullYear()===curYear);
+
+  // Today
+  document.getElementById('sv-today-sales').textContent=fi(todayO.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('sv-today-orders').textContent=todayO.length;
+  document.getElementById('sv-today-shops').textContent=new Set(todayO.map(o=>o.bid)).size;
+
+  // MTD
+  const mtdSales=mtdO.reduce((s,o)=>s+(o.gt||0),0);
+  const target=sm.target||50000;
+  const mtdPct=Math.round(mtdSales/target*100);
+  document.getElementById('sv-mtd-sales').textContent=fi(mtdSales);
+  document.getElementById('sv-mtd-pct').textContent=mtdPct+'%';
+  document.getElementById('sv-mtd-target').textContent=fi(target);
+  document.getElementById('sv-mtd-bar').style.width=Math.min(mtdPct,100)+'%';
+  const mtdShops=new Set(mtdO.map(o=>o.bid)).size;
+  document.getElementById('sv-mtd-shops').textContent=mtdShops;
+  const gap=15-mtdShops;
+  document.getElementById('sv-mtd-shops-gap').textContent=gap>0?`${gap} more shops needed`:'✓ Shop target met';
+
+  // YTD
+  const ytdSales=ytdO.reduce((s,o)=>s+(o.gt||0),0);
+  const annTarget=target*12;
+  const ytdPct=Math.round(ytdSales/annTarget*100);
+  document.getElementById('sv-ytd-sales').textContent=fi(ytdSales);
+  document.getElementById('sv-ytd-pct').textContent=ytdPct+'%';
+  document.getElementById('sv-ytd-target').textContent=fi(annTarget);
+  document.getElementById('sv-ytd-bar').style.width=Math.min(ytdPct,100)+'%';
+  document.getElementById('sv-ytd-shops').textContent=new Set(ytdO.map(o=>o.bid)).size;
+
+  // Charts
+  document.getElementById('sv-chart-lbl').textContent=`MTD Sales by Product — ${months[curMonth-1]} ${curYear}`;
+  buildMixChart('svChartMtd',mtdO,svChartMtd,c=>svChartMtd=c);
+  buildMixChart('svChartYtd',ytdO,svChartYtd,c=>svChartYtd=c);
+
+  // Recent orders (read-only, no click action)
+  const recent=smOrders.slice(0,10);
+  document.getElementById('sv-orders').innerHTML=recent.length?recent.map(o=>{
+    const sc=o.status.toLowerCase();
+    const ico=o.status==='Pending'?'⏳':o.status==='Accepted'?'✅':'📦';
+    return `<div class="ocard" style="cursor:default">
+      <div class="ocard-top">
+        <div class="status-ico ${sc}">${ico}</div>
+        <div class="ocard-body">
+          <div class="ocard-r1"><span class="o-oid">${o.oid}</span><span class="o-amt">${fi(o.gt)}</span></div>
+          <div class="o-party">${o.bname}</div>
+          <div class="o-meta"><span>📅 ${fmtDateShort(o.date)}</span></div>
+        </div>
+      </div>
+      <div class="ocard-foot">
+        <span style="color:var(--sub)">${(o.items||[]).slice(0,2).map(it=>`${it.code}×${it.qty}`).join(', ')}</span>
+        <span class="stbadge ${sc}">${o.status}</span>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty" style="padding:20px">No orders from this salesman.</div>';
+
+  document.getElementById('smView').classList.add('on');
+  window.scrollTo({top:0});
+}
+
+function closeSmView(){document.getElementById('smView').classList.remove('on');}
 
 // ── ORDER MODAL ──
 async function openOrder(oid){
   const o=allOrders.find(x=>x.oid===oid);
-  if(!o) return;
+  if(!o)return;
   curOrder=o;
   ['sec-accept','sec-dispatch','sec-cancel','om-disp-info','audit-wrap'].forEach(id=>{
     document.getElementById(id).style.display='none';
@@ -528,31 +1038,31 @@ async function openOrder(oid){
     <span style="font-weight:700">Grand Total</span>
     <span style="font-family:var(--m);font-size:16px;font-weight:800;color:var(--grn)">${fi(o.gt)}</span>
   </div></div>`;
-  if(o.bphone||o.baddress) det+=`<div style="font-size:11px;color:var(--sub);margin-bottom:10px">${o.bphone?`📱 ${o.bphone}<br>`:''}${o.baddress?`📍 ${o.baddress}`:''}</div>`;
-  if(o.notes) det+=`<div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--a2);margin-bottom:8px">📝 ${o.notes}</div>`;
+  if(o.bphone||o.baddress)det+=`<div style="font-size:11px;color:var(--sub);margin-bottom:10px">${o.bphone?`📱 ${o.bphone}<br>`:''}${o.baddress?`📍 ${o.baddress}`:''}</div>`;
+  if(o.notes)det+=`<div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--a2);margin-bottom:8px">📝 ${o.notes}</div>`;
   document.getElementById('om-details').innerHTML=det;
-  // Dispatch info
+
   if(o.status==='Dispatched'&&(o.invoiceNo||o.dispatchDate)){
     let di=`<div class="disp-box"><div class="disp-title">📦 Dispatch Details</div>`;
-    if(o.invoiceNo) di+=`<div class="disp-row"><span class="disp-lbl">Invoice No</span><span class="disp-val">${o.invoiceNo}</span></div>`;
-    if(o.invoiceDate) di+=`<div class="disp-row"><span class="disp-lbl">Invoice Date</span><span class="disp-val">${fmtDate(o.invoiceDate)}</span></div>`;
-    if(o.dispatchDate) di+=`<div class="disp-row"><span class="disp-lbl">Dispatch Date</span><span class="disp-val">${fmtDate(o.dispatchDate)}</span></div>`;
-    if(o.transport) di+=`<div class="disp-row"><span class="disp-lbl">Transport</span><span class="disp-val">${o.transport}</span></div>`;
-    if(o.trackingNo) di+=`<div class="disp-row"><span class="disp-lbl">Tracking/LR</span><span class="disp-val">${o.trackingNo}</span></div>`;
-    if(o.dispatchNotes) di+=`<div class="disp-row"><span class="disp-lbl">Notes</span><span class="disp-val">${o.dispatchNotes}</span></div>`;
+    if(o.invoiceNo)di+=`<div class="disp-row"><span class="disp-lbl">Invoice No</span><span class="disp-val">${o.invoiceNo}</span></div>`;
+    if(o.invoiceDate)di+=`<div class="disp-row"><span class="disp-lbl">Invoice Date</span><span class="disp-val">${fmtDate(o.invoiceDate)}</span></div>`;
+    if(o.dispatchDate)di+=`<div class="disp-row"><span class="disp-lbl">Dispatch Date</span><span class="disp-val">${fmtDate(o.dispatchDate)}</span></div>`;
+    if(o.transport)di+=`<div class="disp-row"><span class="disp-lbl">Transport</span><span class="disp-val">${o.transport}</span></div>`;
+    if(o.trackingNo)di+=`<div class="disp-row"><span class="disp-lbl">Tracking/LR</span><span class="disp-val">${o.trackingNo}</span></div>`;
+    if(o.dispatchNotes)di+=`<div class="disp-row"><span class="disp-lbl">Notes</span><span class="disp-val">${o.dispatchNotes}</span></div>`;
     di+='</div>';
     document.getElementById('om-disp-info').innerHTML=di;
     document.getElementById('om-disp-info').style.display='block';
   }
-  // Actions
+
   let acts='';
   if(o.status==='Pending'){
     acts=`<button class="btn success" onclick="showAccept()">✅ Accept / Adjust</button>
-    <button class="btn danger" onclick="showSec('sec-cancel')">⛔ Cancel</button>`;
+          <button class="btn danger" onclick="showSec('sec-cancel')">⛔ Cancel</button>`;
   }else if(o.status==='Accepted'){
     acts=`<button class="btn primary" onclick="showDispatch(false)">📦 Add Dispatch Details</button>
-    <button class="btn warn" onclick="showAccept()">✏️ Modify Qty</button>
-    <button class="btn danger" onclick="showSec('sec-cancel')">⛔ Cancel</button>`;
+          <button class="btn warn" onclick="showAccept()">✏️ Modify Qty</button>
+          <button class="btn danger" onclick="showSec('sec-cancel')">⛔ Cancel</button>`;
   }else if(o.status==='Dispatched'){
     acts=`<button class="btn warn" onclick="showDispatch(true)">✏️ Update Dispatch</button>`;
   }
@@ -576,11 +1086,10 @@ function closeModal(){document.getElementById('orderOv').classList.remove('on');
 function hideSec(){['sec-accept','sec-dispatch','sec-cancel'].forEach(id=>document.getElementById(id).style.display='none');}
 function showSec(id){hideSec();document.getElementById(id).style.display='block';setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth'}),80);}
 
-// Accept
+// ── ACCEPT ──
 function showAccept(){
   hideSec();document.getElementById('sec-accept').style.display='block';
-  const o=curOrder;
-  let h='';
+  const o=curOrder;let h='';
   (o.items||[]).forEach(it=>{
     const aq=it.acceptedQty!==undefined?it.acceptedQty:it.qty;
     h+=`<div class="irow">
@@ -594,9 +1103,9 @@ function showAccept(){
   updTotal();
   setTimeout(()=>document.getElementById('sec-accept').scrollIntoView({behavior:'smooth'}),80);
 }
+
 function updTotal(){
-  const o=curOrder;if(!o)return;
-  let tot=0;
+  const o=curOrder;if(!o)return;let tot=0;
   (o.items||[]).forEach(it=>{
     const v=parseFloat(document.getElementById('aq-'+it.code)?.value)||0;
     tot+=v*it.price;
@@ -605,6 +1114,7 @@ function updTotal(){
   });
   document.getElementById('accept-total').textContent=fi(tot);
 }
+
 async function submitAccept(){
   const o=curOrder;if(!o)return;
   const qs={};
@@ -617,12 +1127,12 @@ async function submitAccept(){
       body:JSON.stringify({action:'distModifyOrder',orderId:o.oid,distId,distName,acceptedQtys:qs,notes})});
     const idx=allOrders.findIndex(x=>x.oid===o.oid);
     if(idx>=0){allOrders[idx].status='Accepted';(allOrders[idx].items||[]).forEach(it=>{if(qs[it.code]!==undefined)it.acceptedQty=qs[it.code];});}
-    toast('✅ Order accepted!','ok');closeModal();renderViews();
+    toast('✅ Order accepted!','ok');closeModal();renderViews();renderOverview();
   }catch(e){toast('⚠️ Error — retry','er');}
   btn.disabled=false;btn.textContent='✅ Accept Order';
 }
 
-// Dispatch
+// ── DISPATCH ──
 function showDispatch(isUpdate){
   dispMode=isUpdate?'update':'new';
   document.getElementById('disp-sec-title').textContent=isUpdate?'✏️ Update Dispatch Details':'📦 Dispatch Details';
@@ -644,13 +1154,13 @@ function showDispatch(isUpdate){
   }
   setTimeout(()=>document.getElementById('sec-dispatch').scrollIntoView({behavior:'smooth'}),80);
 }
+
 async function submitDispatch(){
   const o=curOrder;if(!o)return;
   const inv=document.getElementById('d-inv').value.trim();
   if(!inv){toast('Invoice number required','er');return;}
   const dispatch={
-    invoiceNo:inv,
-    invoiceDate:document.getElementById('d-invdate').value,
+    invoiceNo:inv,invoiceDate:document.getElementById('d-invdate').value,
     dispatchDate:document.getElementById('d-dispdate').value,
     transport:document.getElementById('d-transport').value.trim(),
     trackingNo:document.getElementById('d-tracking').value.trim(),
@@ -665,12 +1175,12 @@ async function submitDispatch(){
     const idx=allOrders.findIndex(x=>x.oid===o.oid);
     if(idx>=0){allOrders[idx].status='Dispatched';Object.assign(allOrders[idx],{invoiceNo:dispatch.invoiceNo,invoiceDate:dispatch.invoiceDate,transport:dispatch.transport,trackingNo:dispatch.trackingNo,dispatchDate:dispatch.dispatchDate,dispatchNotes:dispatch.notes});}
     toast(dispMode==='update'?'✏️ Dispatch updated!':'📦 Order dispatched!','ok');
-    closeModal();renderViews();
+    closeModal();renderViews();renderOverview();
   }catch(e){toast('⚠️ Error — retry','er');}
   btn.disabled=false;btn.textContent=dispMode==='update'?'💾 Update Dispatch':'📦 Confirm Dispatch';
 }
 
-// Cancel
+// ── CANCEL ──
 async function submitCancel(){
   const o=curOrder;if(!o)return;
   const reason=document.getElementById('cancel-reason').value.trim();
@@ -681,7 +1191,7 @@ async function submitCancel(){
       body:JSON.stringify({action:'distCancelOrder',orderId:o.oid,distId,distName,reason})});
     const idx=allOrders.findIndex(x=>x.oid===o.oid);
     if(idx>=0)allOrders[idx].status='Cancelled';
-    toast('⛔ Order cancelled','er');closeModal();renderViews();
+    toast('⛔ Order cancelled','er');closeModal();renderViews();renderOverview();
   }catch(e){toast('⚠️ Error — retry','er');}
   btn.disabled=false;btn.textContent='⛔ Confirm Cancel';
 }
