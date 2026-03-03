@@ -506,8 +506,9 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   </div>
 </div>
 
-<!-- SALESMAN VIEW OVERLAY (read-only) -->
+<!-- SALESMAN VIEW OVERLAY (read-only tabbed portal) -->
 <div class="sm-view" id="smView">
+  <!-- Header -->
   <div class="sv-hdr">
     <button class="sv-back" onclick="closeSmView()">← Back</button>
     <div style="flex:1;margin-left:12px">
@@ -516,61 +517,93 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     </div>
     <div class="sv-badge">👁 View Only</div>
   </div>
-  <div style="padding:14px 15px 80px">
-    <div class="ro-note">📋 Read-only view — you cannot place or modify orders here</div>
-    <!-- Today -->
-    <div class="sl">Today</div>
-    <div class="kpi3" style="margin-bottom:12px">
-      <div class="kcard bl"><div class="kico">💰</div><div class="kval" id="sv-today-sales">₹0</div><div class="klbl">Sales</div></div>
-      <div class="kcard gr"><div class="kico">📦</div><div class="kval" id="sv-today-orders">0</div><div class="klbl">Orders</div></div>
-      <div class="kcard or"><div class="kico">🏪</div><div class="kval" id="sv-today-shops">0</div><div class="klbl">Shops</div></div>
-    </div>
-    <!-- MTD -->
-    <div class="sl">Month to Date</div>
-    <div class="kpi2" style="margin-bottom:12px">
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">MTD Sales</div><div class="ppct" id="sv-mtd-pct">0%</div></div>
-        <div class="pamt" id="sv-mtd-sales">₹0</div>
-        <div class="ptgt">Target: <span id="sv-mtd-target">₹50,000</span></div>
-        <div class="pbar"><div class="pfill bl" id="sv-mtd-bar" style="width:0%"></div></div>
-      </div>
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">MTD Shops</div></div>
-        <div class="pamt" id="sv-mtd-shops">0</div>
-        <div class="ptgt">Shop target: 15</div>
-        <div class="ptgt" id="sv-mtd-shops-gap" style="color:var(--ylw);margin-top:3px">—</div>
-      </div>
-    </div>
-    <!-- YTD -->
-    <div class="sl">Year to Date</div>
-    <div class="kpi2" style="margin-bottom:12px">
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">YTD Sales</div><div class="ppct" id="sv-ytd-pct">0%</div></div>
-        <div class="pamt" id="sv-ytd-sales">₹0</div>
-        <div class="ptgt">Annual target: <span id="sv-ytd-target">₹6,00,000</span></div>
-        <div class="pbar"><div class="pfill gr" id="sv-ytd-bar" style="width:0%"></div></div>
-      </div>
-      <div class="pcard">
-        <div class="ptop"><div class="plbl">YTD Shops</div></div>
-        <div class="pamt" id="sv-ytd-shops">0</div>
-        <div class="ptgt">Unique shops this year</div>
-      </div>
-    </div>
-    <!-- Product Mix -->
-    <div class="sl">Product Mix — MTD</div>
-    <div class="ccard" style="margin-bottom:12px">
-      <div class="ctitle"><span id="sv-chart-lbl">MTD Sales by Product</span></div>
-      <div class="cwrap"><canvas id="svChartMtd"></canvas></div>
-    </div>
-    <div class="sl">Product Mix — YTD</div>
-    <div class="ccard" style="margin-bottom:12px">
-      <div class="ctitle"><span>YTD Sales by Product</span></div>
-      <div class="cwrap"><canvas id="svChartYtd"></canvas></div>
-    </div>
-    <!-- Recent Orders (read only) -->
-    <div class="sl">Recent Orders</div>
-    <div id="sv-orders"></div>
+  <!-- Tabs -->
+  <div class="tabs" id="sv-tabs">
+    <div class="tab on" onclick="svGoTab('dash')">📊 Dashboard</div>
+    <div class="tab" onclick="svGoTab('history')">📋 History</div>
+    <div class="tab" onclick="svGoTab('parties')">🏪 Parties</div>
   </div>
+  <!-- Scroll area -->
+  <div class="scr">
+
+  <!-- ── DASHBOARD TAB ── -->
+  <div class="page on" id="sv-pg-dash">
+    <div class="sec">
+      <div class="ro-note">📋 Read-only view — distributor cannot place or modify orders</div>
+      <div class="sl">Today's Performance</div>
+      <div class="kpi3" style="margin-bottom:12px">
+        <div class="kcard bl"><div class="kico">💰</div><div class="kval" id="sv-today-sales">₹0</div><div class="klbl">Sales</div></div>
+        <div class="kcard gr"><div class="kico">📦</div><div class="kval" id="sv-today-orders">0</div><div class="klbl">Orders</div></div>
+        <div class="kcard or"><div class="kico">🏪</div><div class="kval" id="sv-today-shops">0</div><div class="klbl">Shops</div></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sl">Month &amp; Year Performance</div>
+      <div class="kpi2" style="margin-bottom:12px">
+        <div class="pcard">
+          <div class="ptop"><div class="plbl">MTD Sales</div><div class="ppct" id="sv-mtd-pct">0%</div></div>
+          <div class="pamt" id="sv-mtd-sales">₹0</div>
+          <div class="ptgt">Target: <span id="sv-mtd-target">₹50,000</span></div>
+          <div class="pbar"><div class="pfill bl" id="sv-mtd-bar" style="width:0%"></div></div>
+        </div>
+        <div class="pcard">
+          <div class="ptop"><div class="plbl">YTD Sales</div><div class="ppct" id="sv-ytd-pct">0%</div></div>
+          <div class="pamt" id="sv-ytd-sales">₹0</div>
+          <div class="ptgt">Annual: <span id="sv-ytd-target">₹6,00,000</span></div>
+          <div class="pbar"><div class="pfill gr" id="sv-ytd-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sl">Product Mix — This Month</div>
+      <div class="ccard" style="margin-bottom:12px">
+        <div class="ctitle"><span>Sales by Product</span><span id="sv-chart-lbl" style="font-size:10px;color:var(--mut);font-weight:500"></span></div>
+        <div class="cwrap"><canvas id="svChartMtd"></canvas></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sl">Coverage &amp; Growth</div>
+      <div class="kpi2" style="margin-bottom:12px">
+        <div class="pcard">
+          <div class="ptop"><div class="plbl">MTD Shops</div></div>
+          <div class="pamt" id="sv-mtd-shops">0</div>
+          <div class="ptgt">Target: 15 shops</div>
+          <div class="ptgt" id="sv-mtd-shops-gap" style="color:var(--ylw);margin-top:3px">—</div>
+        </div>
+        <div class="pcard">
+          <div class="ptop"><div class="plbl">YTD Shops</div></div>
+          <div class="pamt" id="sv-ytd-shops">0</div>
+          <div class="ptgt">Unique shops this year</div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sl">Product Mix — YTD</div>
+      <div class="ccard" style="margin-bottom:12px">
+        <div class="ctitle"><span>YTD Sales by Product</span></div>
+        <div class="cwrap"><canvas id="svChartYtd"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HISTORY TAB ── -->
+  <div class="page" id="sv-pg-history">
+    <div class="sec" style="padding-top:13px">
+      <div class="sl">Submitted Orders</div>
+      <div id="sv-hist-list"></div>
+    </div>
+  </div>
+
+  <!-- ── PARTIES TAB ── -->
+  <div class="page" id="sv-pg-parties">
+    <div class="sec" style="padding-top:13px">
+      <div class="sl">Party List</div>
+      <input class="fi" type="search" id="sv-psearch" placeholder="Search parties…" oninput="svRenderParties()" style="margin-bottom:11px">
+      <div id="sv-party-list"></div>
+    </div>
+  </div>
+
+  </div><!-- /scr -->
 </div>
 
 <!-- ORDER MODAL -->
@@ -956,82 +989,152 @@ function renderSalesmen(){
   }).join('')||'<div class="empty">No salesmen linked to your account.</div>';
 }
 
-// ── SALESMAN VIEW ──
+// ── SALESMAN PORTAL (tabbed, read-only) ──
+let curSmId = '';
+
+function svGoTab(tab){
+  const tabs = ['dash','history','parties'];
+  document.querySelectorAll('#sv-tabs .tab').forEach((t,i) => t.classList.toggle('on', tabs[i]===tab));
+  document.querySelectorAll('#smView .page').forEach(p => p.classList.remove('on'));
+  document.getElementById('sv-pg-'+tab).classList.add('on');
+  if(tab==='history') svRenderHistory();
+  if(tab==='parties') svRenderParties();
+  document.querySelector('#smView .scr').scrollTo({top:0});
+}
+
 function openSmView(smId){
-  const sm=allSalesmen.find(s=>s.id===smId);
-  if(!sm)return;
-  const now=new Date();
-  const todayStr=now.toISOString().slice(0,10);
-  const curMonth=now.getMonth()+1,curYear=now.getFullYear();
-  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  curSmId = smId;
+  const sm = allSalesmen.find(s => s.id === smId);
+  if(!sm) return;
 
-  document.getElementById('sv-name').textContent=sm.name;
-  document.getElementById('sv-id').textContent=`${sm.id} · ${sm.territory||'—'} · D: ${sm.distributor||'—'}`;
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  const curMonth = now.getMonth()+1, curYear = now.getFullYear();
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  const smOrders=allOrders.filter(o=>o.smId===smId&&o.status!=='Cancelled');
-  const todayO=smOrders.filter(o=>o.date===todayStr);
-  const mtdO=smOrders.filter(o=>{const d=new Date(o.date);return d.getMonth()+1===curMonth&&d.getFullYear()===curYear;});
-  const ytdO=smOrders.filter(o=>new Date(o.date).getFullYear()===curYear);
+  // Header
+  document.getElementById('sv-name').textContent = sm.name;
+  document.getElementById('sv-id').textContent = `${sm.id} · ${sm.territory||'—'} · Target: ${fi(sm.target||50000)}/mo`;
+
+  // Filter orders
+  const smOrds = allOrders.filter(o => o.smId===smId && o.status!=='Cancelled');
+  const todayO = smOrds.filter(o => o.date===todayStr);
+  const mtdO   = smOrds.filter(o => { const d=new Date(o.date); return d.getMonth()+1===curMonth && d.getFullYear()===curYear; });
+  const ytdO   = smOrds.filter(o => new Date(o.date).getFullYear()===curYear);
 
   // Today
-  document.getElementById('sv-today-sales').textContent=fi(todayO.reduce((s,o)=>s+(o.gt||0),0));
-  document.getElementById('sv-today-orders').textContent=todayO.length;
-  document.getElementById('sv-today-shops').textContent=new Set(todayO.map(o=>o.bid)).size;
+  document.getElementById('sv-today-sales').textContent  = fi(todayO.reduce((s,o)=>s+(o.gt||0),0));
+  document.getElementById('sv-today-orders').textContent = todayO.length;
+  document.getElementById('sv-today-shops').textContent  = new Set(todayO.map(o=>o.bid)).size;
 
   // MTD
-  const mtdSales=mtdO.reduce((s,o)=>s+(o.gt||0),0);
-  const target=sm.target||50000;
-  const mtdPct=Math.round(mtdSales/target*100);
-  document.getElementById('sv-mtd-sales').textContent=fi(mtdSales);
-  document.getElementById('sv-mtd-pct').textContent=mtdPct+'%';
-  document.getElementById('sv-mtd-target').textContent=fi(target);
-  document.getElementById('sv-mtd-bar').style.width=Math.min(mtdPct,100)+'%';
-  const mtdShops=new Set(mtdO.map(o=>o.bid)).size;
-  document.getElementById('sv-mtd-shops').textContent=mtdShops;
-  const gap=15-mtdShops;
-  document.getElementById('sv-mtd-shops-gap').textContent=gap>0?`${gap} more shops needed`:'✓ Shop target met';
+  const target   = sm.target||50000;
+  const mtdSales = mtdO.reduce((s,o)=>s+(o.gt||0),0);
+  const mtdPct   = target ? Math.min(Math.round(mtdSales/target*100),999) : 0;
+  document.getElementById('sv-mtd-sales').textContent  = fi(mtdSales);
+  document.getElementById('sv-mtd-pct').textContent    = mtdPct+'%';
+  document.getElementById('sv-mtd-target').textContent = fi(target);
+  document.getElementById('sv-mtd-bar').style.width    = Math.min(mtdPct,100)+'%';
+  const mtdShops = new Set(mtdO.map(o=>o.bid)).size;
+  document.getElementById('sv-mtd-shops').textContent     = mtdShops;
+  const gap = 15 - mtdShops;
+  document.getElementById('sv-mtd-shops-gap').textContent = gap>0 ? `${gap} more shops needed` : '✓ Shop target met';
 
   // YTD
-  const ytdSales=ytdO.reduce((s,o)=>s+(o.gt||0),0);
-  const annTarget=target*12;
-  const ytdPct=Math.round(ytdSales/annTarget*100);
-  document.getElementById('sv-ytd-sales').textContent=fi(ytdSales);
-  document.getElementById('sv-ytd-pct').textContent=ytdPct+'%';
-  document.getElementById('sv-ytd-target').textContent=fi(annTarget);
-  document.getElementById('sv-ytd-bar').style.width=Math.min(ytdPct,100)+'%';
-  document.getElementById('sv-ytd-shops').textContent=new Set(ytdO.map(o=>o.bid)).size;
+  const annTarget = target * 12;
+  const ytdSales  = ytdO.reduce((s,o)=>s+(o.gt||0),0);
+  const ytdPct    = annTarget ? Math.min(Math.round(ytdSales/annTarget*100),999) : 0;
+  document.getElementById('sv-ytd-sales').textContent  = fi(ytdSales);
+  document.getElementById('sv-ytd-pct').textContent    = ytdPct+'%';
+  document.getElementById('sv-ytd-target').textContent = fi(annTarget);
+  document.getElementById('sv-ytd-bar').style.width    = Math.min(ytdPct,100)+'%';
+  document.getElementById('sv-ytd-shops').textContent  = new Set(ytdO.map(o=>o.bid)).size;
+
+  // Chart label
+  document.getElementById('sv-chart-lbl').textContent = MONTHS[curMonth-1]+' '+curYear;
 
   // Charts
-  document.getElementById('sv-chart-lbl').textContent=`MTD Sales by Product — ${months[curMonth-1]} ${curYear}`;
-  buildMixChart('svChartMtd',mtdO,svChartMtd,c=>svChartMtd=c);
-  buildMixChart('svChartYtd',ytdO,svChartYtd,c=>svChartYtd=c);
+  buildMixChart('svChartMtd', mtdO, svChartMtd, c=>svChartMtd=c);
+  buildMixChart('svChartYtd', ytdO, svChartYtd, c=>svChartYtd=c);
 
-  // Recent orders (read-only, no click action)
-  const recent=smOrders.slice(0,10);
-  document.getElementById('sv-orders').innerHTML=recent.length?recent.map(o=>{
-    const sc=o.status.toLowerCase();
-    const ico=o.status==='Pending'?'⏳':o.status==='Accepted'?'✅':'📦';
-    return `<div class="ocard" style="cursor:default">
+  // Reset to dashboard tab
+  svGoTab('dash');
+  document.getElementById('smView').classList.add('on');
+  window.scrollTo({top:0});
+}
+
+function svRenderHistory(){
+  const smOrds = allOrders
+    .filter(o => o.smId===curSmId)
+    .sort((a,b) => b.date.localeCompare(a.date));
+
+  if(!smOrds.length){
+    document.getElementById('sv-hist-list').innerHTML =
+      '<div class="empty"><span class="empty-ico">📭</span>No orders submitted yet.</div>';
+    return;
+  }
+  document.getElementById('sv-hist-list').innerHTML = smOrds.map(o => {
+    const sc = o.status.toLowerCase();
+    const ico = o.status==='Pending'?'⏳':o.status==='Accepted'?'✅':o.status==='Dispatched'?'📦':'✕';
+    const items = (o.items||[]).slice(0,2).map(it=>`${it.code}×${it.acceptedQty!==undefined?it.acceptedQty:it.qty}`).join(', ')
+                + (o.items.length>2?` +${o.items.length-2}`:'');
+    const inv = o.status==='Dispatched'&&o.invoiceNo ? `· ${o.invoiceNo}` : '';
+    return `<div class="ocard" onclick="openOrder('${o.oid}')">
       <div class="ocard-top">
         <div class="status-ico ${sc}">${ico}</div>
         <div class="ocard-body">
           <div class="ocard-r1"><span class="o-oid">${o.oid}</span><span class="o-amt">${fi(o.gt)}</span></div>
           <div class="o-party">${o.bname}</div>
-          <div class="o-meta"><span>📅 ${fmtDateShort(o.date)}</span></div>
+          <div class="o-meta">
+            <span>📅 ${fmtDateShort(o.date)}</span>
+            ${o.baddress?`<span>📍 ${o.baddress.slice(0,22)}…</span>`:''}
+          </div>
         </div>
       </div>
       <div class="ocard-foot">
-        <span style="color:var(--sub)">${(o.items||[]).slice(0,2).map(it=>`${it.code}×${it.qty}`).join(', ')}</span>
-        <span class="stbadge ${sc}">${o.status}</span>
+        <span style="color:var(--sub)">${items}</span>
+        <span><span class="stbadge ${sc}">${o.status}</span>${inv?`<span style="margin-left:5px;color:var(--sub);font-size:9px">${inv}</span>`:''}</span>
       </div>
     </div>`;
-  }).join(''):'<div class="empty" style="padding:20px">No orders from this salesman.</div>';
-
-  document.getElementById('smView').classList.add('on');
-  window.scrollTo({top:0});
+  }).join('');
 }
 
-function closeSmView(){document.getElementById('smView').classList.remove('on');}
+function svRenderParties(){
+  const q = (document.getElementById('sv-psearch')?.value||'').toLowerCase();
+  // Build unique party list from this salesman's orders
+  const partyMap = {};
+  allOrders.filter(o => o.smId===curSmId).forEach(o => {
+    if(!partyMap[o.bid]) partyMap[o.bid] = {id:o.bid, name:o.bname, phone:o.bphone||'', address:o.baddress||'', orders:0, total:0};
+    partyMap[o.bid].orders++;
+    partyMap[o.bid].total += (o.gt||0);
+  });
+  let parties = Object.values(partyMap).sort((a,b) => b.total-a.total);
+  if(q) parties = parties.filter(p => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q));
+
+  if(!parties.length){
+    document.getElementById('sv-party-list').innerHTML =
+      '<div class="empty"><span class="empty-ico">🏪</span>No parties found.</div>';
+    return;
+  }
+  document.getElementById('sv-party-list').innerHTML = parties.map(p => `
+    <div class="smrow" style="cursor:default">
+      <div class="smav" style="background:var(--acc);font-size:18px">🏪</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700">${p.name}</div>
+        <div style="font-size:10px;color:var(--sub)">${p.id}${p.address?' · '+p.address.slice(0,28):''}</div>
+        ${p.phone?`<div style="font-size:10px;color:var(--mut)">📱 ${p.phone}</div>`:''}
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:var(--m);font-size:12px;font-weight:700;color:var(--grn)">${fi(p.total)}</div>
+        <div style="font-size:10px;color:var(--mut)">${p.orders} order${p.orders>1?'s':''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function closeSmView(){
+  document.getElementById('smView').classList.remove('on');
+  curSmId = '';
+}
 
 // ── ORDER MODAL ──
 async function openOrder(oid){
