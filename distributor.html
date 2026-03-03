@@ -532,9 +532,9 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <div class="ro-note">📋 Read-only view — distributor cannot place or modify orders</div>
       <div class="sl">Today's Performance</div>
       <div class="kpi3" style="margin-bottom:12px">
-        <div class="kcard bl"><div class="kico">💰</div><div class="kval" id="sv-today-sales">₹0</div><div class="klbl">Sales</div></div>
-        <div class="kcard gr"><div class="kico">📦</div><div class="kval" id="sv-today-orders">0</div><div class="klbl">Orders</div></div>
-        <div class="kcard or"><div class="kico">🏪</div><div class="kval" id="sv-today-shops">0</div><div class="klbl">Shops</div></div>
+        <div class="kcard bl" onclick="svOpenDrill('today','sales')"><div class="kico">💰</div><div class="kval" id="sv-today-sales">₹0</div><div class="klbl">SALES ▸</div></div>
+        <div class="kcard gr" onclick="svOpenDrill('today','orders')"><div class="kico">📦</div><div class="kval" id="sv-today-orders">0</div><div class="klbl">ORDERS ▸</div></div>
+        <div class="kcard or" onclick="svOpenDrill('today','shops')"><div class="kico">🏪</div><div class="kval" id="sv-today-shops">0</div><div class="klbl">SHOPS ▸</div></div>
       </div>
     </div>
     <div class="sec">
@@ -1189,13 +1189,17 @@ function svOpenDrill(period, type){
     return;
   }
 
-  // MTD — flat list
+  // MTD / Today — flat list
   if(period === 'mtd'){
     orders = orders.filter(o => { const d=new Date(o.date); return d.getMonth()+1===curMonth && d.getFullYear()===curYear; });
+  } else if(period === 'today'){
+    orders = orders.filter(o => o.date===todayStr);
   }
   const title = type==='shops'
-    ? `🏪 ${period==='mtd'?'MTD':'Today'} Shops — ${MONTHS[curMonth-1]} ${curYear}`
-    : `💰 ${period==='mtd'?'MTD':'Today'} Sales — ${MONTHS[curMonth-1]} ${curYear}`;
+    ? `🏪 ${period==='ytd'?'YTD':period==='mtd'?'MTD':'Today'} Shops — ${period==='today'?fmtDate(todayStr):MONTHS[curMonth-1]+' '+curYear}`
+    : type==='orders'
+    ? `📦 Today's Orders — ${fmtDate(todayStr)}`
+    : `💰 ${period==='ytd'?'YTD':period==='mtd'?'MTD':'Today'} Sales — ${period==='today'?fmtDate(todayStr):MONTHS[curMonth-1]+' '+curYear}`;
   document.getElementById('drill-title').textContent = title;
   document.getElementById('drill-body').innerHTML = buildOrderOrShopList(orders, type);
   document.getElementById('drillOv').classList.add('on');
