@@ -413,8 +413,8 @@ textarea{resize:none;line-height:1.5;min-height:58px}
       </div>
     </div>
   </div>
-  <div class="sec" style="display:none">
-    <div class="sl">Notes</div>
+  <div class="sec">
+    <div class="sl">📝 Order Notes</div>
     <div class="card"><textarea id="onotes" placeholder="Special instructions…" rows="2"></textarea></div>
   </div>
 </div>
@@ -446,7 +446,49 @@ textarea{resize:none;line-height:1.5;min-height:58px}
       <div class="fld"><label>Contact Person</label><input type="text" id="ncontact" placeholder="Owner / Manager"></div>
     </div>
     <div class="card">
-      <div class="fld"><label>Address</label><input type="text" id="naddr" placeholder="Shop address"></div>
+      <div class="fld"><label>📷 Party Photo</label>
+        <input type="file" id="nphoto" accept="image/*" style="padding:4px">
+        <img id="photoPreview" src="" alt="Preview" style="display:none;max-width:100%;max-height:120px;margin-top:6px;border-radius:6px;border:1px solid #ddd">
+      </div>
+    </div>
+    <div class="card">
+      <div class="fld"><label>Address 1 <span style="color:red">*</span></label><input type="text" id="naddr1" placeholder="House / Shop No., Building Name"></div>
+    </div>
+    <div class="card">
+      <div class="fld"><label>Address 2 – Area <span style="color:red">*</span></label><input type="text" id="naddr2" placeholder="Area / Locality / Street"></div>
+    </div>
+    <div class="card">
+      <div class="g2">
+        <div class="fld"><label>City <span style="color:red">*</span></label><input type="text" id="naddr3" placeholder="City" autocomplete="off"></div>
+        <div class="fld"><label>State <span style="color:red">*</span></label>
+          <select id="naddr4" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;font-size:14px">
+            <option value="">-- Select State --</option>
+            <optgroup label="States">
+              <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option>
+              <option>Bihar</option><option>Chhattisgarh</option><option>Goa</option>
+              <option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option>
+              <option>Jharkhand</option><option>Karnataka</option><option>Kerala</option>
+              <option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option>
+              <option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option>
+              <option>Odisha</option><option>Punjab</option><option>Rajasthan</option>
+              <option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option>
+              <option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option>
+              <option>West Bengal</option>
+            </optgroup>
+            <optgroup label="Union Territories">
+              <option>Andaman & Nicobar Islands</option><option>Chandigarh</option>
+              <option>Dadra & Nagar Haveli and Daman & Diu</option>
+              <option>Delhi</option><option>Jammu & Kashmir</option><option>Ladakh</option>
+              <option>Lakshadweep</option><option>Puducherry</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="fld"><label>Pin Code <span style="color:#999;font-size:0.8em">(optional)</span></label><input type="text" id="npin" placeholder="e.g. 400001" maxlength="6" pattern="[0-9]{6}"></div>
+    </div>
+    <div class="card">
       <div class="g2">
         <div class="fld"><label>Route / Beat</label><input type="text" id="nroute" placeholder="Route A"></div>
         <div class="fld"><label>Territory</label><input type="text" id="nterr" placeholder="North Zone"></div>
@@ -584,6 +626,29 @@ document.addEventListener('DOMContentLoaded',()=>{
   addLine();
   loadDashboard();
   autoSyncPending();
+
+  (function(){
+    const phInput=document.getElementById('nphoto');
+    if(phInput)phInput.addEventListener('change',function(){
+      const f=this.files[0],prev=document.getElementById('photoPreview');
+      if(f){const r=new FileReader();r.onload=e=>{prev.src=e.target.result;prev.style.display='block';};r.readAsDataURL(f);}
+      else{prev.src='';prev.style.display='none';}
+    });
+    let _done=false;
+    const cityEl=document.getElementById('naddr3');
+    if(cityEl)cityEl.addEventListener('focus',function(){
+      if(_done)return;_done=true;
+      try{
+        const buyers=getBuyers();if(!buyers||!buyers.length)return;
+        const recent=buyers.slice().reverse().find(b=>b.city&&b.state);
+        if(recent){
+          if(!cityEl.value)cityEl.value=recent.city||'';
+          const sel=document.getElementById('naddr4');
+          if(sel&&!sel.value&&recent.state){for(let i=0;i<sel.options.length;i++){if(sel.options[i].text===recent.state){sel.selectedIndex=i;break;}}}
+        }
+      }catch(e){}
+    });
+  })();
 });
 
 // ═══ TABS ═════════════════════════════════════════════════════════════
@@ -1103,7 +1168,13 @@ async function addParty(){
   const newB={
     id:nextBID(),name,phone,
     contact:document.getElementById('ncontact').value.trim(),
-    address:document.getElementById('naddr').value.trim(),
+    addr1:document.getElementById('naddr1').value.trim(),
+    addr2:document.getElementById('naddr2').value.trim(),
+    city:document.getElementById('naddr3').value.trim(),
+    state:document.getElementById('naddr4').value,
+    pincode:document.getElementById('npin').value.trim(),
+    address:(document.getElementById('naddr1').value.trim()+' '+document.getElementById('naddr2').value.trim()+' '+document.getElementById('naddr3').value.trim()+' '+document.getElementById('naddr4').value+(document.getElementById('npin').value.trim()?' '+document.getElementById('npin').value.trim():'')).trim(),
+    photo:'',
     route:document.getElementById('nroute').value.trim(),
     territory:document.getElementById('nterr').value.trim(),
     gst:document.getElementById('ngst').value.trim().toUpperCase(),
@@ -1124,7 +1195,10 @@ async function addParty(){
     });
   }catch(e){}
   
-  ['nname','nphone','ncontact','naddr','nroute','nterr','ngst','ncredit'].forEach(id=>document.getElementById(id).value='');
+  ['nname','nphone','ncontact','naddr1','naddr2','naddr3','npin','nroute','nterr','ngst','ncredit'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('naddr4').selectedIndex=0;
+  const _pp=document.getElementById('photoPreview');if(_pp){_pp.style.display='none';_pp.src='';}
+  const _np=document.getElementById('nphoto');if(_np)_np.value='';
   document.getElementById('nterms').value='';
   fillBuyerSel();
   toast(`✅ ${newB.name} added as ${newB.id}`,'ok');
