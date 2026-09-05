@@ -1963,6 +1963,8 @@ async function renderProductsMaster() {
 function editProduct(code) {
   const p = allProducts.find(x => x.code===code);
   if (!p) return;
+  prodSubTab('add'); // switch to add pane first (this clears fields)
+  // Now fill fields AFTER the clear
   document.getElementById('pf-code').value   = p.code;
   document.getElementById('pf-name').value   = p.name;
   document.getElementById('pf-cat').value    = p.category||'';
@@ -1970,9 +1972,8 @@ function editProduct(code) {
   document.getElementById('pf-comm').value   = p.comm ? (p.comm*100).toFixed(1) : '';
   document.getElementById('pf-desc').value   = p.description||'';
   document.getElementById('pf-active').value = p.active===false ? 'No' : 'Yes';
-  document.getElementById('pf-editcode').value = code; // marks this as an edit
-  prodSubTab('add');
-  document.getElementById('pf-code').readOnly = true; // don't change code on edit
+  document.getElementById('pf-editcode').value = code;
+  document.getElementById('pf-code').readOnly = true;
   document.getElementById('pf-code').style.opacity = '0.6';
 }
 
