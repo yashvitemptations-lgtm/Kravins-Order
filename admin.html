@@ -760,11 +760,19 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
 
 <!-- ══ IMPORT PARTIES ══ -->
 <div class="page" id="pg-import">
+  <!-- Import source sub-tabs -->
+  <div class="stab-bar">
+    <div class="stab on" id="imp-tab-route" onclick="impSourceTab('route')">📋 Route Plan (613)</div>
+    <div class="stab" id="imp-tab-upload" onclick="impSourceTab('upload')">📤 Upload New File</div>
+  </div>
+
+  <!-- Route Plan pane -->
+  <div id="imp-pane-route">
   <div class="sec">
-    <div class="sl">Import Parties from Route Plan</div>
+    <div class="sl">Ahmedabad Field Route Plan — 613 Shops</div>
     <p style="font-size:11px;color:var(--mut);margin-bottom:14px;line-height:1.7">
-      613 shops loaded from <strong style="color:var(--txt)">Ahmedabad Field Route Plan</strong>.
-      Filter by Day/Route, assign to a salesman, preview and import.
+      Pre-loaded from your route plan. Already imported shops are greyed out.
+      Filter, select new ones, and import.
     </p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
       <div class="fld"><label>Filter by Day</label>
@@ -845,7 +853,20 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
       </div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:12px;color:var(--mut)">Showing <span id="imp-count" style="color:var(--a2);font-weight:700">0</span> · <span id="imp-selected" style="color:var(--grn);font-weight:700">0</span> selected</div>
+      <div>
+        <div style="font-size:12px;color:var(--mut)">
+          <span id="imp-count" style="color:var(--a2);font-weight:700">0</span> new ·
+          <span id="imp-selected" style="color:var(--grn);font-weight:700">0</span> selected
+        </div>
+        <div style="font-size:10px;color:var(--mut);margin-top:3px">
+          <span id="imp-done-count" style="color:var(--ylw)">0 already imported</span>
+          &nbsp;·&nbsp;
+          <label style="cursor:pointer;color:var(--mut)">
+            <input type="checkbox" id="imp-show-done" onchange="renderImportList()" style="margin-right:3px">
+            Show imported
+          </label>
+        </div>
+      </div>
       <div style="display:flex;gap:7px">
         <button onclick="selectAllImport(true)" style="padding:6px 12px;background:rgba(34,197,94,.1);border:1.5px solid rgba(34,197,94,.3);border-radius:7px;font-family:var(--f);font-size:11px;font-weight:600;color:var(--grn);cursor:pointer">✅ All</button>
         <button onclick="selectAllImport(false)" style="padding:6px 12px;background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.3);border-radius:7px;font-family:var(--f);font-size:11px;font-weight:600;color:var(--red);cursor:pointer">✕ Clear</button>
@@ -855,6 +876,48 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
     <button class="mbtn pri" onclick="runImport()">📥 Import Selected (Unallocated)</button>
     <p style="font-size:10px;color:var(--mut);margin-top:6px;line-height:1.6">Parties are imported without any salesman assignment. Use the <strong style="color:var(--a2)">Allocate</strong> tab to assign them.</p>
   </div>
+  </div><!-- /imp-pane-route -->
+
+  <!-- Upload New File pane -->
+  <div id="imp-pane-upload" style="display:none">
+  <div class="sec">
+    <div class="sl">Upload New Party Excel / CSV</div>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:14px;line-height:1.7">
+      Upload any Excel (.xlsx) or CSV file with party details. Map the columns and import.
+    </p>
+
+    <!-- File upload -->
+    <div style="border:2px dashed var(--bdr);border-radius:12px;padding:24px;text-align:center;margin-bottom:14px;cursor:pointer" onclick="document.getElementById('xlsxInput').click()" id="uploadZone">
+      <div style="font-size:28px;margin-bottom:8px">📂</div>
+      <div style="font-size:13px;font-weight:600;color:var(--txt)">Click to select Excel or CSV file</div>
+      <div style="font-size:11px;color:var(--mut);margin-top:4px">.xlsx, .xls, .csv supported</div>
+      <input type="file" id="xlsxInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(this)">
+    </div>
+
+    <!-- Column mapping (shown after file parsed) -->
+    <div id="colMapSection" style="display:none">
+      <div style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Map Columns</div>
+      <div style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--mut);margin-bottom:10px">Match your file columns to party fields. Leave blank to skip.</div>
+        <div id="colMapRows" style="display:grid;gap:8px"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:12px;color:var(--mut)">
+          <span id="ul-count" style="color:var(--a2);font-weight:700">0</span> rows parsed ·
+          <span id="ul-selected" style="color:var(--grn);font-weight:700">0</span> selected ·
+          <span id="ul-dupes" style="color:var(--ylw);font-weight:700">0</span> duplicates
+        </div>
+        <div style="display:flex;gap:7px">
+          <button onclick="selectAllUpload(true)" style="padding:5px 10px;background:rgba(34,197,94,.1);border:1.5px solid rgba(34,197,94,.3);border-radius:7px;font-family:var(--f);font-size:10px;font-weight:600;color:var(--grn);cursor:pointer">All</button>
+          <button onclick="selectAllUpload(false)" style="padding:5px 10px;background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.3);border-radius:7px;font-family:var(--f);font-size:10px;font-weight:600;color:var(--red);cursor:pointer">None</button>
+        </div>
+      </div>
+      <div id="ul-preview" style="max-height:350px;overflow-y:auto;margin-bottom:12px;border:1px solid var(--bdr);border-radius:10px"></div>
+      <button class="mbtn pri" onclick="runUploadImport()">📥 Import Selected Parties</button>
+    </div>
+  </div>
+  </div><!-- /imp-pane-upload -->
+
 </div>
 
 <!-- ══ ALLOCATE PARTIES ══ -->
@@ -2401,18 +2464,39 @@ let importFiltered = [...ROUTE_SHOPS];
 let importSelected = new Set(ROUTE_SHOPS.map(s => s.id));
 
 function renderImportTab() {
+  // Build set of already-imported party IDs from allParties
+  window.importedIds = new Set(allParties.map(p => p.id));
+  // Auto-deselect already imported shops
+  importSelected = new Set(
+    [...importSelected].filter(id => !window.importedIds.has(id))
+  );
   filterImport();
 }
 
 function filterImport() {
   const day   = document.getElementById('imp-day')?.value || '';
   const route = document.getElementById('imp-route')?.value || '';
-  importFiltered = ROUTE_SHOPS.filter(s =>
+  const showImported = document.getElementById('imp-show-done')?.checked || false;
+  const imported = window.importedIds || new Set();
+
+  const all = ROUTE_SHOPS.filter(s =>
     (!day   || s.day === day) &&
     (!route || s.route === route)
   );
-  document.getElementById('imp-count').textContent = importFiltered.length;
-  document.getElementById('imp-selected').textContent = importFiltered.filter(s=>importSelected.has(s.id)).length;
+
+  // Split into new (not yet imported) and already imported
+  importFiltered      = all.filter(s => !imported.has(s.id));
+  window.importedFiltered = all.filter(s =>  imported.has(s.id));
+
+  const totalNew      = importFiltered.length;
+  const totalImported = window.importedFiltered.length;
+  const selectedCount = importFiltered.filter(s=>importSelected.has(s.id)).length;
+
+  document.getElementById('imp-count').textContent    = totalNew;
+  document.getElementById('imp-selected').textContent = selectedCount;
+  document.getElementById('imp-done-count').textContent =
+    totalImported + ' already imported';
+
   renderImportList();
 }
 
@@ -2422,6 +2506,14 @@ function renderImportList() {
     list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mut)">No shops match filter</div>';
     return;
   }
+  const showImported = document.getElementById('imp-show-done')?.checked || false;
+  const importedList = showImported ? (window.importedFiltered||[]) : [];
+
+  if (!importFiltered.length && !importedList.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mut)">No shops match filter</div>';
+    return;
+  }
+
   list.innerHTML = importFiltered.map(s => {
     const checked = importSelected.has(s.id);
     const expanded = importExpandedId === s.id;
@@ -2477,7 +2569,32 @@ function renderImportList() {
         </div>
       </div>`:''}
     </div>`;
-  }).join('');
+  }).join('') +
+  // ── Already imported (greyed, non-selectable) ─────────────────────
+  (importedList.length ? `
+    <div style="padding:8px 10px;font-size:10px;font-weight:700;color:var(--ylw);
+      text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--bdr);
+      background:rgba(234,179,8,.05)">
+      ✅ Already Imported (${importedList.length})
+    </div>` +
+    importedList.map(s => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;
+        border-bottom:1px solid var(--bdr);opacity:.45;cursor:default">
+        <div style="width:18px;height:18px;border-radius:4px;background:rgba(34,197,94,.2);
+          border:2px solid var(--grn);flex-shrink:0;display:flex;align-items:center;justify-content:center">
+          <span style="color:var(--grn);font-size:11px;font-weight:700">✓</span>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600">${s.name}</div>
+          <div style="font-size:10px;color:var(--mut)">${s.route||''} · ${s.day||''}</div>
+          ${s.phone?`<div style="font-size:10px;color:var(--mut)">📞 ${s.phone}</div>`:''}
+        </div>
+        <span style="font-size:9px;padding:2px 7px;border-radius:8px;
+          background:rgba(34,197,94,.12);color:var(--grn);font-weight:700;white-space:nowrap">
+          Imported
+        </span>
+      </div>`).join('')
+  : '');
 }
 
 let importExpandedId = null;
@@ -2541,7 +2658,13 @@ async function runImport() {
       toast(`✅ ${d.imported} parties imported (unallocated)`, 'ok');
       const rp = await fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`);
       const dp = await rp.json();
-      if (dp.ok) allParties = dp.parties || [];
+      if (dp.ok) {
+        allParties = dp.parties || [];
+        // Refresh imported IDs so the import list updates immediately
+        window.importedIds = new Set(allParties.map(p => p.id));
+        importSelected = new Set([...importSelected].filter(id => !window.importedIds.has(id)));
+        filterImport();
+      }
     } else { toast('❌ ' + (d.error||'Import failed'), 'er'); }
   } catch(e) { toast('❌ Network error', 'er'); }
 }
@@ -3055,6 +3178,233 @@ async function rejectEditReq(reqId){
       showEditRequests();
     } else toast('❌ '+(d.error||'Failed'),'er');
   }catch(e){toast('❌ Network error','er');}
+}
+
+
+// ═══════════════════════════════════════════════════════
+// IMPORT SOURCE SUB-TABS
+// ═══════════════════════════════════════════════════════
+function impSourceTab(tab){
+  document.getElementById('imp-pane-route').style.display  = tab==='route'  ? '' : 'none';
+  document.getElementById('imp-pane-upload').style.display = tab==='upload' ? '' : 'none';
+  document.getElementById('imp-tab-route').classList.toggle('on',  tab==='route');
+  document.getElementById('imp-tab-upload').classList.toggle('on', tab==='upload');
+}
+
+// ═══════════════════════════════════════════════════════
+// UPLOAD NEW EXCEL / CSV FILE
+// Uses SheetJS (xlsx) loaded from CDN
+// ═══════════════════════════════════════════════════════
+let uploadedRows   = [];   // raw parsed rows [{colName: value}]
+let uploadSelected = new Set();
+let fileHeaders    = [];   // column names from file
+
+// Party fields we want to map to
+const PARTY_FIELDS = [
+  {key:'name',      label:'Party Name *'},
+  {key:'contact',   label:'Contact Person'},
+  {key:'phone',     label:'Phone'},
+  {key:'whatsapp',  label:'WhatsApp'},
+  {key:'address',   label:'Address'},
+  {key:'route',     label:'Route / Beat'},
+  {key:'territory', label:'Territory'},
+  {key:'gst',       label:'GST Number'},
+  {key:'terms',     label:'Payment Terms'},
+  {key:'credit',    label:'Credit Limit'},
+  {key:'email',     label:'Email'},
+  {key:'notes',     label:'Notes'},
+  {key:'day',       label:'Day / Beat'},
+];
+
+async function handleFileUpload(input){
+  const file = input.files[0];
+  if(!file){ return; }
+
+  // Load SheetJS dynamically if not already loaded
+  if(!window.XLSX){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload=res; s.onerror=rej;
+      document.head.appendChild(s);
+    });
+  }
+
+  const uploadZone = document.getElementById('uploadZone');
+  uploadZone.innerHTML = `<div style="font-size:22px;margin-bottom:6px">⏳</div><div style="font-size:12px;color:var(--mut)">Parsing ${file.name}...</div>`;
+
+  try{
+    const buf = await file.arrayBuffer();
+    const wb  = XLSX.read(buf, {type:'array'});
+    const ws  = wb.Sheets[wb.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(ws, {defval:''});
+
+    if(!raw.length){ toast('⚠️ File appears empty','er'); return; }
+
+    fileHeaders  = Object.keys(raw[0]);
+    uploadedRows = raw;
+
+    // Auto-match columns (case-insensitive fuzzy)
+    const autoMap = {};
+    PARTY_FIELDS.forEach(f=>{
+      const match = fileHeaders.find(h=>
+        h.toLowerCase().replace(/[^a-z]/g,'').includes(f.key.toLowerCase()) ||
+        f.key.toLowerCase().includes(h.toLowerCase().replace(/[^a-z]/g,'').slice(0,4))
+      );
+      if(match) autoMap[f.key] = match;
+    });
+
+    // Build column mapping UI
+    document.getElementById('colMapSection').style.display = '';
+    document.getElementById('colMapRows').innerHTML = PARTY_FIELDS.map(f=>`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center">
+        <div style="font-size:11px;font-weight:600;color:var(--txt)">${f.label}</div>
+        <select class="finp" id="colmap-${f.key}" style="font-size:12px;padding:7px 10px" onchange="refreshUploadPreview()">
+          <option value="">— Skip —</option>
+          ${fileHeaders.map(h=>`<option value="${h}" ${autoMap[f.key]===h?'selected':''}>${h}</option>`).join('')}
+        </select>
+      </div>`).join('');
+
+    uploadZone.innerHTML = `<div style="font-size:22px;margin-bottom:6px">✅</div>
+      <div style="font-size:12px;font-weight:600;color:var(--grn)">${file.name}</div>
+      <div style="font-size:11px;color:var(--mut);margin-top:3px">${raw.length} rows · ${fileHeaders.length} columns</div>
+      <div style="font-size:10px;color:var(--a2);margin-top:4px;cursor:pointer" onclick="document.getElementById('xlsxInput').click()">Change file</div>`;
+
+    refreshUploadPreview();
+  } catch(e){
+    uploadZone.innerHTML = `<div style="font-size:22px;margin-bottom:6px">❌</div><div style="font-size:12px;color:var(--red)">Failed to parse: ${e.message}</div>`;
+    toast('❌ Could not read file: '+e.message,'er');
+  }
+}
+
+function getColMapping(){
+  const map={};
+  PARTY_FIELDS.forEach(f=>{
+    const el=document.getElementById('colmap-'+f.key);
+    if(el&&el.value) map[f.key]=el.value;
+  });
+  return map;
+}
+
+function refreshUploadPreview(){
+  const map = getColMapping();
+  const imported = window.importedIds || new Set();
+
+  // Map rows to party objects
+  const mapped = uploadedRows.map((row,i)=>{
+    const p={};
+    PARTY_FIELDS.forEach(f=>{ if(map[f.key]) p[f.key]=String(row[map[f.key]]||'').trim(); });
+    // Generate ID from index if not mapped
+    p.id = 'UP'+(Date.now()%100000)+String(i+1).padStart(4,'0');
+    return p;
+  }).filter(p=>p.name); // must have name
+
+  // Check duplicates by name against existing
+  const existingNames = new Set(allParties.map(p=>p.name.toLowerCase().trim()));
+  const newRows   = mapped.filter(p=>!existingNames.has(p.name.toLowerCase()));
+  const dupeRows  = mapped.filter(p=> existingNames.has(p.name.toLowerCase()));
+
+  window.uploadMapped   = mapped;
+  window.uploadNewRows  = newRows;
+  window.uploadDupeRows = dupeRows;
+  uploadSelected = new Set(newRows.map((_,i)=>i)); // select all new by default
+
+  document.getElementById('ul-count').textContent    = mapped.length;
+  document.getElementById('ul-selected').textContent = uploadSelected.size;
+  document.getElementById('ul-dupes').textContent    = dupeRows.length+' duplicates (name match)';
+
+  // Render preview
+  const preview = document.getElementById('ul-preview');
+  if(!mapped.length){
+    preview.innerHTML='<div style="text-align:center;padding:20px;color:var(--mut)">No valid rows (Party Name column required)</div>';
+    return;
+  }
+
+  preview.innerHTML =
+    // New rows
+    newRows.map((p,i)=>{
+      const sel=uploadSelected.has(i);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--bdr);cursor:pointer" onclick="toggleUpload(${i})">
+        <div style="width:18px;height:18px;border-radius:4px;border:2px solid ${sel?'var(--grn)':'var(--bdr)'};background:${sel?'var(--grn)':'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center">
+          ${sel?'<span style="color:#fff;font-size:11px;font-weight:700">✓</span>':''}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600">${p.name}</div>
+          <div style="font-size:10px;color:var(--mut)">${[p.phone,p.route,p.territory].filter(Boolean).join(' · ')}</div>
+          ${p.address?`<div style="font-size:10px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${p.address}</div>`:''}
+        </div>
+      </div>`;
+    }).join('') +
+    // Duplicate rows (greyed)
+    (dupeRows.length ? `<div style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--ylw);
+      background:rgba(234,179,8,.05);border-bottom:1px solid var(--bdr)">
+      ⚠️ Already exist — will be skipped (${dupeRows.length})
+    </div>` +
+    dupeRows.map(p=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-bottom:1px solid var(--bdr);opacity:.4">
+      <div style="width:18px;height:18px;border-radius:4px;background:rgba(234,179,8,.15);border:2px solid var(--ylw);flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600">${p.name}</div>
+        <div style="font-size:10px;color:var(--mut)">${p.phone||''}</div>
+      </div>
+      <span style="font-size:9px;padding:2px 6px;border-radius:6px;background:rgba(234,179,8,.15);color:var(--ylw);font-weight:700">Exists</span>
+    </div>`).join('')
+    : '');
+}
+
+function toggleUpload(i){
+  if(uploadSelected.has(i)) uploadSelected.delete(i);
+  else uploadSelected.add(i);
+  document.getElementById('ul-selected').textContent = uploadSelected.size;
+  refreshUploadPreview();
+}
+function selectAllUpload(select){
+  const newRows = window.uploadNewRows||[];
+  newRows.forEach((_,i)=> select ? uploadSelected.add(i) : uploadSelected.delete(i));
+  document.getElementById('ul-selected').textContent = uploadSelected.size;
+  refreshUploadPreview();
+}
+
+async function runUploadImport(){
+  const newRows = window.uploadNewRows||[];
+  const toImport = newRows.filter((_,i)=>uploadSelected.has(i));
+  if(!toImport.length){ toast('⚠️ No rows selected','er'); return; }
+  if(!confirm(`Import ${toImport.length} parties?`)) return;
+
+  // Assign unique IDs
+  const now = new Date().toISOString();
+  const existing = new Set(allParties.map(p=>p.id));
+  let seq = allParties.length + 1;
+  const parties = toImport.map(p=>{
+    let id = 'UP'+String(seq++).padStart(4,'0');
+    while(existing.has(id)){ id='UP'+String(seq++).padStart(4,'0'); }
+    existing.add(id);
+    return {...p, id, addedBy:'', at:now, status:'Active',
+      credit:parseFloat(p.credit)||0, outstanding:0,
+      lat:'', lng:'', photo:''};
+  });
+
+  toast(`📥 Importing ${parties.length} parties...`,'in');
+  try{
+    const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'bulkImportParties', parties, smId:''})});
+    const d = await r.json();
+    if(d.ok){
+      toast(`✅ ${d.imported} parties imported`,'ok');
+      const rp = await fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`);
+      const dp = await rp.json();
+      if(dp.ok){
+        allParties = dp.parties||[];
+        window.importedIds = new Set(allParties.map(p=>p.id));
+      }
+      // Reset upload UI
+      document.getElementById('colMapSection').style.display='none';
+      document.getElementById('xlsxInput').value='';
+      document.getElementById('uploadZone').innerHTML=`<div style="font-size:28px;margin-bottom:8px">📂</div>
+        <div style="font-size:13px;font-weight:600;color:var(--txt)">Click to select Excel or CSV file</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:4px">.xlsx, .xls, .csv supported</div>`;
+      uploadedRows=[]; uploadSelected=new Set(); fileHeaders=[];
+    } else toast('❌ '+(d.error||'Import failed'),'er');
+  } catch(e){ toast('❌ Network error','er'); }
 }
 
 </script>
