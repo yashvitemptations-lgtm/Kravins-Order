@@ -517,6 +517,62 @@ textarea{resize:none;line-height:1.5;min-height:58px}
         </div>
       </div>
     </div>
+    <div class="card">
+      <div class="fld"><label>Address 1 <span style="color:var(--red)">*</span></label><input type="text" id="naddr1" placeholder="House / Shop No., Building Name"></div>
+    </div>
+    <div class="card">
+      <div class="fld"><label>Address 2 – Area <span style="color:var(--red)">*</span></label><input type="text" id="naddr2" placeholder="Area / Locality / Street"></div>
+    </div>
+    <div class="card">
+      <div class="g2">
+        <div class="fld"><label>City <span style="color:var(--red)">*</span></label><input type="text" id="naddr3" placeholder="City" autocomplete="off"></div>
+        <div class="fld"><label>State <span style="color:var(--red)">*</span></label>
+          <select id="naddr4">
+            <option value="">-- Select State --</option>
+            <optgroup label="States">
+              <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option>
+              <option>Bihar</option><option>Chhattisgarh</option><option>Goa</option>
+              <option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option>
+              <option>Jharkhand</option><option>Karnataka</option><option>Kerala</option>
+              <option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option>
+              <option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option>
+              <option>Odisha</option><option>Punjab</option><option>Rajasthan</option>
+              <option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option>
+              <option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option>
+              <option>West Bengal</option>
+            </optgroup>
+            <optgroup label="Union Territories">
+              <option>Andaman &amp; Nicobar Islands</option><option>Chandigarh</option>
+              <option>Dadra &amp; Nagar Haveli and Daman &amp; Diu</option>
+              <option>Delhi</option><option>Jammu &amp; Kashmir</option><option>Ladakh</option>
+              <option>Lakshadweep</option><option>Puducherry</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="fld"><label>Pin Code <span style="color:var(--mut);font-size:.8em">(optional)</span></label><input type="text" id="npin" placeholder="e.g. 400001" maxlength="6" pattern="[0-9]{6}" inputmode="numeric"></div>
+    </div>
+    <div class="card">
+      <div class="g2">
+        <div class="fld"><label>Route / Beat</label><input type="text" id="nroute" placeholder="Route A"></div>
+        <div class="fld"><label>Territory</label><input type="text" id="nterr" placeholder="North Zone"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="g2">
+        <div class="fld"><label>GST Number</label><input type="text" id="ngst" placeholder="GST No." style="text-transform:uppercase"></div>
+        <div class="fld">
+          <label>Payment Terms</label>
+          <select id="nterms">
+            <option value="">Select</option><option>Cash</option><option>7 Days</option>
+            <option>15 Days</option><option>30 Days</option><option>45 Days</option>
+          </select>
+        </div>
+      </div>
+      <div class="fld"><label>Credit Limit Requested (₹)</label><input type="number" id="ncredit" placeholder="0"></div>
+    </div>
     <button class="bsub" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);box-shadow:0 4px 16px rgba(124,58,237,.28);position:static" onclick="addParty()">➕ Add Party Instantly</button>
     <p style="text-align:center;font-size:11px;color:var(--mut);line-height:1.7;padding:10px 10px 0">Party added immediately. No approval needed.<br>Synced to central records automatically.</p>
   </div>
@@ -613,7 +669,20 @@ let SID   = _urlSID || '';
 let SNAME = SID;
 let DIST_ID = 'D001';
 let PARTY_ACCESS = true;
-const LK = {b:`B_${SID}`, o:`O_${SID}`};
+// ── Cache version — increment this when data structure changes ───────
+const CACHE_VER = '3';  // bump this to force clear old mobile cache
+const LK = {b:`B_${SID}_v${CACHE_VER}`, o:`O_${SID}`};
+
+// Clear old cache keys from previous versions on first load
+(function(){
+  try {
+    const oldKeys = Object.keys(localStorage).filter(k =>
+      (k.startsWith('B_') || k.startsWith('O_')) && !k.includes('_v'+CACHE_VER)
+    );
+    oldKeys.forEach(k => localStorage.removeItem(k));
+    if(oldKeys.length) console.log('Cleared '+oldKeys.length+' stale cache keys');
+  } catch(e) {}
+})();
 let lastDashData = null; // Store latest dashboard data for KPI modals
 const EDIT_WINDOW_MINS = 30; // Edit/cancel window for salesmen
 
@@ -708,12 +777,16 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   } catch(e) {}
 
   document.getElementById('salName').textContent=SNAME;
+  document.title = SNAME + ' — Sales Dashboard';
   document.getElementById('salId').textContent=SID;
   document.getElementById('avatar').textContent=SNAME.split(' ').map(w=>w[0]).join('').slice(0,2);
   document.title = SNAME + ' - Sales Dashboard';
   document.getElementById('odate').value=new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"})).toISOString().split('T')[0];
-  loadBuyers();
+  // Load buyers first, then add line so dropdown is ready
+  await loadBuyers();
   addLine();
+  // Load products (async, re-renders lines when done)
+  loadProducts();
   loadDashboard();
   autoSyncPending();
 
@@ -897,15 +970,23 @@ async function loadDashboard(){
 // ═══ BUYER ════════════════════════════════════════════════════════════
 async function loadBuyers(){
   try{
-    // Load parties assigned to this salesman
-    const r=await fetch(`${SCRIPT_URL}?action=parties&smId=${SID}&t=${Date.now()}`);
+    // Always fetch fresh from server — don't rely on stale mobile cache
+    // Load ALL parties (no smId filter) — filter by allocation client-side
+    const r=await fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`);
     const data=await r.json();
-    if(data.ok&&data.parties&&data.parties.length){
-      const merged=[...data.parties,...getBuyers()];
+    if(data.ok && data.parties && data.parties.length){
+      // Show: parties assigned to this SM, OR unallocated (addedBy blank)
+      const visible = data.parties.filter(p=>{
+        if(!p.addedBy || p.addedBy==='') return true;        // unallocated → visible to all
+        if(p.addedBy===SID) return true;                     // assigned to this SM
+        if(p.addedBy==='DIST:'+DIST_ID) return true;         // assigned to this SM's distributor
+        return false;
+      });
+      const merged=[...visible,...getBuyers()];
       const unique=merged.filter((b,i,a)=>a.findIndex(x=>x.id===b.id)===i);
       saveBuyers(unique);
     } else {
-      // Fallback: load from master buyers
+      // Fallback: master buyers sheet
       const r2=await fetch(`${SCRIPT_URL}?action=buyers&t=${Date.now()}`);
       const d2=await r2.json();
       if(d2.ok&&d2.buyers){
@@ -914,7 +995,7 @@ async function loadBuyers(){
         saveBuyers(unique);
       }
     }
-  }catch(e){}
+  }catch(e){ console.error('loadBuyers error:',e); }
   fillBuyerSel();
 }
 
@@ -987,22 +1068,15 @@ async function loadProducts(){
   try{
     const r=await fetch(`${SCRIPT_URL}?action=products&t=${Date.now()}`);
     const data=await r.json();
-    if(data.ok&&data.products)window.PRODS=data.products.filter(p=>p.active!==false);
-  }catch(e){}
+    if(data.ok && data.products && data.products.length){
+      window.PRODS = data.products.filter(p=>p.active!==false);
+      renderLines(); // Re-render any existing product lines with fresh data
+    }
+  }catch(e){ console.error('loadProducts error:',e); }
 }
-window.PRODS=[
-  {code:'P001',name:'Crazy Poms Jar',price:150,comm:0.05},
-  {code:'P002',name:'Tams Jar',price:150,comm:0.05},
-  {code:'P003',name:'Crazy Poms 250g Pouch',price:50,comm:0.04},
-  {code:'P004',name:'Tams 250g Pouch',price:50,comm:0.04},
-  {code:'P005',name:'Crazy Poms Display Box (5pc)',price:240,comm:0.06},
-  {code:'P006',name:'Tams Display Box (5pc)',price:240,comm:0.06},
-  {code:'P007',name:'Crazy Poms Display Box (50pc)',price:350,comm:0.07},
-  {code:'P008',name:'Tams Display Box (50pc)',price:350,comm:0.07},
-  {code:'P009',name:'Mix Flavour Dangler (72pc)',price:500,comm:0.08},
-  {code:'P010',name:'Mix Flavour Dangler (24pc)',price:180,comm:0.06},
-  {code:'P011',name:'Mix Flavour Display Box (50pc)',price:360,comm:0.07}
-];
+// Products loaded from API only — no hardcoded fallback
+// This prevents stale product data on mobile
+window.PRODS = [];  // empty until API loads
 loadProducts();
 
 function addLine(){lines.push({id:++lid,code:'',qty:0});renderLines();}
