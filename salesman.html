@@ -740,7 +740,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     const gal=document.getElementById('nphoto_gallery');
     if(cam)handlePhoto(cam);
     if(gal)handlePhoto(gal);
-  })();
+
     // City/State autofill from past buyer data
     let _done=false;
     const cityEl=document.getElementById('naddr3');
@@ -1277,7 +1277,7 @@ function renderParties(){
       <div style="flex:1;min-width:0">
         <div class="pnm">${b.name}</div>
         <div class="pid">${b.id}</div>
-        <div class="pro">${b.route||''} · ${PARTY_ACCESS?'Avail ₹'+av.toLocaleString('en-IN'):''}${b.lat&&b.lng?` · <a href="https://maps.google.com/?q=${b.lat},${b.lng}" target="_blank" style="color:var(--a2);text-decoration:none" onclick="event.stopPropagation()">📍 Map</a>`:''}</div>
+        <div class="pro">${b.route||''} · ${PARTY_ACCESS?'Avail ₹'+av.toLocaleString('en-IN'):''}${b.lat&&b.lng?' · <a href="https://maps.google.com/?q='+b.lat+','+b.lng+'" target="_blank" style="color:var(--a2);text-decoration:none" onclick="event.stopPropagation()">📍 Map</a>':''}</div>
       </div>
     </div>`;
   }).join('');
