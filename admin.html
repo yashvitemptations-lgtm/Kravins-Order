@@ -1956,7 +1956,10 @@ async function renderProductsMaster() {
           </div>
           <div style="font-size:11px;color:var(--mut);margin-top:3px">${p.category||'—'} · ₹${Number(p.price||0).toLocaleString('en-IN')} · Comm: ${p.comm?((p.comm*100).toFixed(1))+'%':'0%'}</div>
         </div>
-        <button onclick="editProduct('${p.code}')" style="flex-shrink:0;padding:7px 11px;background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.3);border-radius:8px;font-family:var(--f);font-size:10px;font-weight:600;color:var(--a2);cursor:pointer">✏️ Edit</button>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+          <button onclick="editProduct('${p.code}')" style="padding:7px 11px;background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.3);border-radius:8px;font-family:var(--f);font-size:10px;font-weight:600;color:var(--a2);cursor:pointer">✏️ Edit</button>
+          <button onclick="toggleProductStatus('${p.code}')" style="padding:7px 11px;background:${p.active===false?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'};border:1.5px solid ${p.active===false?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'};border-radius:8px;font-family:var(--f);font-size:10px;font-weight:600;color:${p.active===false?'var(--grn)':'var(--red)'};cursor:pointer">${p.active===false?'✅ Activate':'⛔ Deactivate'}</button>
+        </div>
       </div>`).join('');
   } catch(e) { list.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Failed to load products</div>'; }
 }
@@ -1965,34 +1968,72 @@ function editProduct(code) {
   const p = allProducts.find(x => x.code===code);
   if (!p) { alert('Product not found: ' + code); return; }
   prodSubTab('add', true); // switch pane WITHOUT clearing fields
-  document.getElementById('pf-code').value        = p.code;
-  document.getElementById('pf-name').value        = p.name;
-  document.getElementById('pf-cat').value         = p.category||'';
-  document.getElementById('pf-price').value       = p.price||'';
-  document.getElementById('pf-comm').value        = p.comm ? (p.comm*100).toFixed(1) : '0';
-  document.getElementById('pf-desc').value        = p.description||'';
-  document.getElementById('pf-active').value      = p.active===false ? 'No' : 'Yes';
-  document.getElementById('pf-editcode').value    = code;
-  document.getElementById('pf-code').readOnly     = true;
-  document.getElementById('pf-code').style.opacity = '0.6';
+  document.getElementById('pf-code').value         = p.code;
+  document.getElementById('pf-name').value         = p.name;
+  document.getElementById('pf-cat').value          = p.category||'';
+  document.getElementById('pf-price').value        = p.price||'';
+  document.getElementById('pf-comm').value         = p.comm ? (p.comm*100).toFixed(1) : '0';
+  document.getElementById('pf-desc').value         = p.description||'';
+  document.getElementById('pf-active').value       = p.active===false ? 'No' : 'Yes';
+  document.getElementById('pf-editcode').value     = code; // original code — used to find & update the row
+  // Check if any orders exist for this product
+  const hasOrders = allOrders.some(o => (o.items||[]).some(it => it.code === code));
+  const codeField = document.getElementById('pf-code');
+  if (hasOrders) {
+    codeField.readOnly = true;
+    codeField.style.opacity = '0.6';
+    codeField.title = 'Code cannot be changed — orders exist for this product';
+  } else {
+    codeField.readOnly = false;
+    codeField.style.opacity = '1';
+    codeField.title = 'No orders yet — code can be changed';
+  }
+}
+
+async function toggleProductStatus(code) {
+  const p = allProducts.find(x => x.code===code);
+  if (!p) return;
+  const newActive = p.active === false ? true : false;
+  const label = newActive ? 'Activate' : 'Deactivate';
+  if (!confirm(label + ' "' + p.name + '"?')) return;
+  const product = Object.assign({}, p, {active: newActive});
+  try {
+    toast('💾 Saving…','in');
+    const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'saveProduct',product})});
+    const d = await r.json();
+    if (d.ok) {
+      const idx = allProducts.findIndex(x=>x.code===code);
+      if (idx>=0) allProducts[idx].active = newActive;
+      toast('✅ ' + p.name + (newActive ? ' activated' : ' deactivated'), 'ok');
+      renderProductsMaster();
+    } else { toast('❌ '+(d.error||'Failed'),'er'); }
+  } catch(e) { toast('❌ Network error','er'); }
 }
 
 async function saveProductMaster() {
-  const code  = document.getElementById('pf-code').value.trim().toUpperCase();
-  const name  = document.getElementById('pf-name').value.trim();
-  const price = parseFloat(document.getElementById('pf-price').value)||0;
-  if (!code) { toast('⚠️ Product code required','er'); return; }
-  if (!name) { toast('⚠️ Product name required','er'); return; }
+  const code     = document.getElementById('pf-code').value.trim().toUpperCase();
+  const origCode = document.getElementById('pf-editcode').value.trim().toUpperCase(); // blank if new
+  const name     = document.getElementById('pf-name').value.trim();
+  const price    = parseFloat(document.getElementById('pf-price').value)||0;
+  if (!code)  { toast('⚠️ Product code required','er'); return; }
+  if (!name)  { toast('⚠️ Product name required','er'); return; }
   if (!price) { toast('⚠️ Price required','er'); return; }
+
+  // If code changed, make sure new code is not already taken
+  if (origCode && code !== origCode) {
+    const taken = allProducts.find(x => x.code === code);
+    if (taken) { toast('⚠️ Code ' + code + ' already exists','er'); return; }
+  }
 
   const commRaw = parseFloat(document.getElementById('pf-comm').value)||0;
   const product = {
     code, name,
-    category: document.getElementById('pf-cat').value.trim(),
+    category:    document.getElementById('pf-cat').value.trim(),
     price,
-    comm: commRaw/100,  // store as decimal (0.05 = 5%)
+    comm:        commRaw/100,
     description: document.getElementById('pf-desc').value.trim(),
-    active: document.getElementById('pf-active').value === 'Yes'
+    active:      document.getElementById('pf-active').value === 'Yes',
+    oldCode:     (origCode && code !== origCode) ? origCode : null  // signal to backend to rename
   };
 
   try {
@@ -2000,11 +2041,19 @@ async function saveProductMaster() {
     const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'saveProduct',product})});
     const d = await r.json();
     if (d.ok) {
-      toast(`✅ ${name} saved`,'ok');
-      const idx = allProducts.findIndex(x=>x.code===code);
-      if (idx>=0) allProducts[idx]=product; else allProducts.push(product);
+      toast('✅ ' + name + ' saved','ok');
+      // Update local cache
+      if (origCode && code !== origCode) {
+        // Code changed — remove old entry, add new
+        const idx = allProducts.findIndex(x=>x.code===origCode);
+        if (idx>=0) allProducts.splice(idx,1);
+        allProducts.push(product);
+      } else {
+        const idx = allProducts.findIndex(x=>x.code===code);
+        if (idx>=0) allProducts[idx]=product; else allProducts.push(product);
+      }
       document.getElementById('pf-code').readOnly = false;
-      document.getElementById('pf-code').style.opacity = '';
+      document.getElementById('pf-code').style.opacity = '1';
       document.getElementById('pf-editcode').value = '';
       prodSubTab('list');
     } else { toast('❌ '+(d.error||'Save failed'),'er'); }
