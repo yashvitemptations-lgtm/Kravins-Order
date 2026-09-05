@@ -248,10 +248,18 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <div class="setup-box">
     <div class="setup-logo">🚚</div>
     <div class="setup-title">Distributor Portal</div>
-    <div class="setup-sub">Enter your Distributor ID to access your orders dashboard.<br>Contact admin if you need your ID.</div>
-    <div class="setup-err" id="setupErr">Distributor not found. Please check your ID.</div>
-    <input class="setup-inp" id="setupId" placeholder="Distributor ID" maxlength="10" onkeydown="if(event.key==='Enter')doSetup()">
-    <button class="setup-btn" onclick="doSetup()">Access My Portal →</button>
+    <div class="setup-sub">Enter your Distributor ID and PIN to login.<br>Contact admin if you need your credentials.</div>
+    <div class="setup-err" id="setupErr" style="display:none">Distributor not found. Please check your ID.</div>
+    <input class="setup-inp" id="setupId" placeholder="Distributor ID (e.g. D001)" maxlength="10"
+      style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"
+      onkeydown="if(event.key==='Enter')document.getElementById('setupPin').focus()">
+    <input class="setup-inp" id="setupPin" type="password" placeholder="PIN" inputmode="numeric"
+      maxlength="6" style="letter-spacing:6px;font-size:20px;margin-top:10px"
+      onkeydown="if(event.key==='Enter')doSetup()">
+    <button class="setup-btn" id="setupBtn" onclick="doSetup()" style="margin-top:16px">Login →</button>
+    <p style="font-size:11px;color:var(--mut,#64748b);margin-top:14px;line-height:1.6;text-align:center">
+      Don't know your PIN? Contact your admin.
+    </p>
   </div>
 </div>
 
@@ -681,39 +689,69 @@ function fmtTs(s){if(!s)return '—';try{return new Date(s).toLocaleDateString('
 let _tt;function toast(m,t='ok'){const el=document.getElementById('toast');clearTimeout(_tt);el.textContent=m;el.className=`toast ${t} on`;_tt=setTimeout(()=>el.classList.remove('on'),2800);}
 
 document.addEventListener('DOMContentLoaded',()=>{
-  const urlParam=new URLSearchParams(window.location.search).get('dist');
-  const stored=localStorage.getItem('kravins_dist_id');
-  const id=urlParam||stored;
-  if(id){distId=id;if(urlParam)localStorage.setItem('kravins_dist_id',urlParam);initApp();}
   const today=new Date().toISOString().slice(0,10);
   document.getElementById('d-invdate').value=today;
   document.getElementById('d-dispdate').value=today;
+
+  // Pre-fill ID from URL param if provided
+  const urlParam=new URLSearchParams(window.location.search).get('dist');
+  if(urlParam){
+    document.getElementById('setupId').value=urlParam.toUpperCase();
+    document.getElementById('setupId').readOnly=true;
+    document.getElementById('setupId').style.opacity='0.6';
+    setTimeout(()=>document.getElementById('setupPin').focus(),100);
+  }
+
+  // Check existing session (sessionStorage clears when tab closes)
+  const DIST_SESS = 'kravins_dist_session';
+  try{
+    const sess=JSON.parse(sessionStorage.getItem(DIST_SESS)||'null');
+    if(sess && sess.id){
+      distId=sess.id; distName=sess.name; distInfo=sess.info||{};
+      initApp(); return;
+    }
+  }catch(e){}
+
+  // Show login
+  document.getElementById('setupScreen').style.display='flex';
+  if(!urlParam) setTimeout(()=>document.getElementById('setupId').focus(),100);
 });
 
 async function doSetup(){
-  const id=document.getElementById('setupId').value.trim().toUpperCase();
-  if(!id){document.getElementById('setupErr').style.display='block';return;}
+  const id  = document.getElementById('setupId').value.trim().toUpperCase();
+  const pin = document.getElementById('setupPin').value.trim();
+  const errEl = document.getElementById('setupErr');
+  const btn   = document.getElementById('setupBtn');
+  if(!id){ errEl.textContent='Enter your Distributor ID'; errEl.style.display='block'; return; }
+  if(!pin){ errEl.textContent='Enter your PIN'; errEl.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Verifying…'; errEl.style.display='none';
   try{
-    const r=await fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`);
+    const r=await fetch(`${SCRIPT_URL}?action=verifyPin&id=${encodeURIComponent(id)}&pin=${encodeURIComponent(pin)}&role=dist&t=${Date.now()}`);
     const d=await r.json();
-    const found=(d.distributors||[]).find(x=>x.id===id);
-    if(!found){document.getElementById('setupErr').style.display='block';return;}
-    if(found.active===false){
-      document.getElementById('setupErr').textContent='❌ This account has been deactivated. Contact admin.';
-      document.getElementById('setupErr').style.display='block';
-      return;
+    if(d.ok){
+      distId=d.id; distName=d.name; distInfo={id:d.id,name:d.name};
+      try{ sessionStorage.setItem('kravins_dist_session',JSON.stringify({id:d.id,name:d.name,info:distInfo,ts:Date.now()})); }catch(e){}
+      document.getElementById('setupScreen').style.display='none';
+      initApp();
+    } else {
+      errEl.textContent = d.error||'Login failed. Check your ID and PIN.';
+      errEl.style.display='block';
+      btn.disabled=false; btn.textContent='Login →';
+      document.getElementById('setupPin').value='';
+      document.getElementById('setupPin').focus();
     }
-    document.getElementById('setupErr').style.display='none';
-    distId=id;distInfo=found;distName=found.name;
-    localStorage.setItem('kravins_dist_id',id);
-    initApp();
   }catch(e){
-    document.getElementById('setupErr').textContent='Connection error. Try again.';
-    document.getElementById('setupErr').style.display='block';
+    errEl.textContent='Connection error. Try again.';
+    errEl.style.display='block';
+    btn.disabled=false; btn.textContent='Login →';
   }
 }
 
-function doLogout(){localStorage.removeItem('kravins_dist_id');location.reload();}
+function doLogout(){
+  try{ sessionStorage.removeItem('kravins_dist_session'); }catch(e){}
+  try{ localStorage.removeItem('kravins_dist_id'); }catch(e){}
+  location.reload();
+}
 
 async function initApp(){
   if(!distName){
@@ -721,14 +759,7 @@ async function initApp(){
       const r=await fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`);
       const d=await r.json();
       const f=(d.distributors||[]).find(x=>x.id===distId);
-      if(f){
-        if(f.active===false){
-          localStorage.removeItem('kravins_dist_id');
-          document.body.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#050a14;color:#64748b;font-family:Outfit,sans-serif;font-size:14px;text-align:center;padding:30px;gap:12px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:700;color:#ef4444">Access Suspended</div><div style="font-size:13px;max-width:280px;line-height:1.7">Your distributor account has been deactivated.<br>Please contact admin.</div></div>';
-          return;
-        }
-        distInfo=f;distName=f.name;
-      }else{distName=distId;}
+      if(f){distInfo=f;distName=f.name;}else{distName=distId;}
     }catch(e){distName=distId;}
   }
   document.getElementById('setupScreen').style.display='none';

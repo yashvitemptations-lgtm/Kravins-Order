@@ -233,6 +233,50 @@ textarea{resize:none;line-height:1.5;min-height:58px}
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#050a14;
+  z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:30px 24px;font-family:var(--f)">
+  <div style="width:100%;max-width:360px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--acc),var(--pur));
+        display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px">🛒</div>
+      <div style="font-size:22px;font-weight:800;color:var(--txt)">Kravins Sales</div>
+      <div style="font-size:12px;color:var(--mut);margin-top:4px">Salesman Portal</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;
+        letter-spacing:.06em;display:block;margin-bottom:6px">Salesman ID</label>
+      <input id="loginId" type="text" placeholder="e.g. SM001"
+        style="width:100%;background:var(--s1);border:1.5px solid var(--bdr);border-radius:11px;
+        padding:13px 16px;font-family:var(--f);font-size:15px;color:var(--txt);outline:none;
+        text-transform:uppercase"
+        oninput="this.value=this.value.toUpperCase()"
+        onkeydown="if(event.key==='Enter')document.getElementById('loginPin').focus()">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;
+        letter-spacing:.06em;display:block;margin-bottom:6px">PIN</label>
+      <input id="loginPin" type="password" placeholder="Enter your PIN" inputmode="numeric"
+        style="width:100%;background:var(--s1);border:1.5px solid var(--bdr);border-radius:11px;
+        padding:13px 16px;font-family:var(--f);font-size:20px;color:var(--txt);outline:none;
+        letter-spacing:6px"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="loginErr" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);
+      border-radius:9px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:14px;text-align:center"></div>
+    <button onclick="doLogin()" id="loginBtn"
+      style="width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),#1d4ed8);
+      border:none;border-radius:11px;font-family:var(--f);font-size:16px;font-weight:700;
+      color:#fff;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.3)">
+      Login →
+    </button>
+    <p style="text-align:center;font-size:11px;color:var(--mut);margin-top:16px;line-height:1.6">
+      Don't know your PIN? Contact your admin.
+    </p>
+  </div>
+</div>
+
 <!-- HEADER -->
 <div class="hdr">
   <div class="htop">
@@ -243,9 +287,15 @@ textarea{resize:none;line-height:1.5;min-height:58px}
         <div class="hid" id="salId">SM001</div>
       </div>
     </div>
-    <div class="sync">
-      <div class="dot"></div>
-      <span>Live</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="sync">
+        <div class="dot"></div>
+        <span>Live</span>
+      </div>
+      <button onclick="doLogout()" title="Logout"
+        style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);
+        border-radius:8px;padding:4px 9px;font-family:var(--f);font-size:10px;
+        font-weight:600;color:var(--red);cursor:pointer">⏻</button>
     </div>
   </div>
 </div>
@@ -680,6 +730,21 @@ function getIndianDate() {
   return istTime.toISOString().split("T")[0];
 }
 
+// ═══ SESSION ══════════════════════════════════════════════════════════
+// Check if already logged in (session stored in sessionStorage)
+// sessionStorage clears when tab is closed — forces re-login each session
+const SESSION_KEY = 'kravins_sm_session';
+
+function getSession(){
+  try{ return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null'); }catch(e){return null;}
+}
+function saveSession(data){
+  try{ sessionStorage.setItem(SESSION_KEY, JSON.stringify(data)); }catch(e){}
+}
+function clearSession(){
+  try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){}
+}
+
 // ═══ CONFIG ═══════════════════════════════════════════════════════════
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz70y3yn3VHlpV1yFrLP0l5L3CduXtDoU0tl_TbBhzCnXQZlIrNoEm4DHgZkmbVIabg/exec';
 
@@ -741,7 +806,7 @@ function nextBID(){const buyers=getBuyers();
 
 // ═══ INIT ═════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async ()=>{
-  // ── Validate URL param ────────────────────────────────────────────
+  // ── Check URL param ───────────────────────────────────────────────
   if (!_urlSID) {
     document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#050a14;color:#64748b;font-family:Outfit,sans-serif;font-size:14px;text-align:center;padding:30px;gap:12px">
       <div style="font-size:40px">🔗</div>
@@ -752,6 +817,21 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     </div>`;
     return;
   }
+  // ── Check existing session ────────────────────────────────────────
+  const sess = getSession();
+  if (sess && sess.id === _urlSID) {
+    // Valid session — restore and proceed
+    SID = sess.id; SNAME = sess.name; DIST_ID = sess.distributor||'D001';
+    document.getElementById('loginScreen').style.display='none';
+    initApp();
+    return;
+  }
+  // ── Show login screen ─────────────────────────────────────────────
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginId').value = _urlSID;
+  document.getElementById('loginId').readOnly = true; // ID fixed from URL
+  document.getElementById('loginId').style.opacity = '0.6';
+  document.getElementById('loginPin').focus();
   // ── Load salesman details from master ─────────────────────────────
   try {
     const r = await fetch(SCRIPT_URL+'?action=salesmen&t='+Date.now());
@@ -851,6 +931,75 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     });
   })();
 });
+
+// ═══ LOGIN ════════════════════════════════════════════════════════════
+async function doLogin(){
+  const pin = document.getElementById('loginPin').value.trim();
+  const errEl = document.getElementById('loginErr');
+  const btn = document.getElementById('loginBtn');
+  if(!pin){ errEl.textContent='Please enter your PIN'; errEl.style.display='block'; return; }
+
+  btn.disabled=true; btn.textContent='Verifying…';
+  errEl.style.display='none';
+
+  try{
+    const r = await fetch(`${SCRIPT_URL}?action=verifyPin&id=${encodeURIComponent(_urlSID)}&pin=${encodeURIComponent(pin)}&role=sm&t=${Date.now()}`);
+    const d = await r.json();
+    if(d.ok){
+      // Save session
+      SID = d.id; SNAME = d.name; DIST_ID = d.distributor||'D001';
+      saveSession({id:d.id, name:d.name, distributor:d.distributor||'D001', ts:Date.now()});
+      document.getElementById('loginScreen').style.display='none';
+      await initApp();
+    } else {
+      errEl.textContent = d.error || 'Login failed';
+      errEl.style.display='block';
+      btn.disabled=false; btn.textContent='Login →';
+      document.getElementById('loginPin').value='';
+      document.getElementById('loginPin').focus();
+    }
+  } catch(e){
+    errEl.textContent='Connection error — check internet and try again';
+    errEl.style.display='block';
+    btn.disabled=false; btn.textContent='Login →';
+  }
+}
+
+function doLogout(){
+  clearSession();
+  document.getElementById('loginPin').value='';
+  document.getElementById('loginErr').style.display='none';
+  document.getElementById('loginBtn').disabled=false;
+  document.getElementById('loginBtn').textContent='Login →';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginPin').focus();
+}
+
+async function initApp(){
+  // Load party access control
+  try {
+    const ra = await fetch(SCRIPT_URL+'?action=partyAccess&t='+Date.now());
+    const da = await ra.json();
+    if (da.ok && da.access && da.access[SID] === false) {
+      PARTY_ACCESS = false;
+      const cg = document.querySelector('.cg');
+      const ca = document.getElementById('calert');
+      if (cg) cg.style.display='none';
+      if (ca) ca.style.display='none';
+    }
+  } catch(e) {}
+
+  document.getElementById('salName').textContent=SNAME;
+  document.getElementById('salId').textContent=SID;
+  document.getElementById('avatar').textContent=SNAME.split(' ').map(w=>w[0]).join('').slice(0,2);
+  document.title = SNAME + ' — Sales Dashboard';
+  document.getElementById('odate').value=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})).toISOString().split('T')[0];
+  await loadBuyers();
+  addLine();
+  loadProducts();
+  loadDashboard();
+  autoSyncPending();
+}
 
 // ═══ TABS ═════════════════════════════════════════════════════════════
 function go(tab){
@@ -995,12 +1144,12 @@ async function loadBuyers(){
     const r=await fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`);
     const data=await r.json();
     if(data.ok && data.parties && data.parties.length){
-      // Show: parties assigned to this SM, OR unallocated (addedBy blank)
+      // STRICT: only show parties explicitly assigned to this SM or their distributor
+      // Unallocated parties are NOT shown — admin must allocate first
       const visible = data.parties.filter(p=>{
-        if(!p.addedBy || p.addedBy==='') return true;        // unallocated → visible to all
-        if(p.addedBy===SID) return true;                     // assigned to this SM
-        if(p.addedBy==='DIST:'+DIST_ID) return true;         // assigned to this SM's distributor
-        return false;
+        if(p.addedBy===SID) return true;                  // assigned to this SM
+        if(p.addedBy==='DIST:'+DIST_ID) return true;      // assigned to this SM's distributor
+        return false;                                      // all others hidden
       });
       const merged=[...visible,...getBuyers()];
       const unique=merged.filter((b,i,a)=>a.findIndex(x=>x.id===b.id)===i);
