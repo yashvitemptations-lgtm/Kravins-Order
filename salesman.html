@@ -1146,12 +1146,11 @@ async function loadBuyers(){
       // STRICT: only show parties explicitly assigned to this SM or their distributor
       // Unallocated parties are NOT shown — admin must allocate first
       const visible = data.parties.filter(p=>{
-        if(p.addedBy===SID) return true;                  // assigned to this SM
-        if(p.addedBy==='DIST:'+DIST_ID) return true;      // assigned to this SM's distributor
-        return false;                                      // all others hidden
+        if(p.addedBy===SID) return true;             // SM allocation (col 12)
+        if((p.distAlloc||'')=== DIST_ID) return true; // Dist allocation (col 22)
+        return false;                                  // all others hidden
       });
-      // STRICT: save ONLY the filtered visible list — never merge with old localStorage
-      // This ensures no stale unallocated parties remain
+      // STRICT: save ONLY filtered list — never merge with old localStorage
       saveBuyers(visible);
     } else {
       // Fallback: master buyers sheet

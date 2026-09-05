@@ -644,6 +644,17 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
         <div class="fld"><label>Account Holder</label><input class="finp" id="smf-accname"></div>
       </div>
       <div class="mcard">
+        <div class="mcard-title">🔐 Login Credentials</div>
+        <div class="fld">
+          <label>Login PIN <span style="font-size:10px;color:var(--mut);font-weight:400">(4–6 digits · salesman uses this to login)</span></label>
+          <input class="finp" id="smf-pin" type="text" inputmode="numeric" maxlength="6"
+            placeholder="e.g. 1234" autocomplete="off" style="letter-spacing:4px;font-size:18px;font-weight:700">
+        </div>
+        <p style="font-size:10px;color:var(--mut);margin-top:4px;line-height:1.6">
+          Share this PIN privately with the salesman. They need it every time they open their portal.
+        </p>
+      </div>
+      <div class="mcard">
         <div class="mcard-title">📄 Document Links <span style="font-size:9px;font-weight:400;color:var(--mut)">(Google Drive shareable links)</span></div>
         <div class="fld"><label>PAN Card</label><input class="finp" id="smf-doc-pan" type="url" placeholder="https://drive.google.com/..."></div>
         <div class="fld"><label>ID / Aadhaar Proof</label><input class="finp" id="smf-doc-id" type="url" placeholder="https://drive.google.com/..."></div>
@@ -2791,7 +2802,7 @@ async function loadAllocations() {
     }
 
     // Currently assigned = parties where addedBy === smId
-    allocAssigned = new Set(allParties.filter(p=>p.addedBy===smId).map(p=>p.id));
+    allocAssigned = new Set(allParties.filter(p=>p.addedBy===smId).map(p=>p.id)); // col 12 only
     allocParties = allParties;
 
     const sm = allSalesmen.find(x=>x.id===smId);
@@ -2864,10 +2875,11 @@ async function saveAllocations(smId) {
     });
     const d = await r.json();
     if (d.ok) {
-      // Update allParties addedBy for this SM
+      // Update local cache — SM alloc only (addedBy), dist alloc untouched
       allParties.forEach(p => {
         if (assigned.includes(p.id)) p.addedBy = smId;
         else if (p.addedBy === smId) p.addedBy = '';
+        // distAlloc (p.distAlloc) is NOT touched here
       });
       toast(`✅ ${assigned.length} parties allocated to ${smId}`, 'ok');
     } else { toast('❌ ' + (d.error||'Save failed'), 'er'); }
@@ -2911,7 +2923,7 @@ async function loadDistAllocations(){
     if(d.ok) allParties=d.parties||[];
   }
   // Distributor allocation stored as addedBy='DIST:D001'
-  distAllocAssigned=new Set(allParties.filter(p=>p.addedBy==='DIST:'+distId).map(p=>p.id));
+  distAllocAssigned=new Set(allParties.filter(p=>(p.distAlloc||'')=== distId).map(p=>p.id)); // col 22 only
   const dist=allDistributors.find(x=>x.id===distId);
   const distName=dist?dist.name:distId;
   body.innerHTML=`
@@ -2940,7 +2952,12 @@ function renderDistAllocList(){
       </div>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:600">${p.name}</div>
-        <div style="font-size:10px;color:var(--mut)">${p.id} · ${p.route||p.territory||'—'} · ${p.addedBy||'Unallocated'}</div>
+        <div style="font-size:10px;color:var(--mut)">${p.id} · ${p.route||p.territory||'—'}</div>
+        <div style="font-size:10px;margin-top:2px">
+          ${p.addedBy?`<span style="color:var(--a2)">👤 SM: ${p.addedBy}</span>`:'<span style="color:var(--mut)">👤 No SM</span>'}
+          &nbsp;
+          ${p.distAlloc?`<span style="color:var(--pur)">🚚 Dist: ${p.distAlloc}</span>`:'<span style="color:var(--mut)">🚚 No Dist</span>'}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -2955,8 +2972,14 @@ async function saveDistAllocations(distId){
     const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action:'saveDistPartyAllocations',distId,partyIds:assigned})});
     const d=await r.json();
-    if(d.ok) toast(`✅ ${assigned.length} parties allocated to distributor`,'ok');
-    else toast('❌ '+(d.error||'Failed'),'er');
+    if(d.ok){
+      // Update local cache — distAlloc only, addedBy (SM) untouched
+      allParties.forEach(p => {
+        if(assigned.includes(p.id)) p.distAlloc = distId;
+        else if((p.distAlloc||'')=== distId) p.distAlloc = '';
+      });
+      toast(`✅ ${assigned.length} parties allocated to distributor`,'ok');
+    } else toast('❌ '+(d.error||'Failed'),'er');
   }catch(e){toast('❌ Network error','er');}
 }
 
