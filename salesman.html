@@ -631,6 +631,26 @@ textarea{resize:none;line-height:1.5;min-height:58px}
   </div>
 </div>
 
+<!-- PARTY DETAIL MODAL -->
+<div class="ov" id="partyDetailOv" onclick="if(event.target===this)closePartyDetail()">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mt" id="pdTitle">Party Details</div>
+    <div id="pdBody"></div>
+    <div style="display:flex;gap:8px;margin-top:13px">
+      <button onclick="pdOrder()" id="pdOrderBtn"
+        style="flex:1;padding:12px;background:linear-gradient(135deg,#16a34a,#15803d);
+        border:none;border-radius:9px;font-family:var(--f);font-size:13px;font-weight:700;
+        color:#fff;cursor:pointer">🛒 Place Order</button>
+      <button onclick="pdEdit()" 
+        style="flex:1;padding:12px;background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.3);
+        border-radius:9px;font-family:var(--f);font-size:13px;font-weight:700;
+        color:var(--a2);cursor:pointer">✏️ Suggest Edit</button>
+    </div>
+    <button class="bs cl" style="width:100%;padding:11px;margin-top:8px" onclick="closePartyDetail()">Close</button>
+  </div>
+</div>
+
 <!-- SUGGEST EDIT MODAL -->
 <div class="ov" id="suggestOv" onclick="if(event.target===this)closeSuggestEdit()">
   <div class="mo">
@@ -1375,20 +1395,37 @@ async function confirmCancel(){
 function renderParties(){
   const q=(document.getElementById('psearch')?.value||'').toLowerCase();
   const list=getBuyers().filter(b=>b.active!==false&&(!q||b.name.toLowerCase().includes(q)||b.id.toLowerCase().includes(q)));
-  const c=document.getElementById('partyList');
-  if(!list.length){c.innerHTML='<div class="empty">No parties found.</div>';return;}
-  c.innerHTML=list.map(b=>{
+  const el=document.getElementById('partyList');
+  if(!list.length){el.innerHTML='<div class="empty">No parties found.</div>';return;}
+  el.innerHTML=list.map(b=>{
     const av=(b.credit||0)-(b.outstanding||0);
     const _ps=b.status||'Active';
     const _pblocked=(b.active===false||_ps==='Inactive'||_ps==='On Hold');
-    return `<div class="pi2" style="${_pblocked?'opacity:.6':''}">
-      <div class="pav" onclick="${_pblocked?'':"pickParty('"+b.id+"')"}" style="${_pblocked?'cursor:default':'cursor:pointer'}">${_ps==='On Hold'?'⏸️':_ps==='Inactive'?'🚫':'🏪'}</div>
-      <div style="flex:1;min-width:0" onclick="${_pblocked?'':"pickParty('"+b.id+"')"}" style="${_pblocked?'cursor:default':'cursor:pointer'}">
-        <div class="pnm">${b.name}${_pblocked?' <span style="font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(239,68,68,.15);color:var(--red)">${_ps}</span>':''}</div>
+    const stColor=_ps==='On Hold'?'var(--ylw)':_ps==='Inactive'?'var(--red)':'var(--grn)';
+    return `<div class="pi2" style="${_pblocked?'opacity:.6':''}" onclick="openPartyDetail('${b.id}')">
+      <div class="pav">${_ps==='On Hold'?'⏸️':_ps==='Inactive'?'🚫':'🏪'}</div>
+      <div style="flex:1;min-width:0">
+        <div class="pnm">${b.name}
+          ${_pblocked?`<span style="font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(239,68,68,.15);color:var(--red);margin-left:4px">${_ps}</span>`:''}
+        </div>
         <div class="pid">${b.id}</div>
-        <div class="pro">${b.route||''} · ${PARTY_ACCESS?'Avail ₹'+av.toLocaleString('en-IN'):''}${b.lat&&b.lng?' · <a href="https://maps.google.com/?q='+b.lat+','+b.lng+'" target="_blank" style="color:var(--a2);text-decoration:none" onclick="event.stopPropagation()">📍 Map</a>':''}</div>
+        <div class="pro">
+          ${b.route?b.route+' · ':''}${b.phone||''}
+          ${PARTY_ACCESS?' · Avail ₹'+av.toLocaleString('en-IN'):''}
+        </div>
       </div>
-      <button onclick="event.stopPropagation();openSuggestEdit('${b.id}')" style="flex-shrink:0;padding:6px 9px;background:rgba(59,130,246,.08);border:1.5px solid rgba(59,130,246,.25);border-radius:7px;font-family:var(--f);font-size:10px;font-weight:600;color:var(--a2);cursor:pointer">✏️</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+        <button onclick="event.stopPropagation();openSuggestEdit('${b.id}')"
+          style="padding:6px 10px;background:rgba(59,130,246,.08);border:1.5px solid rgba(59,130,246,.25);
+          border-radius:7px;font-family:var(--f);font-size:10px;font-weight:600;color:var(--a2);cursor:pointer">
+          ✏️ Edit
+        </button>
+        ${!_pblocked?`<button onclick="event.stopPropagation();pickParty('${b.id}')"
+          style="padding:6px 10px;background:rgba(34,197,94,.08);border:1.5px solid rgba(34,197,94,.25);
+          border-radius:7px;font-family:var(--f);font-size:10px;font-weight:600;color:var(--grn);cursor:pointer">
+          🛒 Order
+        </button>`:''}
+      </div>
     </div>`;
   }).join('');
 }
@@ -1917,25 +1954,112 @@ function closeKpiAndOpenOrder(oid){
 let suggestPartyId = null;
 let suggestPartyData = null;
 
+// Open party detail modal
+let pdPartyId = null;
+function openPartyDetail(partyId){
+  const b = getBuyers().find(x=>x.id===partyId);
+  if(!b){ toast('Party not found','er'); return; }
+  pdPartyId = partyId;
+  const _ps = b.status||'Active';
+  const _blocked = b.active===false||_ps==='Inactive'||_ps==='On Hold';
+  const av = (b.credit||0)-(b.outstanding||0);
+  const fi = n=>'₹'+Number(n||0).toLocaleString('en-IN');
+  document.getElementById('pdTitle').textContent = b.name;
+  // Show / hide order button
+  document.getElementById('pdOrderBtn').style.display = _blocked ? 'none' : '';
+
+  let h = '';
+  if(b.photo) h+=`<img src="${b.photo}" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;border:1px solid var(--bdr);margin-bottom:12px">`;
+  if(_blocked) h+=`<div style="padding:8px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:10px">⛔ ${_ps} — Order booking not allowed</div>`;
+
+  const row=(lbl,val)=>val?`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span style="color:var(--mut)">${lbl}</span><span style="font-weight:600;text-align:right;max-width:60%">${val}</span></div>`:'';
+  h += row('Party ID', b.id);
+  h += row('Phone', b.phone ? `<a href="tel:${b.phone}" style="color:var(--a2)">${b.phone}</a>` : '');
+  h += row('WhatsApp', b.whatsapp ? `<a href="https://wa.me/${b.whatsapp}" target="_blank" style="color:var(--grn)">${b.whatsapp}</a>` : '');
+  h += row('Contact Person', b.contact);
+  const addr = [b.address||b.addr1, b.addr2, b.city, b.state, b.pin].filter(Boolean).join(', ');
+  h += row('Address', addr);
+  h += row('Route / Beat', b.route);
+  h += row('Territory', b.territory);
+  h += row('GST', b.gst);
+  h += row('Payment Terms', b.terms);
+  if(PARTY_ACCESS){
+    h += row('Credit Limit', fi(b.credit));
+    h += row('Outstanding', fi(b.outstanding));
+    h += row('Available Credit', fi(av));
+  }
+  h += row('Day / Beat', b.day);
+  h += row('Notes', b.notes);
+  if(b.lat && b.lng){
+    h += `<div style="margin-top:8px"><a href="https://maps.google.com/?q=${b.lat},${b.lng}" target="_blank"
+      style="font-size:12px;color:var(--a2);text-decoration:none">🗺️ View on Google Maps ↗</a></div>`;
+  }
+  document.getElementById('pdBody').innerHTML = h;
+  document.getElementById('partyDetailOv').classList.add('on');
+}
+function closePartyDetail(){ document.getElementById('partyDetailOv').classList.remove('on'); pdPartyId=null; }
+function pdOrder(){
+  if(!pdPartyId) return;
+  closePartyDetail();
+  setTimeout(()=>{ pickParty(pdPartyId); }, 150);
+}
+function pdEdit(){
+  const id = pdPartyId;
+  closePartyDetail();
+  setTimeout(()=>{ openSuggestEdit(id); }, 150);
+}
+
+// Open suggest edit with ALL fields pre-filled
 function openSuggestEdit(partyId){
   const b = getBuyers().find(x=>x.id===partyId);
   if(!b){ toast('Party not found','er'); return; }
-  suggestPartyId = partyId;
+  suggestPartyId  = partyId;
   suggestPartyData = b;
   document.getElementById('suggestTitle').textContent = '✏️ Suggest Edit — '+b.name;
+  const addr = [b.address||b.addr1||''].join('');
   document.getElementById('suggestBody').innerHTML = `
-    <div style="background:var(--s2);border-radius:9px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--mut)">
-      <strong style="color:var(--txt)">${b.name}</strong> · ${b.id}
+    <div style="background:var(--s2);border-radius:9px;padding:10px 12px;margin-bottom:12px;
+      font-size:11px;color:var(--mut);line-height:1.6">
+      <strong style="color:var(--txt)">${b.name}</strong> · ${b.id}<br>
+      <span style="color:var(--ylw)">⚠️ Only filled fields will be submitted. Changes need admin approval before taking effect.</span>
     </div>
-    <div class="fld"><label>Contact Person</label><input class="finp" id="se-contact" placeholder="Leave blank if no change" value=""></div>
-    <div class="fld"><label>Phone</label><input class="finp" id="se-phone" type="tel" placeholder="Leave blank if no change" value=""></div>
-    <div class="fld"><label>Address</label><input class="finp" id="se-address" placeholder="Leave blank if no change" value=""></div>
-    <div class="fld"><label>Route / Beat</label><input class="finp" id="se-route" placeholder="Leave blank if no change" value=""></div>
-    <div class="fld"><label>GST Number</label><input class="finp" id="se-gst" placeholder="Leave blank if no change" value="" style="text-transform:uppercase"></div>
-    <div class="fld"><label>Your Note (reason for change)</label>
-      <textarea class="finp" id="se-note" placeholder="e.g. Owner changed, new phone number..." style="resize:none;min-height:56px"></textarea>
+    <div class="fld"><label>Party / Shop Name</label>
+      <input class="finp" id="se-name" value="${b.name||''}" placeholder="Party name">
     </div>
-    <button class="bsub" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 4px 16px rgba(37,99,235,.3);position:static;margin-bottom:8px" onclick="submitSuggestEdit()">📤 Submit for Approval</button>
+    <div class="fld"><label>Contact Person</label>
+      <input class="finp" id="se-contact" value="${b.contact||''}" placeholder="Owner / Manager">
+    </div>
+    <div class="fld"><label>Phone</label>
+      <input class="finp" id="se-phone" type="tel" value="${b.phone||''}" placeholder="+91 98765 43210">
+    </div>
+    <div class="fld"><label>WhatsApp</label>
+      <input class="finp" id="se-whatsapp" type="tel" value="${b.whatsapp||''}" placeholder="+91 98765 43210">
+    </div>
+    <div class="fld"><label>Address</label>
+      <input class="finp" id="se-address" value="${addr}" placeholder="Full address">
+    </div>
+    <div class="fld"><label>Route / Beat</label>
+      <input class="finp" id="se-route" value="${b.route||''}" placeholder="Route A">
+    </div>
+    <div class="fld"><label>GST Number</label>
+      <input class="finp" id="se-gst" value="${b.gst||''}" placeholder="GST No." style="text-transform:uppercase">
+    </div>
+    <div class="fld"><label>Payment Terms</label>
+      <select class="finp" id="se-terms">
+        <option value="">No change</option>
+        ${['Cash','7 Days','15 Days','30 Days','45 Days'].map(t=>`<option ${b.terms===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fld"><label>Notes / Remarks</label>
+      <input class="finp" id="se-notes" value="${b.notes||''}" placeholder="Any special info about this party">
+    </div>
+    <div class="fld"><label>Reason for Change <span style="color:var(--red)">*</span></label>
+      <textarea class="finp" id="se-note" placeholder="e.g. Phone number changed, new owner, address updated..."
+        style="resize:none;min-height:64px"></textarea>
+    </div>
+    <button class="bsub" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);
+      box-shadow:0 4px 16px rgba(37,99,235,.3);position:static;margin-bottom:8px"
+      onclick="submitSuggestEdit()">📤 Submit for Admin Approval</button>
     <button class="bs cl" style="width:100%;padding:11px" onclick="closeSuggestEdit()">Cancel</button>
   `;
   document.getElementById('suggestOv').classList.add('on');
@@ -1946,21 +2070,29 @@ function closeSuggestEdit(){ document.getElementById('suggestOv').classList.remo
 async function submitSuggestEdit(){
   if(!suggestPartyId||!suggestPartyData) return;
   const fields={
-    contact: {id:'se-contact', label:'Contact Person'},
-    phone:   {id:'se-phone',   label:'Phone'},
-    address: {id:'se-address', label:'Address'},
-    route:   {id:'se-route',   label:'Route'},
-    gst:     {id:'se-gst',     label:'GST'}
+    name:     {id:'se-name',     label:'Party Name'},
+    contact:  {id:'se-contact',  label:'Contact Person'},
+    phone:    {id:'se-phone',    label:'Phone'},
+    whatsapp: {id:'se-whatsapp', label:'WhatsApp'},
+    address:  {id:'se-address',  label:'Address'},
+    route:    {id:'se-route',    label:'Route / Beat'},
+    gst:      {id:'se-gst',      label:'GST Number'},
+    terms:    {id:'se-terms',    label:'Payment Terms'},
+    notes:    {id:'se-notes',    label:'Notes'}
   };
   const changes={};
   Object.keys(fields).forEach(k=>{
-    const val=document.getElementById(fields[k].id).value.trim();
-    if(val && val!==suggestPartyData[k]){
-      changes[k]={old:suggestPartyData[k]||'', new:val, label:fields[k].label};
+    const el=document.getElementById(fields[k].id);
+    if(!el) return;
+    const val=el.value.trim();
+    const oldVal=String(suggestPartyData[k]||'').trim();
+    if(val && val!==oldVal && !(val==='No change'&&!oldVal)){
+      changes[k]={old:oldVal, new:val, label:fields[k].label};
     }
   });
-  if(!Object.keys(changes).length){ toast('⚠️ No changes entered','er'); return; }
+  if(!Object.keys(changes).length){ toast('⚠️ No changes detected — edit at least one field','er'); return; }
   const note=document.getElementById('se-note').value.trim();
+  if(!note){ toast('⚠️ Please enter a reason for the change','er'); return; }
   try{
     toast('📤 Submitting...','in');
     const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
