@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sales Order System</title>
+<title>Kravins Order System</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -12,68 +12,80 @@ body{font-family:'Outfit',sans-serif;background:#050a14;color:#f1f5f9;
   justify-content:center;padding:28px 18px;text-align:center}
 h1{font-size:26px;font-weight:700;margin-bottom:7px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.sub{font-size:13px;color:#64748b;margin-bottom:38px;line-height:1.6}
+.sub{font-size:13px;color:#64748b;margin-bottom:32px;line-height:1.6}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-  gap:12px;width:100%;max-width:600px;margin-bottom:18px}
+  gap:12px;width:100%;max-width:700px;margin-bottom:18px}
 a.card{background:#0a1222;border:1px solid #1e3152;border-radius:14px;
-  padding:20px 14px;text-decoration:none;color:#f1f5f9;transition:all .2s;
-  display:block}
+  padding:20px 14px;text-decoration:none;color:#f1f5f9;transition:all .2s;display:block}
 a.card:hover{border-color:#3b82f6;transform:translateY(-2px)}
-.ico{font-size:28px;margin-bottom:10px}
+a.card:active{transform:scale(.97)}
+.ico{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+  display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;
+  color:#fff;margin:0 auto 10px}
 .name{font-size:15px;font-weight:600;margin-bottom:2px}
 .id{font-size:11px;color:#3b82f6;font-family:monospace}
-.admin{margin-top:10px}
-.admin a{color:#64748b;font-size:13px;text-decoration:none;
+.terr{font-size:10px;color:#64748b;margin-top:2px}
+.admin-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.admin-row a{color:#64748b;font-size:13px;text-decoration:none;
   border:1px solid #1e3152;padding:9px 20px;border-radius:9px;
-  transition:color .2s;display:inline-block}
-.admin a:hover{color:#f1f5f9;border-color:#3b82f6}
-.feat{margin-top:30px;padding:18px;background:#0a1222;border:1px solid #1e3152;
-  border-radius:12px;max-width:500px;text-align:left}
-.feat h3{font-size:14px;color:#3b82f6;margin-bottom:10px}
-.feat ul{font-size:12px;color:#94a3b8;line-height:1.9;list-style:none;padding:0}
-.feat li::before{content:'✓ ';color:#22c55e;font-weight:700;margin-right:5px}
+  transition:all .2s;display:inline-block}
+.admin-row a:hover{color:#f1f5f9;border-color:#3b82f6}
+.spin{display:inline-block;width:24px;height:24px;border:3px solid #1e3152;
+  border-top-color:#3b82f6;border-radius:50%;animation:spin .7s linear infinite;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{text-align:center;padding:40px;color:#64748b}
 </style>
 </head>
 <body>
-<h1>🛒 Sales Order System</h1>
-<p class="sub">Enhanced with Dashboard & Performance Metrics</p>
-<div class="grid">
-  <a class="card" href="sunil-bhai.html">
-    <div class="ico">👤</div>
-    <div class="name">Sunil Bhai</div>
-    <div class="id">SM001 · North</div>
-  </a>
-  <a class="card" href="jk-bhai.html">
-    <div class="ico">👤</div>
-    <div class="name">JK Bhai</div>
-    <div class="id">SM002 · South</div>
-  </a>
-  <a class="card" href="satish.html">
-    <div class="ico">👤</div>
-    <div class="name">Satish</div>
-    <div class="id">SM003 · East</div>
-  </a>
-  <a class="card" href="ajay.html">
-    <div class="ico">👤</div>
-    <div class="name">Ajay</div>
-    <div class="id">SM004 · West</div>
-  </a>
-  <a class="card" href="jitu-bhai.html">
-    <div class="ico">👤</div>
-    <div class="name">Jitu Bhai</div>
-    <div class="id">SM005 · Central</div>
-  </a>
+<h1>🛒 Kravins Order System</h1>
+<p class="sub">Live Sales Portal · Auto-synced with Google Sheets</p>
+
+<div class="grid" id="smGrid">
+  <div class="loading">
+    <div class="spin"></div>
+    <div>Loading salesmen…</div>
+  </div>
 </div>
-<div class="admin"><a href="admin.html">⚙️ Admin Dashboard</a></div>
-<div class="feat">
-  <h3>📊 What's New</h3>
-  <ul>
-    <li>Real-time dashboard with MTD/YTD performance</li>
-    <li>Product mix visualization with charts</li>
-    <li>Today's sales & shop count</li>
-    <li>Progress tracking vs targets</li>
-    <li>Auto-refresh every 30 seconds</li>
-  </ul>
+
+<div class="admin-row">
+  <a href="admin.html">⚙️ Admin Console</a>
+  <a href="distributor.html">🚚 Distributor Portal</a>
 </div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz70y3yn3VHlpV1yFrLP0l5L3CduXtDoU0tl_TbBhzCnXQZlIrNoEm4DHgZkmbVIabg/exec';
+
+async function loadSalesmen() {
+  try {
+    const r = await fetch(SCRIPT_URL + '?action=salesmen&t=' + Date.now());
+    const data = await r.json();
+    if (!data.ok || !data.salesmen || !data.salesmen.length) throw new Error('empty');
+    const active = data.salesmen.filter(function(s){ return s.active !== false; });
+    const grid = document.getElementById('smGrid');
+    if (!active.length) {
+      grid.innerHTML = '<div class="loading">No active salesmen.<br><small>Add via Admin Console → SM Master</small></div>';
+      return;
+    }
+    grid.innerHTML = active.map(function(sm) {
+      const init = sm.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+      return '<a class="card" href="salesman.html?sm=' + encodeURIComponent(sm.id) + '">'
+        + '<div class="ico">' + init + '</div>'
+        + '<div class="name">' + sm.name + '</div>'
+        + '<div class="id">' + sm.id + '</div>'
+        + '<div class="terr">' + (sm.territory||'') + '</div>'
+        + '</a>';
+    }).join('');
+  } catch(e) {
+    document.getElementById('smGrid').innerHTML =
+      '<div class="loading" style="color:#ef4444">⚠️ Could not load salesmen<br>'
+      + '<span style="font-size:11px;color:#64748b">Check connection and refresh</span><br>'
+      + '<button onclick="loadSalesmen()" style="margin-top:12px;padding:8px 18px;background:#1e3152;'
+      + 'border:none;border-radius:8px;color:#60a5fa;font-family:Outfit,sans-serif;font-size:12px;cursor:pointer">'
+      + '🔄 Retry</button></div>';
+  }
+}
+
+loadSalesmen();
+</script>
 </body>
 </html>

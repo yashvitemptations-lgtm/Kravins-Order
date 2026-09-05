@@ -250,6 +250,8 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
     <div class="tab"     onclick="goTab('parties')">🏪 Parties</div>
     <div class="tab"     onclick="goTab('smmaster')">👤 SM Master</div>
     <div class="tab"     onclick="goTab('distmaster')">🚚 Dist Master</div>
+    <div class="tab"     onclick="goTab('products')">📦 Products</div>
+    <div class="tab"     onclick="goTab('access')">🔐 Access</div>
   </div>
 </div>
 
@@ -693,6 +695,55 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
   </div>
 </div>
 
+<!-- ══ PRODUCTS MASTER ══ -->
+<div class="page" id="pg-products">
+  <div class="stab-bar">
+    <div class="stab on" id="prt-list" onclick="prodSubTab('list')">📦 All Products</div>
+    <div class="stab" id="prt-add" onclick="prodSubTab('add')">➕ Add / Edit</div>
+  </div>
+  <div id="prod-list-pane">
+    <div class="sec">
+      <input class="fi" type="search" id="prod-search" placeholder="Search products..." oninput="renderProductsMaster()" style="width:100%;margin-bottom:10px">
+      <div id="prod-master-list"><div style="text-align:center;padding:30px;color:var(--mut)">Loading...</div></div>
+    </div>
+  </div>
+  <div id="prod-add-pane" style="display:none">
+    <div class="sec">
+      <div class="mcard">
+        <div class="mcard-title">📦 Product Info</div>
+        <div class="g2">
+          <div class="fld"><label>Product Code *</label><input class="finp" id="pf-code" placeholder="e.g. P012" oninput="this.value=this.value.toUpperCase()"></div>
+          <div class="fld"><label>Product Name *</label><input class="finp" id="pf-name" placeholder="Crazy Poms Jar"></div>
+        </div>
+        <div class="fld"><label>Category</label><input class="finp" id="pf-cat" placeholder="Snacks, Beverages..."></div>
+        <div class="g2">
+          <div class="fld"><label>Price (₹) *</label><input class="finp" id="pf-price" type="number" min="0" step="0.01" placeholder="150"></div>
+          <div class="fld"><label>Commission %</label><input class="finp" id="pf-comm" type="number" min="0" step="0.01" placeholder="5"></div>
+        </div>
+        <div class="fld"><label>Description</label><textarea class="finp" id="pf-desc" placeholder="Optional product description..." style="resize:none;min-height:56px"></textarea></div>
+        <div class="fld"><label>Status</label>
+          <select class="finp" id="pf-active"><option value="Yes">Active</option><option value="No">Inactive</option></select>
+        </div>
+      </div>
+      <input type="hidden" id="pf-editcode">
+      <button class="mbtn pri" onclick="saveProductMaster()">✅ Save Product</button>
+      <button class="mbtn sec" onclick="prodSubTab('list')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PARTY ACCESS CONTROL ══ -->
+<div class="page" id="pg-access">
+  <div class="sec">
+    <div class="sl">Party Details Access Control</div>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:14px;line-height:1.7">
+      Control which salesmen can see party credit limit, outstanding balance, and financial details. Salesmen with access OFF will only see party name and phone — no financial data.
+    </p>
+    <div id="access-list"><div style="text-align:center;padding:30px;color:var(--mut)">Loading...</div></div>
+    <button class="mbtn pri" onclick="saveAllAccess()" style="margin-top:8px">💾 Save Access Settings</button>
+  </div>
+</div>
+
 </div><!-- /scr -->
 
 <div class="toast" id="toast"></div>
@@ -888,7 +939,7 @@ document.addEventListener('DOMContentLoaded', loadAll);
 // NAVIGATION — original 5 tabs + 2 new master tabs
 // ═══════════════════════════════════════════════════════
 function goTab(tab){
-  const tabNames=['overview','salesmen','distributors','orders','parties','smmaster','distmaster'];
+  const tabNames=['overview','salesmen','distributors','orders','parties','smmaster','distmaster','products','access'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',tabNames[i]===tab));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   const pg=document.getElementById('pg-'+tab);
@@ -899,6 +950,8 @@ function goTab(tab){
   if(tab==='parties') renderParties();
   if(tab==='smmaster'){ populateDistDropdown(); renderSmMaster(); }
   if(tab==='distmaster') renderDistMaster();
+  if(tab==='products') renderProductsMaster();
+  if(tab==='access') renderAccessControl();
   window.scrollTo({top:0});
 }
 
@@ -1861,6 +1914,173 @@ async function saveDistMaster(){
 
 // Auto-refresh every 60s
 setInterval(()=>loadAll(), 60000);
+
+// ═══════════════════════════════════════════════════════
+// PRODUCTS MASTER
+// ═══════════════════════════════════════════════════════
+let allProducts = [];
+
+function prodSubTab(tab) {
+  document.getElementById('prod-list-pane').style.display = tab==='list' ? '' : 'none';
+  document.getElementById('prod-add-pane').style.display  = tab==='add'  ? '' : 'none';
+  document.getElementById('prt-list').classList.toggle('on', tab==='list');
+  document.getElementById('prt-add').classList.toggle('on', tab==='add');
+  if (tab==='list') renderProductsMaster();
+  if (tab==='add') {
+    // Clear form for new product
+    ['pf-code','pf-name','pf-cat','pf-price','pf-comm','pf-desc'].forEach(id => document.getElementById(id).value='');
+    document.getElementById('pf-active').value = 'Yes';
+    document.getElementById('pf-editcode').value = '';
+  }
+}
+
+async function renderProductsMaster() {
+  const list = document.getElementById('prod-master-list');
+  try {
+    if (!allProducts.length) {
+      const r = await fetch(`${SCRIPT_URL}?action=products&t=${Date.now()}`);
+      const d = await r.json();
+      if (d.ok) allProducts = d.products || [];
+    }
+    const q = (document.getElementById('prod-search')?.value||'').toLowerCase();
+    const filtered = allProducts.filter(p => !q || p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
+    if (!filtered.length) { list.innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)">No products found</div>'; return; }
+    list.innerHTML = filtered.map(p => `
+      <div style="background:var(--s1);border:1.5px solid ${p.active===false?'rgba(239,68,68,.3)':'var(--bdr)'};border-radius:12px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:10px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+            <span style="font-family:var(--m);font-size:11px;color:var(--a2)">${p.code}</span>
+            <span style="font-size:13px;font-weight:600">${p.name}</span>
+            ${p.active===false?'<span style="font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(239,68,68,.15);color:var(--red)">INACTIVE</span>':''}
+          </div>
+          <div style="font-size:11px;color:var(--mut);margin-top:3px">${p.category||'—'} · ₹${Number(p.price||0).toLocaleString('en-IN')} · Comm: ${p.comm?((p.comm*100).toFixed(1))+'%':'0%'}</div>
+        </div>
+        <button onclick="editProduct('${p.code}')" style="flex-shrink:0;padding:7px 11px;background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.3);border-radius:8px;font-family:var(--f);font-size:10px;font-weight:600;color:var(--a2);cursor:pointer">✏️ Edit</button>
+      </div>`).join('');
+  } catch(e) { list.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Failed to load products</div>'; }
+}
+
+function editProduct(code) {
+  const p = allProducts.find(x => x.code===code);
+  if (!p) return;
+  document.getElementById('pf-code').value   = p.code;
+  document.getElementById('pf-name').value   = p.name;
+  document.getElementById('pf-cat').value    = p.category||'';
+  document.getElementById('pf-price').value  = p.price||'';
+  document.getElementById('pf-comm').value   = p.comm ? (p.comm*100).toFixed(1) : '';
+  document.getElementById('pf-desc').value   = p.description||'';
+  document.getElementById('pf-active').value = p.active===false ? 'No' : 'Yes';
+  document.getElementById('pf-editcode').value = code; // marks this as an edit
+  prodSubTab('add');
+  document.getElementById('pf-code').readOnly = true; // don't change code on edit
+  document.getElementById('pf-code').style.opacity = '0.6';
+}
+
+async function saveProductMaster() {
+  const code  = document.getElementById('pf-code').value.trim().toUpperCase();
+  const name  = document.getElementById('pf-name').value.trim();
+  const price = parseFloat(document.getElementById('pf-price').value)||0;
+  if (!code) { toast('⚠️ Product code required','er'); return; }
+  if (!name) { toast('⚠️ Product name required','er'); return; }
+  if (!price) { toast('⚠️ Price required','er'); return; }
+
+  const commRaw = parseFloat(document.getElementById('pf-comm').value)||0;
+  const product = {
+    code, name,
+    category: document.getElementById('pf-cat').value.trim(),
+    price,
+    comm: commRaw/100,  // store as decimal (0.05 = 5%)
+    description: document.getElementById('pf-desc').value.trim(),
+    active: document.getElementById('pf-active').value === 'Yes'
+  };
+
+  try {
+    toast('💾 Saving…','in');
+    const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'saveProduct',product})});
+    const d = await r.json();
+    if (d.ok) {
+      toast(`✅ ${name} saved`,'ok');
+      const idx = allProducts.findIndex(x=>x.code===code);
+      if (idx>=0) allProducts[idx]=product; else allProducts.push(product);
+      document.getElementById('pf-code').readOnly = false;
+      document.getElementById('pf-code').style.opacity = '';
+      document.getElementById('pf-editcode').value = '';
+      prodSubTab('list');
+    } else { toast('❌ '+(d.error||'Save failed'),'er'); }
+  } catch(e) { toast('❌ Network error','er'); }
+}
+
+// ═══════════════════════════════════════════════════════
+// PARTY ACCESS CONTROL
+// ═══════════════════════════════════════════════════════
+let accessSettings = {};
+
+async function renderAccessControl() {
+  const list = document.getElementById('access-list');
+  try {
+    // Load access settings from sheet
+    const r = await fetch(`${SCRIPT_URL}?action=partyAccess&t=${Date.now()}`);
+    const d = await r.json();
+    if (d.ok) accessSettings = d.access || {};
+
+    if (!allSalesmen.length) {
+      const rs = await fetch(`${SCRIPT_URL}?action=salesmen&t=${Date.now()}`);
+      const ds = await rs.json();
+      if (ds.ok) allSalesmen = ds.salesmen || [];
+    }
+
+    const active = allSalesmen.filter(s => s.active!==false);
+    if (!active.length) { list.innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)">No active salesmen</div>'; return; }
+
+    list.innerHTML = `
+      <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--mut);line-height:1.7">
+        <strong style="color:var(--txt)">Party Details</strong> include: Credit Limit, Outstanding Balance, Available Credit, Payment Terms.<br>
+        Toggle <strong style="color:var(--grn)">ON</strong> to allow a salesman to see these fields in their portal.
+      </div>
+      ${active.map(sm => {
+        const hasAccess = accessSettings[sm.id] !== false; // default ON
+        return `<div style="background:var(--s1);border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-size:13px;font-weight:600">${sm.name}</div>
+            <div style="font-size:10px;font-family:var(--m);color:var(--a2);margin-top:1px">${sm.id} · ${sm.territory||'—'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:9px;flex-shrink:0">
+            <span style="font-size:10px;color:var(--mut)" id="acc-lbl-${sm.id}">${hasAccess?'Full Access':'Hidden'}</span>
+            <div onclick="toggleAccess('${sm.id}')" id="acc-tog-${sm.id}"
+              style="width:44px;height:24px;border-radius:12px;cursor:pointer;transition:background .2s;
+              background:${hasAccess?'var(--grn)':'var(--bdr)'};position:relative">
+              <div style="position:absolute;top:3px;left:${hasAccess?'22':'3'}px;width:18px;height:18px;
+                border-radius:50%;background:#fff;transition:left .2s"></div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}`;
+  } catch(e) {
+    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">Failed to load access settings</div>';
+  }
+}
+
+function toggleAccess(smId) {
+  accessSettings[smId] = accessSettings[smId] === false ? true : false;
+  const hasAccess = accessSettings[smId] !== false;
+  const tog = document.getElementById('acc-tog-'+smId);
+  const lbl = document.getElementById('acc-lbl-'+smId);
+  if (tog) {
+    tog.style.background = hasAccess ? 'var(--grn)' : 'var(--bdr)';
+    tog.querySelector('div').style.left = hasAccess ? '22px' : '3px';
+  }
+  if (lbl) lbl.textContent = hasAccess ? 'Full Access' : 'Hidden';
+}
+
+async function saveAllAccess() {
+  try {
+    toast('💾 Saving access settings…','in');
+    const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'savePartyAccess',access:accessSettings})});
+    const d = await r.json();
+    if (d.ok) toast('✅ Access settings saved','ok');
+    else toast('❌ '+(d.error||'Save failed'),'er');
+  } catch(e) { toast('❌ Network error','er'); }
+}
 </script>
 </body>
 </html>
