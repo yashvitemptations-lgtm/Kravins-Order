@@ -597,6 +597,16 @@ textarea{resize:none;line-height:1.5;min-height:58px}
   </div>
 </div>
 
+<!-- SUGGEST EDIT MODAL -->
+<div class="ov" id="suggestOv" onclick="if(event.target===this)closeSuggestEdit()">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mt" id="suggestTitle">Suggest Edit</div>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:12px;line-height:1.6">Only fill fields you want to change. Your suggestion will be sent to admin for approval — the party info will not change until admin approves.</p>
+    <div id="suggestBody"></div>
+  </div>
+</div>
+
 <!-- KPI DETAIL MODAL -->
 <div class="ov" id="kpiOv" onclick="if(event.target===this)closeKpiModal()">
   <div class="mo">
@@ -1296,13 +1306,14 @@ function renderParties(){
     const av=(b.credit||0)-(b.outstanding||0);
     const _ps=b.status||'Active';
     const _pblocked=(b.active===false||_ps==='Inactive'||_ps==='On Hold');
-    return `<div class="pi2" onclick="${_pblocked?'':"pickParty('"+b.id+"')"}" style="${_pblocked?'opacity:.5;cursor:default':''}">
-      <div class="pav">${_ps==='On Hold'?'⏸️':_ps==='Inactive'?'🚫':'🏪'}</div>
-      <div style="flex:1;min-width:0">
+    return `<div class="pi2" style="${_pblocked?'opacity:.6':''}">
+      <div class="pav" onclick="${_pblocked?'':"pickParty('"+b.id+"')"}" style="${_pblocked?'cursor:default':'cursor:pointer'}">${_ps==='On Hold'?'⏸️':_ps==='Inactive'?'🚫':'🏪'}</div>
+      <div style="flex:1;min-width:0" onclick="${_pblocked?'':"pickParty('"+b.id+"')"}" style="${_pblocked?'cursor:default':'cursor:pointer'}">
         <div class="pnm">${b.name}${_pblocked?' <span style="font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(239,68,68,.15);color:var(--red)">${_ps}</span>':''}</div>
         <div class="pid">${b.id}</div>
         <div class="pro">${b.route||''} · ${PARTY_ACCESS?'Avail ₹'+av.toLocaleString('en-IN'):''}${b.lat&&b.lng?' · <a href="https://maps.google.com/?q='+b.lat+','+b.lng+'" target="_blank" style="color:var(--a2);text-decoration:none" onclick="event.stopPropagation()">📍 Map</a>':''}</div>
       </div>
+      <button onclick="event.stopPropagation();openSuggestEdit('${b.id}')" style="flex-shrink:0;padding:6px 9px;background:rgba(59,130,246,.08);border:1.5px solid rgba(59,130,246,.25);border-radius:7px;font-family:var(--f);font-size:10px;font-weight:600;color:var(--a2);cursor:pointer">✏️</button>
     </div>`;
   }).join('');
 }
@@ -1794,6 +1805,75 @@ function showShopDrilldown(bid){
 function closeKpiAndOpenOrder(oid){
   closeKpiModal();
   setTimeout(()=>openModal(oid),200);
+}
+
+// ═══ SUGGEST EDIT (salesman → admin approval) ═══════════════════════
+let suggestPartyId = null;
+let suggestPartyData = null;
+
+function openSuggestEdit(partyId){
+  const b = getBuyers().find(x=>x.id===partyId);
+  if(!b){ toast('Party not found','er'); return; }
+  suggestPartyId = partyId;
+  suggestPartyData = b;
+  document.getElementById('suggestTitle').textContent = '✏️ Suggest Edit — '+b.name;
+  document.getElementById('suggestBody').innerHTML = `
+    <div style="background:var(--s2);border-radius:9px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--mut)">
+      <strong style="color:var(--txt)">${b.name}</strong> · ${b.id}
+    </div>
+    <div class="fld"><label>Contact Person</label><input class="finp" id="se-contact" placeholder="Leave blank if no change" value=""></div>
+    <div class="fld"><label>Phone</label><input class="finp" id="se-phone" type="tel" placeholder="Leave blank if no change" value=""></div>
+    <div class="fld"><label>Address</label><input class="finp" id="se-address" placeholder="Leave blank if no change" value=""></div>
+    <div class="fld"><label>Route / Beat</label><input class="finp" id="se-route" placeholder="Leave blank if no change" value=""></div>
+    <div class="fld"><label>GST Number</label><input class="finp" id="se-gst" placeholder="Leave blank if no change" value="" style="text-transform:uppercase"></div>
+    <div class="fld"><label>Your Note (reason for change)</label>
+      <textarea class="finp" id="se-note" placeholder="e.g. Owner changed, new phone number..." style="resize:none;min-height:56px"></textarea>
+    </div>
+    <button class="bsub" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 4px 16px rgba(37,99,235,.3);position:static;margin-bottom:8px" onclick="submitSuggestEdit()">📤 Submit for Approval</button>
+    <button class="bs cl" style="width:100%;padding:11px" onclick="closeSuggestEdit()">Cancel</button>
+  `;
+  document.getElementById('suggestOv').classList.add('on');
+}
+
+function closeSuggestEdit(){ document.getElementById('suggestOv').classList.remove('on'); suggestPartyId=null; suggestPartyData=null; }
+
+async function submitSuggestEdit(){
+  if(!suggestPartyId||!suggestPartyData) return;
+  const fields={
+    contact: {id:'se-contact', label:'Contact Person'},
+    phone:   {id:'se-phone',   label:'Phone'},
+    address: {id:'se-address', label:'Address'},
+    route:   {id:'se-route',   label:'Route'},
+    gst:     {id:'se-gst',     label:'GST'}
+  };
+  const changes={};
+  Object.keys(fields).forEach(k=>{
+    const val=document.getElementById(fields[k].id).value.trim();
+    if(val && val!==suggestPartyData[k]){
+      changes[k]={old:suggestPartyData[k]||'', new:val, label:fields[k].label};
+    }
+  });
+  if(!Object.keys(changes).length){ toast('⚠️ No changes entered','er'); return; }
+  const note=document.getElementById('se-note').value.trim();
+  try{
+    toast('📤 Submitting...','in');
+    const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({
+        action:'submitEditRequest',
+        partyId:suggestPartyId,
+        partyName:suggestPartyData.name,
+        smId:SID,
+        changes,
+        note,
+        at:new Date().toISOString()
+      })
+    });
+    const d=await r.json();
+    if(d.ok){
+      toast('✅ Edit request submitted. Admin will review it.','ok');
+      closeSuggestEdit();
+    } else toast('❌ '+(d.error||'Failed'),'er');
+  }catch(e){toast('❌ Network error','er');}
 }
 
 function closeKpiModal(){document.getElementById('kpiOv').classList.remove('on');}

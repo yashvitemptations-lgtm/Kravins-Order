@@ -247,7 +247,7 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
     <div class="tab"     onclick="goTab('salesmen')">👤 Salesmen</div>
     <div class="tab"     onclick="goTab('distributors')">🚚 Distributors</div>
     <div class="tab"     onclick="goTab('orders')">📦 Orders</div>
-    <div class="tab"     onclick="goTab('parties')">🏪 Parties</div>
+    <div class="tab"     onclick="goTab('parties')">🏪 Parties <span id='editReqBadge' style='display:none;font-size:9px;padding:1px 5px;border-radius:8px;background:#ef4444;color:#fff;vertical-align:middle'></span></div>
     <div class="tab"     onclick="goTab('smmaster')">👤 SM Master</div>
     <div class="tab"     onclick="goTab('distmaster')">🚚 Dist Master</div>
     <div class="tab"     onclick="goTab('products')">📦 Products</div>
@@ -531,7 +531,10 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
 <div class="page" id="pg-parties">
   <div class="sec">
     <div class="fbar">
-      <input class="fi" type="search" id="psearch" placeholder="Party name, ID..." oninput="renderParties()">
+      <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+        <input class="fi" type="search" id="psearch" placeholder="Party name, ID..." oninput="renderParties()" style="flex:1;margin-bottom:0">
+        <button onclick="showEditRequests()" style="flex-shrink:0;padding:8px 12px;background:rgba(234,179,8,.1);border:1.5px solid rgba(234,179,8,.3);border-radius:8px;font-family:var(--f);font-size:11px;font-weight:700;color:var(--ylw);cursor:pointer;white-space:nowrap">📝 Edit Requests <span id="editReqCount" style="background:#ef4444;color:#fff;border-radius:8px;padding:0 5px;font-size:9px;margin-left:3px;display:none"></span></button>
+      </div>
       <div style="display:flex;gap:8px;margin-top:8px">
         <select class="fi" id="pstf" onchange="renderParties()" style="flex:1">
           <option value="">All Status</option>
@@ -841,38 +844,71 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
         </select>
       </div>
     </div>
-    <div class="fld" style="margin-bottom:10px">
-      <label>Assign to Salesman *</label>
-      <select class="finp" id="imp-sm">
-        <option value="">— Select Salesman —</option>
-      </select>
-    </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:12px;color:var(--mut)">Showing <span id="imp-count" style="color:var(--a2);font-weight:700">0</span> shops · <span id="imp-selected" style="color:var(--grn);font-weight:700">0</span> selected</div>
+      <div style="font-size:12px;color:var(--mut)">Showing <span id="imp-count" style="color:var(--a2);font-weight:700">0</span> · <span id="imp-selected" style="color:var(--grn);font-weight:700">0</span> selected</div>
       <div style="display:flex;gap:7px">
-        <button onclick="selectAllImport(true)" style="padding:6px 12px;background:rgba(34,197,94,.1);border:1.5px solid rgba(34,197,94,.3);border-radius:7px;font-family:var(--f);font-size:11px;font-weight:600;color:var(--grn);cursor:pointer">✅ Select All</button>
+        <button onclick="selectAllImport(true)" style="padding:6px 12px;background:rgba(34,197,94,.1);border:1.5px solid rgba(34,197,94,.3);border-radius:7px;font-family:var(--f);font-size:11px;font-weight:600;color:var(--grn);cursor:pointer">✅ All</button>
         <button onclick="selectAllImport(false)" style="padding:6px 12px;background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.3);border-radius:7px;font-family:var(--f);font-size:11px;font-weight:600;color:var(--red);cursor:pointer">✕ Clear</button>
       </div>
     </div>
     <div id="imp-list" style="max-height:400px;overflow-y:auto;margin-bottom:12px"></div>
-    <button class="mbtn pri" onclick="runImport()">📥 Import Selected Parties</button>
+    <button class="mbtn pri" onclick="runImport()">📥 Import Selected (Unallocated)</button>
+    <p style="font-size:10px;color:var(--mut);margin-top:6px;line-height:1.6">Parties are imported without any salesman assignment. Use the <strong style="color:var(--a2)">Allocate</strong> tab to assign them.</p>
   </div>
 </div>
 
 <!-- ══ ALLOCATE PARTIES ══ -->
 <div class="page" id="pg-allocate">
-  <div class="sec">
-    <div class="sl">Allocate Parties to Salesman</div>
-    <p style="font-size:11px;color:var(--mut);margin-bottom:14px;line-height:1.7">
-      Assign existing parties to a salesman. Salesmen only see parties allocated to them. Distributor sees all parties under their salesmen.
-    </p>
-    <div class="fld" style="margin-bottom:12px">
-      <label>Select Salesman</label>
-      <select class="finp" id="alloc-sm" onchange="loadAllocations()">
-        <option value="">— Select Salesman —</option>
-      </select>
+  <div class="stab-bar">
+    <div class="stab on" id="alc-sm-tab" onclick="allocSubTab('sm')">👤 To Salesman</div>
+    <div class="stab" id="alc-dist-tab" onclick="allocSubTab('dist')">🚚 To Distributor</div>
+  </div>
+  <!-- SALESMAN ALLOCATION -->
+  <div id="alc-sm-pane">
+    <div class="sec">
+      <div class="sl">Assign Parties to Salesman</div>
+      <p style="font-size:11px;color:var(--mut);margin-bottom:12px;line-height:1.6">Each salesman sees only their allocated parties in their portal.</p>
+      <div class="fld" style="margin-bottom:12px">
+        <label>Select Salesman</label>
+        <select class="finp" id="alloc-sm" onchange="loadAllocations()">
+          <option value="">— Select Salesman —</option>
+        </select>
+      </div>
+      <div id="alloc-body"><div style="text-align:center;padding:30px;color:var(--mut)">Select a salesman to manage allocations</div></div>
     </div>
-    <div id="alloc-body"><div style="text-align:center;padding:30px;color:var(--mut)">Select a salesman to manage their party allocation</div></div>
+  </div>
+  <!-- DISTRIBUTOR ALLOCATION -->
+  <div id="alc-dist-pane" style="display:none">
+    <div class="sec">
+      <div class="sl">Assign Parties to Distributor</div>
+      <p style="font-size:11px;color:var(--mut);margin-bottom:12px;line-height:1.6">Distributor sees parties allocated directly to them, plus all parties under their salesmen.</p>
+      <div class="fld" style="margin-bottom:12px">
+        <label>Select Distributor</label>
+        <select class="finp" id="alloc-dist" onchange="loadDistAllocations()">
+          <option value="">— Select Distributor —</option>
+        </select>
+      </div>
+      <div id="alloc-dist-body"><div style="text-align:center;padding:30px;color:var(--mut)">Select a distributor to manage allocations</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PARTY EDIT MODAL (Admin full edit) ══ -->
+<div class="ov" id="partyEditOv" onclick="if(event.target===this)closePartyEdit()">
+  <div class="mo" style="max-height:90dvh">
+    <div class="mh"></div>
+    <div class="mt" id="partyEditTitle">Edit Party</div>
+    <div id="partyEditBody"></div>
+  </div>
+</div>
+
+<!-- ══ EDIT REQUESTS MODAL ══ -->
+<div class="ov" id="editReqOv" onclick="if(event.target===this)document.getElementById('editReqOv').classList.remove('on')">
+  <div class="mo" style="max-height:90dvh">
+    <div class="mh"></div>
+    <div class="mt">📝 Pending Edit Requests</div>
+    <div id="editReqBody"></div>
+    <button class="bs cl" style="width:100%;padding:11px;margin-top:10px" onclick="document.getElementById('editReqOv').classList.remove('on')">Close</button>
   </div>
 </div>
 
@@ -1079,7 +1115,7 @@ function goTab(tab){
   if(tab==='salesmen') renderAllSalesmen();
   if(tab==='distributors') renderAllDistributors();
   if(tab==='orders') renderOrders();
-  if(tab==='parties') renderParties();
+  if(tab==='parties'){ renderParties(); loadEditRequests(); }
   if(tab==='smmaster'){ populateDistDropdown(); renderSmMaster(); }
   if(tab==='distmaster') renderDistMaster();
   if(tab==='products') renderProductsMaster();
@@ -1492,6 +1528,7 @@ function renderParties(){
         <div style="font-size:11px;color:var(--mut);margin-top:2px">${p.phone||''}${p.territory?' · '+p.territory:''}${p.addedBy?' · '+p.addedBy:''}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+        <button onclick="event.stopPropagation();openPartyEdit('${p.id}')" style="padding:5px 8px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:6px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--a2);cursor:pointer;white-space:nowrap">✏️ Edit</button>
         ${st!=='On Hold'?`<button onclick="setPartyStatus('${p.id}','On Hold')" style="padding:5px 8px;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:6px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--ylw);cursor:pointer;white-space:nowrap">⏸ Hold</button>`:''}
         ${st==='On Hold'?`<button onclick="setPartyStatus('${p.id}','Active')" style="padding:5px 8px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:6px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--grn);cursor:pointer;white-space:nowrap">▶ Resume</button>`:''}
         ${st!=='Inactive'?`<button onclick="setPartyStatus('${p.id}','Inactive')" style="padding:5px 8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--red);cursor:pointer;white-space:nowrap">🚫 Deactivate</button>`:`<button onclick="setPartyStatus('${p.id}','Active')" style="padding:5px 8px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:6px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--grn);cursor:pointer;white-space:nowrap">✅ Activate</button>`}
@@ -2364,15 +2401,6 @@ let importFiltered = [...ROUTE_SHOPS];
 let importSelected = new Set(ROUTE_SHOPS.map(s => s.id));
 
 function renderImportTab() {
-  // Populate SM dropdown
-  const sel = document.getElementById('imp-sm');
-  if (sel.options.length <= 1) {
-    allSalesmen.filter(s=>s.active!==false).forEach(sm => {
-      const o = document.createElement('option');
-      o.value = sm.id; o.textContent = sm.id + ' · ' + sm.name;
-      sel.appendChild(o);
-    });
-  }
   filterImport();
 }
 
@@ -2396,20 +2424,72 @@ function renderImportList() {
   }
   list.innerHTML = importFiltered.map(s => {
     const checked = importSelected.has(s.id);
-    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border-bottom:1px solid var(--bdr);cursor:pointer" onclick="toggleImportShop('${s.id}')">
-      <div style="width:18px;height:18px;border-radius:4px;border:2px solid ${checked?'var(--grn)':'var(--bdr)'};
-        background:${checked?'var(--grn)':'transparent'};flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center">
-        ${checked?'<span style="color:#fff;font-size:11px;font-weight:700">✓</span>':''}
+    const expanded = importExpandedId === s.id;
+    const hasExtra = s.gst||s.terms||s.credit||s.whatsapp||s.email;
+    const termOpts = ['','Cash','7 Days','15 Days','30 Days','45 Days']
+      .map(t=>`<option ${(s.terms||''===t)?'selected':''}>${t}</option>`).join('');
+    return `<div style="border-bottom:1px solid var(--bdr)">
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 10px">
+        <div onclick="toggleImportShop('${s.id}')" style="width:18px;height:18px;border-radius:4px;border:2px solid ${checked?'var(--grn)':'var(--bdr)'};background:${checked?'var(--grn)':'transparent'};flex-shrink:0;margin-top:3px;display:flex;align-items:center;justify-content:center;cursor:pointer">
+          ${checked?'<span style="color:#fff;font-size:11px;font-weight:700">&#10003;</span>':''}
+        </div>
+        <div style="flex:1;min-width:0;cursor:pointer" onclick="toggleImportExpand('${s.id}')">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:12px;font-weight:600">${s.name}</span>
+            ${hasExtra?'<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(34,197,94,.12);color:var(--grn);font-weight:700">+info</span>':''}
+          </div>
+          <div style="font-size:10px;color:var(--mut);margin-top:2px">${s.route||''} &middot; ${s.day||''}</div>
+          ${s.phone?`<div style="font-size:10px;color:var(--a2);margin-top:1px">&#128222; ${s.phone}</div>`:'<div style="font-size:10px;color:var(--red);margin-top:1px">No phone on file</div>'}
+        </div>
+        <button onclick="toggleImportExpand('${s.id}')" style="flex-shrink:0;padding:4px 8px;background:transparent;border:1px solid var(--bdr);border-radius:6px;font-family:var(--f);font-size:10px;color:var(--mut);cursor:pointer">${expanded?'&#9650; Less':'&#9660; Edit'}</button>
       </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:600">${s.name}</div>
-        <div style="font-size:10px;color:var(--mut);margin-top:2px">${s.route} · ${s.day}</div>
-        ${s.phone?`<div style="font-size:10px;color:var(--a2);margin-top:1px">📞 ${s.phone}</div>`:''}
-        ${s.address?`<div style="font-size:10px;color:var(--mut);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${s.address}</div>`:''}
-      </div>
+      ${expanded?`<div style="padding:0 10px 14px 38px">
+        <div style="background:var(--s2);border-radius:10px;padding:12px;border:1px solid var(--bdr)">
+          <div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Full Party Details</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="fld"><label>Party Name *</label><input class="finp" value="${s.name||''}" oninput="setImpField('${s.id}','name',this.value)"></div>
+            <div class="fld"><label>Contact Person</label><input class="finp" value="${s.contact||''}" oninput="setImpField('${s.id}','contact',this.value)"></div>
+            <div class="fld"><label>Phone</label><input class="finp" type="tel" value="${s.phone||''}" oninput="setImpField('${s.id}','phone',this.value)"></div>
+            <div class="fld"><label>WhatsApp</label><input class="finp" type="tel" value="${s.whatsapp||''}" oninput="setImpField('${s.id}','whatsapp',this.value)"></div>
+          </div>
+          <div class="fld"><label>Address</label><input class="finp" value="${s.address||''}" oninput="setImpField('${s.id}','address',this.value)"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="fld"><label>Route / Beat</label><input class="finp" value="${s.route||''}" oninput="setImpField('${s.id}','route',this.value)"></div>
+            <div class="fld"><label>Territory</label><input class="finp" value="${s.territory||'Ahmedabad'}" oninput="setImpField('${s.id}','territory',this.value)"></div>
+            <div class="fld"><label>GST Number</label><input class="finp" value="${s.gst||''}" oninput="setImpField('${s.id}','gst',this.value)" style="text-transform:uppercase"></div>
+            <div class="fld"><label>Payment Terms</label>
+              <select class="finp" onchange="setImpField('${s.id}','terms',this.value)">
+                <option value="">Select</option>
+                <option ${s.terms==='Cash'?'selected':''}>Cash</option>
+                <option ${s.terms==='7 Days'?'selected':''}>7 Days</option>
+                <option ${s.terms==='15 Days'?'selected':''}>15 Days</option>
+                <option ${s.terms==='30 Days'?'selected':''}>30 Days</option>
+                <option ${s.terms==='45 Days'?'selected':''}>45 Days</option>
+              </select>
+            </div>
+            <div class="fld"><label>Credit Limit (&#8377;)</label><input class="finp" type="number" value="${s.credit||''}" placeholder="0" oninput="setImpField('${s.id}','credit',parseFloat(this.value)||0)"></div>
+            <div class="fld"><label>Outstanding (&#8377;)</label><input class="finp" type="number" value="${s.outstanding||''}" placeholder="0" oninput="setImpField('${s.id}','outstanding',parseFloat(this.value)||0)"></div>
+            <div class="fld"><label>Email</label><input class="finp" type="email" value="${s.email||''}" oninput="setImpField('${s.id}','email',this.value)"></div>
+            <div class="fld"><label>Day / Visit</label><input class="finp" value="${s.day||''}" oninput="setImpField('${s.id}','day',this.value)"></div>
+          </div>
+          <div class="fld" style="margin-top:4px"><label>Notes / Remarks</label><input class="finp" value="${s.notes||''}" placeholder="Any special notes..." oninput="setImpField('${s.id}','notes',this.value)"></div>
+          <div style="font-size:10px;color:var(--mut);margin-top:8px;line-height:1.5">Fields are auto-saved in preview. Import when ready.</div>
+        </div>
+      </div>`:''}
     </div>`;
   }).join('');
 }
+
+let importExpandedId = null;
+function toggleImportExpand(id){
+  importExpandedId = (importExpandedId===id) ? null : id;
+  renderImportList();
+}
+function setImpField(id, field, value){
+  const s = ROUTE_SHOPS.find(x=>x.id===id);  if(s) s[field]=value;
+  const f = importFiltered.find(x=>x.id===id); if(f) f[field]=value;
+}
+
 
 function toggleImportShop(id) {
   if (importSelected.has(id)) importSelected.delete(id);
@@ -2425,48 +2505,45 @@ function selectAllImport(select) {
 }
 
 async function runImport() {
-  const smId = document.getElementById('imp-sm').value;
-  if (!smId) { toast('⚠️ Select a salesman first','er'); return; }
   const toImport = ROUTE_SHOPS.filter(s => importSelected.has(s.id));
   if (!toImport.length) { toast('⚠️ No shops selected','er'); return; }
-
-  const sm = allSalesmen.find(x=>x.id===smId);
-  const smName = sm ? sm.name : smId;
-
-  if (!confirm(`Import ${toImport.length} shops and assign to ${smName}?`)) return;
-
+  if (!confirm(`Import ${toImport.length} parties as unallocated? You can assign them in the Allocate tab.`)) return;
   toast(`📥 Importing ${toImport.length} parties...`, 'in');
-
-  // Add addedBy and timestamp
   const now = new Date().toISOString();
   const parties = toImport.map(s => ({
-    ...s,
-    addedBy: smId,
-    at: now,
-    terms: '',
-    gst: '',
-    territory: 'Ahmedabad'
+    id:          s.id,
+    name:        s.name||'',
+    contact:     s.contact||'',
+    phone:       s.phone||'',
+    whatsapp:    s.whatsapp||'',
+    address:     s.address||'',
+    route:       s.route||'',
+    territory:   s.territory||'Ahmedabad',
+    gst:         s.gst||'',
+    terms:       s.terms||'',
+    credit:      s.credit||0,
+    outstanding: s.outstanding||0,
+    email:       s.email||'',
+    notes:       s.notes||'',
+    day:         s.day||'',
+    lat:         s.lat||'',
+    lng:         s.lng||'',
+    photo:       s.photo||'',
+    addedBy:     '',
+    at:          now,
+    status:      'Active'
   }));
-
   try {
-    const r = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify({action: 'bulkImportParties', parties, smId})
-    });
+    const r = await fetch(SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'bulkImportParties', parties, smId:''})});
     const d = await r.json();
     if (d.ok) {
-      toast(`✅ ${d.imported} parties imported for ${smName}`, 'ok');
-      // Refresh parties list
+      toast(`✅ ${d.imported} parties imported (unallocated)`, 'ok');
       const rp = await fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`);
       const dp = await rp.json();
       if (dp.ok) allParties = dp.parties || [];
-    } else {
-      toast('❌ ' + (d.error||'Import failed'), 'er');
-    }
-  } catch(e) {
-    toast('❌ Network error: ' + e.message, 'er');
-  }
+    } else { toast('❌ ' + (d.error||'Import failed'), 'er'); }
+  } catch(e) { toast('❌ Network error', 'er'); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2478,13 +2555,15 @@ let allocAssigned = new Set();
 async function renderAllocateTab() {
   // Populate SM dropdown
   const sel = document.getElementById('alloc-sm');
-  if (sel.options.length <= 1) {
+  if (sel && sel.options.length <= 1) {
     allSalesmen.filter(s=>s.active!==false).forEach(sm => {
       const o = document.createElement('option');
       o.value = sm.id; o.textContent = sm.id + ' · ' + sm.name;
       sel.appendChild(o);
     });
   }
+  // Populate dist dropdown
+  await renderAllocateDistTab();
 }
 
 async function loadAllocations() {
@@ -2584,6 +2663,287 @@ async function saveAllocations(smId) {
       toast(`✅ ${assigned.length} parties allocated to ${smId}`, 'ok');
     } else { toast('❌ ' + (d.error||'Save failed'), 'er'); }
   } catch(e) { toast('❌ Network error', 'er'); }
+}
+
+
+// ═══════════════════════════════════════════════════════
+// ALLOCATE SUB-TABS
+// ═══════════════════════════════════════════════════════
+function allocSubTab(tab){
+  document.getElementById('alc-sm-pane').style.display  = tab==='sm'   ? '' : 'none';
+  document.getElementById('alc-dist-pane').style.display= tab==='dist' ? '' : 'none';
+  document.getElementById('alc-sm-tab').classList.toggle('on', tab==='sm');
+  document.getElementById('alc-dist-tab').classList.toggle('on', tab==='dist');
+  if(tab==='dist') renderAllocateDistTab();
+}
+
+async function renderAllocateDistTab(){
+  const sel=document.getElementById('alloc-dist');
+  if(sel.options.length<=1){
+    allDistributors.filter(d=>d.active!==false).forEach(d=>{
+      const o=document.createElement('option');
+      o.value=d.id; o.textContent=d.id+' · '+d.name;
+      sel.appendChild(o);
+    });
+  }
+}
+
+// ── Distributor party allocation ─────────────────────────────────────
+let distAllocAssigned=new Set();
+
+async function loadDistAllocations(){
+  const distId=document.getElementById('alloc-dist').value;
+  const body=document.getElementById('alloc-dist-body');
+  if(!distId){body.innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)">Select a distributor</div>';return;}
+  body.innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)">Loading...</div>';
+  if(!allParties.length){
+    const r=await fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`);
+    const d=await r.json();
+    if(d.ok) allParties=d.parties||[];
+  }
+  // Distributor allocation stored as addedBy='DIST:D001'
+  distAllocAssigned=new Set(allParties.filter(p=>p.addedBy==='DIST:'+distId).map(p=>p.id));
+  const dist=allDistributors.find(x=>x.id===distId);
+  const distName=dist?dist.name:distId;
+  body.innerHTML=`
+    <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:11px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:13px;font-weight:700">${distName}</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:2px">${distAllocAssigned.size} of ${allParties.length} parties assigned</div>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button onclick="distAllocAll(true)" style="padding:6px 10px;background:rgba(34,197,94,.1);border:1.5px solid rgba(34,197,94,.3);border-radius:7px;font-family:var(--f);font-size:10px;font-weight:600;color:var(--grn);cursor:pointer">All</button>
+        <button onclick="distAllocAll(false)" style="padding:6px 10px;background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.3);border-radius:7px;font-family:var(--f);font-size:10px;font-weight:600;color:var(--red);cursor:pointer">None</button>
+      </div>
+    </div>
+    <div id="dist-alloc-list" style="max-height:400px;overflow-y:auto;margin-bottom:12px"></div>
+    <button class="mbtn pri" onclick="saveDistAllocations('${distId}')">💾 Save Allocations</button>`;
+  renderDistAllocList();
+}
+
+function renderDistAllocList(){
+  const list=document.getElementById('dist-alloc-list'); if(!list) return;
+  list.innerHTML=allParties.map(p=>{
+    const assigned=distAllocAssigned.has(p.id);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid var(--bdr);cursor:pointer" onclick="toggleDistAlloc('${p.id}')">
+      <div style="width:18px;height:18px;border-radius:4px;border:2px solid ${assigned?'var(--grn)':'var(--bdr)'};
+        background:${assigned?'var(--grn)':'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center">
+        ${assigned?'<span style="color:#fff;font-size:11px;font-weight:700">✓</span>':''}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600">${p.name}</div>
+        <div style="font-size:10px;color:var(--mut)">${p.id} · ${p.route||p.territory||'—'} · ${p.addedBy||'Unallocated'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleDistAlloc(id){ distAllocAssigned.has(id)?distAllocAssigned.delete(id):distAllocAssigned.add(id); renderDistAllocList(); }
+function distAllocAll(s){ allParties.forEach(p=>s?distAllocAssigned.add(p.id):distAllocAssigned.delete(p.id)); renderDistAllocList(); }
+
+async function saveDistAllocations(distId){
+  const assigned=[...distAllocAssigned];
+  try{
+    toast('💾 Saving...','in');
+    const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'saveDistPartyAllocations',distId,partyIds:assigned})});
+    const d=await r.json();
+    if(d.ok) toast(`✅ ${assigned.length} parties allocated to distributor`,'ok');
+    else toast('❌ '+(d.error||'Failed'),'er');
+  }catch(e){toast('❌ Network error','er');}
+}
+
+// ═══════════════════════════════════════════════════════
+// PARTY FULL EDIT (Admin)
+// ═══════════════════════════════════════════════════════
+let editingParty=null;
+
+function openPartyEdit(partyId){
+  const p=allParties.find(x=>x.id===partyId); if(!p) return;
+  editingParty=p;
+  document.getElementById('partyEditTitle').textContent='✏️ Edit — '+p.name;
+  document.getElementById('partyEditBody').innerHTML=`
+    <div class="mcard" style="margin-bottom:10px">
+      <div class="g2">
+        <div class="fld"><label>Party ID</label><input class="finp" id="pe-id" value="${p.id}" readonly style="opacity:.6"></div>
+        <div class="fld"><label>Party Name *</label><input class="finp" id="pe-name" value="${p.name||''}"></div>
+      </div>
+      <div class="g2">
+        <div class="fld"><label>Contact Person</label><input class="finp" id="pe-contact" value="${p.contact||''}"></div>
+        <div class="fld"><label>Phone</label><input class="finp" id="pe-phone" value="${p.phone||''}"></div>
+      </div>
+      <div class="fld"><label>Address</label><input class="finp" id="pe-address" value="${p.address||''}"></div>
+      <div class="g2">
+        <div class="fld"><label>Route / Beat</label><input class="finp" id="pe-route" value="${p.route||''}"></div>
+        <div class="fld"><label>Territory</label><input class="finp" id="pe-territory" value="${p.territory||''}"></div>
+      </div>
+      <div class="g2">
+        <div class="fld"><label>GST</label><input class="finp" id="pe-gst" value="${p.gst||''}" style="text-transform:uppercase"></div>
+        <div class="fld"><label>Payment Terms</label>
+          <select class="finp" id="pe-terms">
+            ${['','Cash','7 Days','15 Days','30 Days','45 Days'].map(t=>`<option ${p.terms===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="fld"><label>Credit Limit (₹)</label><input class="finp" id="pe-credit" type="number" value="${p.credit||0}"></div>
+        <div class="fld"><label>Outstanding (₹)</label><input class="finp" id="pe-outstanding" type="number" value="${p.outstanding||0}"></div>
+      </div>
+      <div class="g2">
+        <div class="fld"><label>WhatsApp</label><input class="finp" id="pe-whatsapp" value="${p.whatsapp||''}"></div>
+        <div class="fld"><label>Email</label><input class="finp" type="email" id="pe-email" value="${p.email||''}"></div>
+        <div class="fld"><label>Day / Visit Beat</label><input class="finp" id="pe-day" value="${p.day||''}"></div>
+        <div class="fld"><label>Assigned To (SM/Dist ID)</label><input class="finp" id="pe-addedby" value="${p.addedBy||''}"></div>
+      </div>
+      <div class="fld"><label>Notes / Remarks</label><input class="finp" id="pe-notes" value="${p.notes||''}" placeholder="Any special notes..."></div>
+      <div class="g2">
+        <div class="fld"><label>Status</label>
+          <select class="finp" id="pe-status">
+            \${(p.status||'Active')==='Active'?'<option selected>Active</option>':'<option>Active</option>'}
+            \${(p.status||'Active')==='On Hold'?'<option selected>On Hold</option>':'<option>On Hold</option>'}
+            \${(p.status||'Active')==='Inactive'?'<option selected>Inactive</option>':'<option>Inactive</option>'}
+          </select>
+        </div>
+      </div>
+      ${p.lat&&p.lng?`<div style="font-size:11px;color:var(--mut);margin-top:6px">📍 ${p.lat}, ${p.lng} · <a href="https://maps.google.com/?q=${p.lat},${p.lng}" target="_blank" style="color:var(--a2)">View map ↗</a></div>`:''}
+      ${p.photo?`<div style="margin-top:8px"><img src="${p.photo}" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;border:1px solid var(--bdr)"></div>`:''}
+    </div>
+    <button class="mbtn pri" onclick="savePartyEdit()">💾 Save Changes</button>
+    <button class="mbtn sec" onclick="closePartyEdit()">Cancel</button>`;
+  document.getElementById('partyEditOv').classList.add('on');
+}
+
+function closePartyEdit(){ document.getElementById('partyEditOv').classList.remove('on'); editingParty=null; }
+
+async function savePartyEdit(){
+  if(!editingParty) return;
+  const updated={
+    id: editingParty.id,
+    name: document.getElementById('pe-name').value.trim(),
+    contact: document.getElementById('pe-contact').value.trim(),
+    phone: document.getElementById('pe-phone').value.trim(),
+    address: document.getElementById('pe-address').value.trim(),
+    route: document.getElementById('pe-route').value.trim(),
+    territory: document.getElementById('pe-territory').value.trim(),
+    gst: document.getElementById('pe-gst').value.trim().toUpperCase(),
+    terms: document.getElementById('pe-terms').value,
+    credit: parseFloat(document.getElementById('pe-credit').value)||0,
+    outstanding: parseFloat(document.getElementById('pe-outstanding').value)||0,
+    addedBy: document.getElementById('pe-addedby').value.trim(),
+    status: document.getElementById('pe-status').value,
+    lat: editingParty.lat||'', lng: editingParty.lng||'', photo: editingParty.photo||'',
+    whatsapp: document.getElementById('pe-whatsapp').value.trim(),
+    email:    document.getElementById('pe-email').value.trim(),
+    day:      document.getElementById('pe-day').value.trim(),
+    notes:    document.getElementById('pe-notes').value.trim()
+  };
+  if(!updated.name){ toast('⚠️ Party name required','er'); return; }
+  try{
+    toast('💾 Saving...','in');
+    const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'updatePartyFull',party:updated})});
+    const d=await r.json();
+    if(d.ok){
+      const idx=allParties.findIndex(x=>x.id===updated.id);
+      if(idx>=0) allParties[idx]={...allParties[idx],...updated};
+      toast('✅ Party updated','ok');
+      closePartyEdit();
+      renderParties();
+    } else toast('❌ '+(d.error||'Failed'),'er');
+  }catch(e){toast('❌ Network error','er');}
+}
+
+// ── Add Edit button to renderParties ─────────────────────────────────
+// (injected below in renderParties update)
+
+// ═══════════════════════════════════════════════════════
+// EDIT REQUEST WORKFLOW (Salesman suggests → Admin approves)
+// ═══════════════════════════════════════════════════════
+let allEditRequests=[];
+
+async function loadEditRequests(){
+  try{
+    const r=await fetch(`${SCRIPT_URL}?action=editRequests&t=${Date.now()}`);
+    const d=await r.json();
+    if(d.ok){ allEditRequests=d.requests||[]; updateEditReqBadge(); }
+  }catch(e){}
+}
+
+function updateEditReqBadge(){
+  const pending=allEditRequests.filter(r=>r.status==='Pending');
+  const badge=document.getElementById('editReqBadge');
+  const cnt=document.getElementById('editReqCount');
+  if(badge){ badge.textContent=pending.length||''; badge.style.display=pending.length?'':'none'; }
+  if(cnt){ cnt.textContent=pending.length||''; cnt.style.display=pending.length?'':'none'; }
+}
+
+async function showEditRequests(){
+  await loadEditRequests();
+  const pending=allEditRequests.filter(r=>r.status==='Pending');
+  const body=document.getElementById('editReqBody');
+  if(!pending.length){
+    body.innerHTML='<div style="text-align:center;padding:30px;color:var(--mut)">✅ No pending edit requests</div>';
+  } else {
+    body.innerHTML=pending.map(req=>{
+      const changes=req.changes||{};
+      const changeRows=Object.keys(changes).map(k=>`
+        <div style="display:flex;gap:6px;font-size:11px;padding:4px 0;border-bottom:1px solid var(--bdr)">
+          <span style="color:var(--mut);min-width:80px">${k}</span>
+          <span style="color:var(--red);text-decoration:line-through;flex:1">${changes[k].old||'—'}</span>
+          <span style="color:var(--grn);flex:1">→ ${changes[k].new||'—'}</span>
+        </div>`).join('');
+      return `<div style="background:var(--s1);border:1.5px solid rgba(234,179,8,.3);border-radius:12px;padding:12px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-size:13px;font-weight:700">${req.partyName||req.partyId}</div>
+            <div style="font-size:10px;color:var(--mut)">Requested by: ${req.smId} · ${req.at?new Date(req.at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):''}</div>
+          </div>
+          <span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(234,179,8,.15);color:var(--ylw);font-weight:700">PENDING</span>
+        </div>
+        ${changeRows}
+        ${req.note?`<div style="font-size:11px;color:var(--mut);margin-top:6px;font-style:italic">📝 "${req.note}"</div>`:''}
+        <div style="display:flex;gap:7px;margin-top:10px">
+          <button onclick="approveEditReq('${req.id}')" style="flex:1;padding:9px;background:rgba(34,197,94,.1);border:1.5px solid rgba(34,197,94,.3);border-radius:8px;font-family:var(--f);font-size:11px;font-weight:700;color:var(--grn);cursor:pointer">✅ Approve</button>
+          <button onclick="rejectEditReq('${req.id}')" style="flex:1;padding:9px;background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.3);border-radius:8px;font-family:var(--f);font-size:11px;font-weight:700;color:var(--red);cursor:pointer">❌ Reject</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('editReqOv').classList.add('on');
+}
+
+async function approveEditReq(reqId){
+  try{
+    const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'resolveEditRequest',reqId,resolution:'Approved'})});
+    const d=await r.json();
+    if(d.ok){
+      // Apply changes to local allParties cache
+      const req=allEditRequests.find(x=>x.id===reqId);
+      if(req){
+        req.status='Approved';
+        const p=allParties.find(x=>x.id===req.partyId);
+        if(p && req.changes) Object.keys(req.changes).forEach(k=>{ p[k]=req.changes[k].new; });
+      }
+      toast('✅ Edit approved and applied','ok');
+      updateEditReqBadge();
+      showEditRequests();
+      renderParties();
+    } else toast('❌ '+(d.error||'Failed'),'er');
+  }catch(e){toast('❌ Network error','er');}
+}
+
+async function rejectEditReq(reqId){
+  try{
+    const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'resolveEditRequest',reqId,resolution:'Rejected'})});
+    const d=await r.json();
+    if(d.ok){
+      const req=allEditRequests.find(x=>x.id===reqId);
+      if(req) req.status='Rejected';
+      toast('❌ Edit request rejected','in');
+      updateEditReqBadge();
+      showEditRequests();
+    } else toast('❌ '+(d.error||'Failed'),'er');
+  }catch(e){toast('❌ Network error','er');}
 }
 
 </script>
