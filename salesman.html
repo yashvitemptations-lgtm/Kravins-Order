@@ -382,8 +382,13 @@ textarea{resize:none;line-height:1.5;min-height:58px}
         </select>
       </div>
       <div class="bbox" id="bbox">
+        <!-- Shop photo - shown when available -->
+        <div id="bphotoWrap" style="display:none;margin-bottom:9px">
+          <img id="bphoto" src="" alt="Shop" style="width:100%;max-height:130px;object-fit:cover;border-radius:8px;border:1px solid var(--bdr)">
+        </div>
         <div class="bn" id="bname"></div>
         <div class="br" id="broute"></div>
+        <div id="bextra" style="font-size:10px;color:var(--mut);margin-bottom:6px"></div>
         <div class="cg">
           <div class="ci"><div class="cv" id="blim"></div><div class="cl">Limit</div></div>
           <div class="ci"><div class="cv" id="bdue"></div><div class="cl">Due</div></div>
@@ -958,7 +963,14 @@ function fillBuyerSel(){
 function onBuyer(){
   const id=document.getElementById('bsel').value;
   const box=document.getElementById('bbox');
-  if(!id){box.classList.remove('on');return;}
+  if(!id){
+    box.classList.remove('on');
+    const _bpw=document.getElementById('bphotoWrap');
+    const _bex=document.getElementById('bextra');
+    if(_bpw) _bpw.style.display='none';
+    if(_bex) _bex.innerHTML='';
+    return;
+  }
   const b=getBuyers().find(x=>x.id===id);
   if(!b){box.classList.remove('on');return;}
   const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
@@ -966,6 +978,23 @@ function onBuyer(){
   const _bb=(b.active===false||_bs==='Inactive'||_bs==='On Hold');
   document.getElementById('bname').textContent=b.name+(_bb?' ['+_bs+']':'');
   document.getElementById('broute').textContent=b.route||'';
+  // Show shop photo if available
+  const bpw=document.getElementById('bphotoWrap');
+  const bpi=document.getElementById('bphoto');
+  if(bpw&&bpi){
+    if(b.photo){bpi.src=b.photo;bpw.style.display='block';}
+    else{bpw.style.display='none';bpi.src='';}
+  }
+  // Show extra info (phone, address, notes)
+  const bex=document.getElementById('bextra');
+  if(bex){
+    const extras=[];
+    if(b.phone)extras.push('📞 '+b.phone);
+    if(b.address)extras.push('📍 '+b.address);
+    if(b.notes)extras.push('📝 '+b.notes);
+    if(b.lat&&b.lng)extras.push('<a href="https://maps.google.com/?q='+b.lat+','+b.lng+'" target="_blank" style="color:var(--a2);text-decoration:none">🗺️ Map</a>');
+    bex.innerHTML=extras.join(' · ');
+  }
   if(PARTY_ACCESS){
     document.getElementById('blim').textContent=fi(b.credit);
     document.getElementById('bdue').textContent=fi(b.outstanding);
@@ -1019,8 +1048,7 @@ function renderLines(){
       <div class="ps"><label style="font-size:9px;color:var(--mut);display:block;margin-bottom:3px;text-transform:uppercase">Product</label>
         <select onchange="onPC(${ln.id},this.value)" style="font-size:12px;padding:9px 28px 9px 9px">
           <option value="">— Select —</option>
-          ${window.PRODS.map(p=>`<option value="${p.code}" ${p.code===ln.code?'selected':''}>
-            ${p.code} · ${p.name.length>24?p.name.slice(0,24)+'…':p.name}</option>`).join('')}
+          ${window.PRODS.map(p=>`<option value="${p.code}" ${p.code===ln.code?'selected':''}>${p.code} · ${p.name}</option>`).join('')}
         </select>
       </div>
       <div class="pq"><label style="font-size:9px;color:var(--mut);display:block;margin-bottom:3px;text-transform:uppercase">Qty</label>
@@ -1044,7 +1072,7 @@ function calcSum(){
   document.getElementById('sumRows').innerHTML=fl.map(ln=>{
     const p=window.PRODS.find(x=>x.code===ln.code);if(!p)return '';
     const lt=p.price*ln.qty;gt+=lt;tc+=lt*p.comm;
-    return `<div class="sr"><span class="l">${p.name.length>22?p.name.slice(0,22)+'…':p.name} ×${ln.qty}</span><span class="v">₹${lt.toLocaleString('en-IN')}</span></div>`;
+    return `<div class="sr"><span class="l">${p.name} ×${ln.qty}</span><span class="v">₹${lt.toLocaleString('en-IN')}</span></div>`;
   }).join('');
   document.getElementById('grandVal').textContent='₹'+gt.toLocaleString('en-IN');
   document.getElementById('commLine').textContent='Commission: ₹'+tc.toFixed(0);

@@ -2760,80 +2760,191 @@ function openPartyEdit(partyId){
   const p=allParties.find(x=>x.id===partyId); if(!p) return;
   editingParty=p;
   document.getElementById('partyEditTitle').textContent='✏️ Edit — '+p.name;
+
+  // Build SM options
+  const smOpts = '<option value="">— Unallocated —</option>'
+    + allSalesmen.map(s=>`<option value="${s.id}" ${p.addedBy===s.id?'selected':''}>${s.id} · ${s.name}</option>`).join('');
+  // Build Dist options  
+  const distOpts = '<option value="">— None —</option>'
+    + allDistributors.map(d=>`<option value="DIST:${d.id}" ${'DIST:'+d.id===p.addedBy?'selected':''}>${d.id} · ${d.name}</option>`).join('');
+
+  // Current assignment type
+  const isDistAlloc = p.addedBy && p.addedBy.startsWith('DIST:');
+  const smVal  = (!p.addedBy || isDistAlloc) ? '' : p.addedBy;
+  const distVal = isDistAlloc ? p.addedBy : '';
+
+  // Status options - built in JS to avoid template-literal nesting
+  const stOpts = ['Active','On Hold','Inactive']
+    .map(s=>`<option value="${s}"${(p.status||'Active')===s?' selected':''}>${s}</option>`).join('');
+
   document.getElementById('partyEditBody').innerHTML=`
     <div class="mcard" style="margin-bottom:10px">
+
+      <!-- Row 1: ID + Name -->
       <div class="g2">
-        <div class="fld"><label>Party ID</label><input class="finp" id="pe-id" value="${p.id}" readonly style="opacity:.6"></div>
-        <div class="fld"><label>Party Name *</label><input class="finp" id="pe-name" value="${p.name||''}"></div>
+        <div class="fld"><label>Party ID</label>
+          <input class="finp" id="pe-id" value="${p.id}" readonly style="opacity:.6">
+        </div>
+        <div class="fld"><label>Party Name *</label>
+          <input class="finp" id="pe-name" value="${p.name||''}">
+        </div>
       </div>
+
+      <!-- Row 2: Contact + Phone -->
       <div class="g2">
-        <div class="fld"><label>Contact Person</label><input class="finp" id="pe-contact" value="${p.contact||''}"></div>
-        <div class="fld"><label>Phone</label><input class="finp" id="pe-phone" value="${p.phone||''}"></div>
+        <div class="fld"><label>Contact Person</label>
+          <input class="finp" id="pe-contact" value="${p.contact||''}">
+        </div>
+        <div class="fld"><label>Phone</label>
+          <input class="finp" id="pe-phone" type="tel" value="${p.phone||''}">
+        </div>
       </div>
-      <div class="fld"><label>Address</label><input class="finp" id="pe-address" value="${p.address||''}"></div>
+
+      <!-- Row 3: WhatsApp + Email -->
       <div class="g2">
-        <div class="fld"><label>Route / Beat</label><input class="finp" id="pe-route" value="${p.route||''}"></div>
-        <div class="fld"><label>Territory</label><input class="finp" id="pe-territory" value="${p.territory||''}"></div>
+        <div class="fld"><label>WhatsApp</label>
+          <input class="finp" id="pe-whatsapp" type="tel" value="${p.whatsapp||''}">
+        </div>
+        <div class="fld"><label>Email</label>
+          <input class="finp" id="pe-email" type="email" value="${p.email||''}">
+        </div>
       </div>
+
+      <!-- Address full width -->
+      <div class="fld"><label>Address</label>
+        <input class="finp" id="pe-address" value="${p.address||''}">
+      </div>
+
+      <!-- Row 4: Route + Territory -->
       <div class="g2">
-        <div class="fld"><label>GST</label><input class="finp" id="pe-gst" value="${p.gst||''}" style="text-transform:uppercase"></div>
+        <div class="fld"><label>Route / Beat</label>
+          <input class="finp" id="pe-route" value="${p.route||''}">
+        </div>
+        <div class="fld"><label>Territory</label>
+          <input class="finp" id="pe-territory" value="${p.territory||''}">
+        </div>
+      </div>
+
+      <!-- Row 5: GST + Terms -->
+      <div class="g2">
+        <div class="fld"><label>GST Number</label>
+          <input class="finp" id="pe-gst" value="${p.gst||''}" style="text-transform:uppercase">
+        </div>
         <div class="fld"><label>Payment Terms</label>
           <select class="finp" id="pe-terms">
-            ${['','Cash','7 Days','15 Days','30 Days','45 Days'].map(t=>`<option ${p.terms===t?'selected':''}>${t}</option>`).join('')}
+            <option value="">Select</option>
+            <option value="Cash"${p.terms==='Cash'?' selected':''}>Cash</option>
+            <option value="7 Days"${p.terms==='7 Days'?' selected':''}>7 Days</option>
+            <option value="15 Days"${p.terms==='15 Days'?' selected':''}>15 Days</option>
+            <option value="30 Days"${p.terms==='30 Days'?' selected':''}>30 Days</option>
+            <option value="45 Days"${p.terms==='45 Days'?' selected':''}>45 Days</option>
           </select>
         </div>
       </div>
+
+      <!-- Row 6: Credit + Outstanding -->
       <div class="g2">
-        <div class="fld"><label>Credit Limit (₹)</label><input class="finp" id="pe-credit" type="number" value="${p.credit||0}"></div>
-        <div class="fld"><label>Outstanding (₹)</label><input class="finp" id="pe-outstanding" type="number" value="${p.outstanding||0}"></div>
+        <div class="fld"><label>Credit Limit (₹)</label>
+          <input class="finp" id="pe-credit" type="number" value="${p.credit||0}">
+        </div>
+        <div class="fld"><label>Outstanding (₹)</label>
+          <input class="finp" id="pe-outstanding" type="number" value="${p.outstanding||0}">
+        </div>
       </div>
+
+      <!-- Row 7: Day + Status -->
       <div class="g2">
-        <div class="fld"><label>WhatsApp</label><input class="finp" id="pe-whatsapp" value="${p.whatsapp||''}"></div>
-        <div class="fld"><label>Email</label><input class="finp" type="email" id="pe-email" value="${p.email||''}"></div>
-        <div class="fld"><label>Day / Visit Beat</label><input class="finp" id="pe-day" value="${p.day||''}"></div>
-        <div class="fld"><label>Assigned To (SM/Dist ID)</label><input class="finp" id="pe-addedby" value="${p.addedBy||''}"></div>
-      </div>
-      <div class="fld"><label>Notes / Remarks</label><input class="finp" id="pe-notes" value="${p.notes||''}" placeholder="Any special notes..."></div>
-      <div class="g2">
+        <div class="fld"><label>Day / Visit Beat</label>
+          <input class="finp" id="pe-day" value="${p.day||''}">
+        </div>
         <div class="fld"><label>Status</label>
-          <select class="finp" id="pe-status">
-            \${(p.status||'Active')==='Active'?'<option selected>Active</option>':'<option>Active</option>'}
-            \${(p.status||'Active')==='On Hold'?'<option selected>On Hold</option>':'<option>On Hold</option>'}
-            \${(p.status||'Active')==='Inactive'?'<option selected>Inactive</option>':'<option>Inactive</option>'}
-          </select>
+          <select class="finp" id="pe-status">${stOpts}</select>
         </div>
       </div>
-      ${p.lat&&p.lng?`<div style="font-size:11px;color:var(--mut);margin-top:6px">📍 ${p.lat}, ${p.lng} · <a href="https://maps.google.com/?q=${p.lat},${p.lng}" target="_blank" style="color:var(--a2)">View map ↗</a></div>`:''}
-      ${p.photo?`<div style="margin-top:8px"><img src="${p.photo}" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;border:1px solid var(--bdr)"></div>`:''}
+
+      <!-- Allocation — SM and Dist separately -->
+      <div style="background:var(--s2);border-radius:9px;padding:11px;margin:8px 0;border:1px solid var(--bdr)">
+        <div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">🗂️ Party Allocation</div>
+        <div class="fld"><label>Assign to Salesman</label>
+          <select class="finp" id="pe-sm-alloc" onchange="peDistAlloc('')">${smOpts}</select>
+        </div>
+        <div class="fld" style="margin-top:6px"><label>Assign to Distributor</label>
+          <select class="finp" id="pe-dist-alloc" onchange="peSmAlloc('')">${distOpts}</select>
+        </div>
+        <div style="font-size:10px;color:var(--mut);margin-top:5px">Only one allocation applies — selecting either clears the other.</div>
+      </div>
+
+      <!-- Notes -->
+      <div class="fld"><label>Notes / Remarks</label>
+        <input class="finp" id="pe-notes" value="${p.notes||''}" placeholder="Any special notes...">
+      </div>
+
+      <!-- GPS -->
+      <div style="margin-top:8px">
+        <div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">📍 GPS Location</div>
+        <div class="g2">
+          <div class="fld"><label>Latitude</label>
+            <input class="finp" id="pe-lat" value="${p.lat||''}" placeholder="e.g. 23.0225">
+          </div>
+          <div class="fld"><label>Longitude</label>
+            <input class="finp" id="pe-lng" value="${p.lng||''}" placeholder="e.g. 72.5714">
+          </div>
+        </div>
+        ${p.lat&&p.lng?`<a href="https://maps.google.com/?q=${p.lat},${p.lng}" target="_blank" style="font-size:11px;color:var(--a2)">📍 View current location on map ↗</a>`:'<div style="font-size:11px;color:var(--mut)">No GPS saved yet</div>'}
+      </div>
+
+      <!-- Photo -->
+      <div style="margin-top:10px">
+        <div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">📷 Shop Photo</div>
+        ${p.photo?`<img src="${p.photo}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;border:1px solid var(--bdr);margin-bottom:6px">`:''}
+        <div class="fld"><label>Photo URL (Google Drive / Cloudinary link)</label>
+          <input class="finp" id="pe-photo" value="${p.photo||''}" placeholder="https://drive.google.com/...">
+        </div>
+        <div style="font-size:10px;color:var(--mut);margin-top:4px;line-height:1.6">
+          Upload photo to Google Drive → right-click → Get link → paste here.<br>
+          Make sure sharing is set to <strong>Anyone with the link</strong>.
+        </div>
+      </div>
+
     </div>
     <button class="mbtn pri" onclick="savePartyEdit()">💾 Save Changes</button>
     <button class="mbtn sec" onclick="closePartyEdit()">Cancel</button>`;
   document.getElementById('partyEditOv').classList.add('on');
 }
 
+// Clear SM alloc when dist selected and vice versa
+function peSmAlloc(v){ const el=document.getElementById('pe-sm-alloc'); if(el) el.value=v; }
+function peDistAlloc(v){ const el=document.getElementById('pe-dist-alloc'); if(el) el.value=v; }
+
 function closePartyEdit(){ document.getElementById('partyEditOv').classList.remove('on'); editingParty=null; }
 
 async function savePartyEdit(){
   if(!editingParty) return;
+  // Determine allocation: SM takes priority over Dist
+  const _smAlloc  = document.getElementById('pe-sm-alloc')?.value||'';
+  const _distAlloc= document.getElementById('pe-dist-alloc')?.value||'';
+  const _addedBy  = _smAlloc || _distAlloc || '';
   const updated={
-    id: editingParty.id,
-    name: document.getElementById('pe-name').value.trim(),
-    contact: document.getElementById('pe-contact').value.trim(),
-    phone: document.getElementById('pe-phone').value.trim(),
-    address: document.getElementById('pe-address').value.trim(),
-    route: document.getElementById('pe-route').value.trim(),
-    territory: document.getElementById('pe-territory').value.trim(),
-    gst: document.getElementById('pe-gst').value.trim().toUpperCase(),
-    terms: document.getElementById('pe-terms').value,
-    credit: parseFloat(document.getElementById('pe-credit').value)||0,
+    id:          editingParty.id,
+    name:        document.getElementById('pe-name').value.trim(),
+    contact:     document.getElementById('pe-contact').value.trim(),
+    phone:       document.getElementById('pe-phone').value.trim(),
+    address:     document.getElementById('pe-address').value.trim(),
+    route:       document.getElementById('pe-route').value.trim(),
+    territory:   document.getElementById('pe-territory').value.trim(),
+    gst:         document.getElementById('pe-gst').value.trim().toUpperCase(),
+    terms:       document.getElementById('pe-terms').value,
+    credit:      parseFloat(document.getElementById('pe-credit').value)||0,
     outstanding: parseFloat(document.getElementById('pe-outstanding').value)||0,
-    addedBy: document.getElementById('pe-addedby').value.trim(),
-    status: document.getElementById('pe-status').value,
-    lat: editingParty.lat||'', lng: editingParty.lng||'', photo: editingParty.photo||'',
-    whatsapp: document.getElementById('pe-whatsapp').value.trim(),
-    email:    document.getElementById('pe-email').value.trim(),
-    day:      document.getElementById('pe-day').value.trim(),
-    notes:    document.getElementById('pe-notes').value.trim()
+    addedBy:     _addedBy,
+    status:      document.getElementById('pe-status').value,
+    lat:         document.getElementById('pe-lat').value.trim(),
+    lng:         document.getElementById('pe-lng').value.trim(),
+    photo:       document.getElementById('pe-photo').value.trim(),
+    whatsapp:    document.getElementById('pe-whatsapp').value.trim(),
+    email:       document.getElementById('pe-email').value.trim(),
+    day:         document.getElementById('pe-day').value.trim(),
+    notes:       document.getElementById('pe-notes').value.trim()
   };
   if(!updated.name){ toast('⚠️ Party name required','er'); return; }
   try{
