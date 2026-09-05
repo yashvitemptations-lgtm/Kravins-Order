@@ -1570,34 +1570,77 @@ function renderParties(){
   const smF=document.getElementById('psmf')?.value||'';
   const stF=document.getElementById('pstf')?.value||'';
   const filtered=allParties.filter(p=>{
-    const mq=!q||p.name.toLowerCase().includes(q)||(p.id||'').toLowerCase().includes(q);
+    const mq=!q||p.name.toLowerCase().includes(q)||(p.id||'').toLowerCase().includes(q)||
+              (p.phone||'').includes(q)||(p.route||'').toLowerCase().includes(q)||(p.address||'').toLowerCase().includes(q);
     const ms=!smF||p.addedBy===smF;
     const mst=!stF||(p.status||'Active')===stF;
     return mq&&ms&&mst;
   });
   document.getElementById('pcount').textContent=filtered.length;
-  document.getElementById('partiesBody').innerHTML=filtered.map(p=>{
-    const st=p.status||'Active';
-    const stColor=st==='Active'?'var(--grn)':st==='On Hold'?'var(--ylw)':'var(--red)';
-    const stBg=st==='Active'?'rgba(34,197,94,.12)':st==='On Hold'?'rgba(234,179,8,.12)':'rgba(239,68,68,.12)';
-    return `<div class="pl" style="border-color:${st!=='Active'?'rgba(239,68,68,.25)':'var(--bdr)'}">
-      <div style="width:34px;height:34px;border-radius:9px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${st==='On Hold'?'⏸️':st==='Inactive'?'🚫':'🏪'}</div>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:13px;font-weight:600">${p.name}</span>
-          <span style="font-size:9px;padding:1px 6px;border-radius:4px;background:${stBg};color:${stColor};font-weight:700">${st}</span>
+
+  if(!filtered.length){
+    document.getElementById('partiesBody').innerHTML='<div class="empty">No parties found</div>';
+    return;
+  }
+
+  // ── Columnar table layout ─────────────────────────────────────────
+  document.getElementById('partiesBody').innerHTML=`
+    <!-- Table header -->
+    <div style="display:grid;grid-template-columns:2fr 1fr 2fr 1.2fr 1fr 1fr 1fr;
+      gap:0;background:var(--s2);border:1px solid var(--bdr);border-radius:10px 10px 0 0;
+      padding:8px 10px;font-size:9px;font-weight:700;color:var(--mut);
+      text-transform:uppercase;letter-spacing:.07em;position:sticky;top:0;z-index:1">
+      <div>Party Name</div>
+      <div>Phone</div>
+      <div>Address / Area</div>
+      <div>Route / Beat</div>
+      <div>Territory</div>
+      <div>Assigned To</div>
+      <div style="text-align:right">Actions</div>
+    </div>
+    <!-- Table rows -->
+    <div style="border:1px solid var(--bdr);border-top:none;border-radius:0 0 10px 10px;overflow:hidden">
+    ${filtered.map((p,i)=>{
+      const st=p.status||'Active';
+      const stColor=st==='Active'?'var(--grn)':st==='On Hold'?'var(--ylw)':'var(--red)';
+      const stBg=st==='Active'?'rgba(34,197,94,.1)':st==='On Hold'?'rgba(234,179,8,.1)':'rgba(239,68,68,.1)';
+      const rowBg=i%2===0?'var(--s1)':'var(--bg)';
+      const area=[p.route,p.address].filter(Boolean).join(' · ').slice(0,45)||'—';
+      const assignedLabel=p.addedBy
+        ?(p.addedBy.startsWith('DIST:')?'🚚 '+p.addedBy.replace('DIST:',''):'👤 '+p.addedBy)
+        :'—';
+      return `<div style="display:grid;grid-template-columns:2fr 1fr 2fr 1.2fr 1fr 1fr 1fr;
+        gap:0;padding:9px 10px;background:${rowBg};border-bottom:1px solid var(--bdr);
+        align-items:center;${st!=='Active'?'opacity:.7':''}">
+        <!-- Name + ID + status badge -->
+        <div style="min-width:0">
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+            <span style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px">${p.name}</span>
+            <span style="font-size:8px;padding:1px 5px;border-radius:4px;background:${stBg};color:${stColor};font-weight:700;flex-shrink:0">${st}</span>
+          </div>
+          <div style="font-size:9px;font-family:var(--m);color:var(--a2);margin-top:1px">${p.id||''}</div>
         </div>
-        <div style="font-size:10px;font-family:var(--m);color:var(--a2)">${p.id||''}</div>
-        <div style="font-size:11px;color:var(--mut);margin-top:2px">${p.phone||''}${p.territory?' · '+p.territory:''}${p.addedBy?' · '+p.addedBy:''}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
-        <button onclick="event.stopPropagation();openPartyEdit('${p.id}')" style="padding:5px 8px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:6px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--a2);cursor:pointer;white-space:nowrap">✏️ Edit</button>
-        ${st!=='On Hold'?`<button onclick="setPartyStatus('${p.id}','On Hold')" style="padding:5px 8px;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:6px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--ylw);cursor:pointer;white-space:nowrap">⏸ Hold</button>`:''}
-        ${st==='On Hold'?`<button onclick="setPartyStatus('${p.id}','Active')" style="padding:5px 8px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:6px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--grn);cursor:pointer;white-space:nowrap">▶ Resume</button>`:''}
-        ${st!=='Inactive'?`<button onclick="setPartyStatus('${p.id}','Inactive')" style="padding:5px 8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--red);cursor:pointer;white-space:nowrap">🚫 Deactivate</button>`:`<button onclick="setPartyStatus('${p.id}','Active')" style="padding:5px 8px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:6px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--grn);cursor:pointer;white-space:nowrap">✅ Activate</button>`}
-      </div>
+        <!-- Phone -->
+        <div style="font-size:11px;color:var(--txt)">${p.phone||'—'}</div>
+        <!-- Address / Area -->
+        <div style="font-size:10px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${p.address||''}">${area}</div>
+        <!-- Route / Beat -->
+        <div style="font-size:11px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.route||'—'}</div>
+        <!-- Territory -->
+        <div style="font-size:11px;color:var(--mut)">${p.territory||'—'}</div>
+        <!-- Assigned To -->
+        <div style="font-size:10px;color:var(--a2)">${assignedLabel}</div>
+        <!-- Actions -->
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <button onclick="openPartyEdit('${p.id}')" style="padding:4px 8px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:5px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--a2);cursor:pointer;white-space:nowrap">✏️ Edit</button>
+          ${st!=='On Hold'?`<button onclick="setPartyStatus('${p.id}','On Hold')" style="padding:4px 8px;background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:5px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--ylw);cursor:pointer;white-space:nowrap">⏸ Hold</button>`:''}
+          ${st==='On Hold'?`<button onclick="setPartyStatus('${p.id}','Active')" style="padding:4px 8px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:5px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--grn);cursor:pointer;white-space:nowrap">▶ Resume</button>`:''}
+          ${st!=='Inactive'?`<button onclick="setPartyStatus('${p.id}','Inactive')" style="padding:4px 8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:5px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--red);cursor:pointer;white-space:nowrap">🚫</button>`
+          :`<button onclick="setPartyStatus('${p.id}','Active')" style="padding:4px 8px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:5px;font-family:var(--f);font-size:9px;font-weight:700;color:var(--grn);cursor:pointer;white-space:nowrap">✅</button>`}
+        </div>
+      </div>`;
+    }).join('')}
     </div>`;
-  }).join('')||'<div class="empty">No parties found</div>';
 }
 
 async function setPartyStatus(partyId, status){

@@ -476,73 +476,46 @@ textarea{resize:none;line-height:1.5;min-height:58px}
       <!-- GPS Location -->
       <div class="fld" style="margin-top:6px">
         <label>📍 GPS Location</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button type="button" onclick="captureGPS()" id="gpsBtn"
-            style="flex:1;padding:10px;background:rgba(34,197,94,.08);border:1.5px dashed rgba(34,197,94,.3);border-radius:9px;font-family:var(--f);font-size:12px;font-weight:600;color:var(--grn);cursor:pointer">
-            📍 Capture Location
-          </button>
-          <button type="button" onclick="clearGPS()" id="gpsClear" style="display:none;padding:10px 12px;background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.3);border-radius:9px;font-family:var(--f);font-size:11px;font-weight:600;color:var(--red);cursor:pointer">✕</button>
-        </div>
-        <div id="gpsStatus" style="font-size:10px;color:var(--mut);margin-top:5px;padding:6px 8px;background:var(--s2);border-radius:6px;display:none"></div>
-        <input type="hidden" id="nlat" value="">
-        <input type="hidden" id="nlng" value="">
-      </div>
-    </div>
-    <div class="card">
-      <div class="fld"><label>Address 1 <span style="color:red">*</span></label><input type="text" id="naddr1" placeholder="House / Shop No., Building Name"></div>
-    </div>
-    <div class="card">
-      <div class="fld"><label>Address 2 – Area <span style="color:red">*</span></label><input type="text" id="naddr2" placeholder="Area / Locality / Street"></div>
-    </div>
-    <div class="card">
-      <div class="g2">
-        <div class="fld"><label>City <span style="color:red">*</span></label><input type="text" id="naddr3" placeholder="City" autocomplete="off"></div>
-        <div class="fld"><label>State <span style="color:red">*</span></label>
-          <select id="naddr4" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;font-size:14px">
-            <option value="">-- Select State --</option>
-            <optgroup label="States">
-              <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option>
-              <option>Bihar</option><option>Chhattisgarh</option><option>Goa</option>
-              <option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option>
-              <option>Jharkhand</option><option>Karnataka</option><option>Kerala</option>
-              <option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option>
-              <option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option>
-              <option>Odisha</option><option>Punjab</option><option>Rajasthan</option>
-              <option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option>
-              <option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option>
-              <option>West Bengal</option>
-            </optgroup>
-            <optgroup label="Union Territories">
-              <option>Andaman & Nicobar Islands</option><option>Chandigarh</option>
-              <option>Dadra & Nagar Haveli and Daman & Diu</option>
-              <option>Delhi</option><option>Jammu & Kashmir</option><option>Ladakh</option>
-              <option>Lakshadweep</option><option>Puducherry</option>
-            </optgroup>
-          </select>
+        <!-- Single button — auto-fills both fields below -->
+        <button type="button" onclick="captureGPS()" id="gpsBtn"
+          style="width:100%;padding:12px;background:rgba(34,197,94,.08);border:1.5px dashed rgba(34,197,94,.3);
+          border-radius:9px;font-family:var(--f);font-size:13px;font-weight:600;color:var(--grn);
+          cursor:pointer;margin-bottom:8px">
+          📍 Capture My Location
+        </button>
+        <!-- Hidden until GPS captured -->
+        <div id="gpsResult" style="display:none">
+          <div id="gpsStatus" style="font-size:11px;padding:8px 10px;background:rgba(34,197,94,.07);
+            border:1px solid rgba(34,197,94,.25);border-radius:8px;color:var(--grn);
+            margin-bottom:8px;line-height:1.6"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+            <div>
+              <div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;
+                letter-spacing:.06em;margin-bottom:4px">Latitude</div>
+              <input type="text" id="nlat" readonly
+                style="width:100%;background:rgba(34,197,94,.05);border:1.5px solid rgba(34,197,94,.3);
+                border-radius:9px;padding:9px 12px;font-family:var(--m);font-size:13px;
+                font-weight:700;color:var(--grn);outline:none;cursor:default">
+            </div>
+            <div>
+              <div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;
+                letter-spacing:.06em;margin-bottom:4px">Longitude</div>
+              <input type="text" id="nlng" readonly
+                style="width:100%;background:rgba(34,197,94,.05);border:1.5px solid rgba(34,197,94,.3);
+                border-radius:9px;padding:9px 12px;font-family:var(--m);font-size:13px;
+                font-weight:700;color:var(--grn);outline:none;cursor:default">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <a id="gpsMapA" href="#" target="_blank"
+              style="font-size:11px;color:var(--a2);text-decoration:none">🗺️ View on Google Maps ↗</a>
+            <button type="button" onclick="clearGPS()"
+              style="padding:5px 11px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);
+              border-radius:7px;font-family:var(--f);font-size:10px;font-weight:600;
+              color:var(--red);cursor:pointer">✕ Clear</button>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="card">
-      <div class="fld"><label>Pin Code <span style="color:#999;font-size:0.8em">(optional)</span></label><input type="text" id="npin" placeholder="e.g. 400001" maxlength="6" pattern="[0-9]{6}"></div>
-    </div>
-    <div class="card">
-      <div class="g2">
-        <div class="fld"><label>Route / Beat</label><input type="text" id="nroute" placeholder="Route A"></div>
-        <div class="fld"><label>Territory</label><input type="text" id="nterr" placeholder="North Zone"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="g2">
-        <div class="fld"><label>GST Number</label><input type="text" id="ngst" placeholder="GST No." style="text-transform:uppercase"></div>
-        <div class="fld">
-          <label>Payment Terms</label>
-          <select id="nterms">
-            <option value="">Select</option><option>Cash</option><option>7 Days</option>
-            <option>15 Days</option><option>30 Days</option><option>45 Days</option>
-          </select>
-        </div>
-      </div>
-      <div class="fld"><label>Credit Limit Requested (₹)</label><input type="number" id="ncredit" placeholder="0"></div>
     </div>
     <button class="bsub" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);box-shadow:0 4px 16px rgba(124,58,237,.28);position:static" onclick="addParty()">➕ Add Party Instantly</button>
     <p style="text-align:center;font-size:11px;color:var(--mut);line-height:1.7;padding:10px 10px 0">Party added immediately. No approval needed.<br>Synced to central records automatically.</p>
@@ -1375,10 +1348,25 @@ function captureGPS(){
       const lat=pos.coords.latitude.toFixed(6);
       const lng=pos.coords.longitude.toFixed(6);
       const acc=Math.round(pos.coords.accuracy);
+      // Fill read-only display fields
       document.getElementById('nlat').value=lat;
       document.getElementById('nlng').value=lng;
-      status.innerHTML=`📍 <strong style="color:var(--grn)">${lat}, ${lng}</strong><br><span style="color:var(--mut)">Accuracy: ±${acc}m · <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" style="color:var(--a2)">View on map ↗</a></span>`;
+      // Show result section
+      const result=document.getElementById('gpsResult');
+      if(result) result.style.display='block';
+      // Update map link
+      const mapA=document.getElementById('gpsMapA');
+      if(mapA){ mapA.href='https://maps.google.com/?q='+lat+','+lng; }
+      // Status message
+      status.innerHTML='✅ <strong>'+lat+'</strong>, <strong>'+lng+'</strong> · ±'+acc+'m accuracy';
       status.style.display='block';
+      // Also populate the visible text fields
+      document.getElementById('nlat').value=lat;
+      document.getElementById('nlng').value=lng;
+      // Show map link
+      const ml=document.getElementById('gpsMapLink');
+      const ma=document.getElementById('gpsMapA');
+      if(ml&&ma){ ma.href='https://maps.google.com/?q='+lat+','+lng; ml.style.display='block'; }
       document.getElementById('gpsClear').style.display='';
       btn.textContent='✅ Location Captured';btn.disabled=false;
       btn.style.background='rgba(34,197,94,.15)';
@@ -1400,9 +1388,24 @@ function clearGPS(){
   document.getElementById('nlng').value='';
   document.getElementById('gpsStatus').style.display='none';
   document.getElementById('gpsClear').style.display='none';
+  const ml=document.getElementById('gpsMapLink'); if(ml) ml.style.display='none';
   const btn=document.getElementById('gpsBtn');
-  btn.textContent='📍 Capture Location';
+  btn.textContent='📍 Auto-Capture from GPS';
   btn.style.background='rgba(34,197,94,.08)';
+}
+
+function onGpsManual(){
+  const lat=document.getElementById('nlat').value;
+  const lng=document.getElementById('nlng').value;
+  const ml=document.getElementById('gpsMapLink');
+  const ma=document.getElementById('gpsMapA');
+  if(lat&&lng&&ml&&ma){
+    ma.href='https://maps.google.com/?q='+lat+','+lng;
+    ml.style.display='block';
+    document.getElementById('gpsClear').style.display='';
+  } else {
+    if(ml) ml.style.display='none';
+  }
 }
 
 async function addParty(){
@@ -1455,6 +1458,7 @@ async function addParty(){
   document.getElementById('naddr4').selectedIndex=0;
   clearPhoto();
   clearGPS();
+  const _ml=document.getElementById('gpsMapLink'); if(_ml) _ml.style.display='none';
   document.getElementById('nterms').value='';
   fillBuyerSel();
   toast(`✅ ${newB.name} added as ${newB.id}`,'ok');
