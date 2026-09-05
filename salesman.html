@@ -682,6 +682,15 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     if (d.ok && d.salesmen) {
       const sm = d.salesmen.find(s=>s.id===SID);
       if (sm) {
+        // Block immediately if deactivated
+        if (sm.active === false) {
+          document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#050a14;color:#64748b;font-family:Outfit,sans-serif;font-size:14px;text-align:center;padding:30px;gap:12px">
+            <div style="font-size:48px">🔒</div>
+            <div style="font-size:18px;font-weight:700;color:#ef4444">Access Suspended</div>
+            <div style="font-size:13px;max-width:280px;line-height:1.7">Your account has been deactivated.<br>Please contact your admin.</div>
+          </div>`;
+          return;
+        }
         SNAME   = sm.name;
         DIST_ID = sm.distributor || 'D001';
       } else {
@@ -924,9 +933,13 @@ async function loadBuyers(){
 function fillBuyerSel(){
   const sel=document.getElementById('bsel'),cur=sel.value;
   sel.innerHTML='<option value="">— Choose a party —</option>';
-  getBuyers().filter(b=>b.active!==false).forEach(b=>{
+  getBuyers().forEach(b=>{
     const o=document.createElement('option');
-    o.value=b.id;o.textContent=`${b.id} · ${b.name}`;
+    const status=b.status||'Active';
+    const isBlocked=(b.active===false||status==='Inactive'||status==='On Hold');
+    o.value=b.id;
+    o.textContent=isBlocked?`${b.id} · ${b.name} [${status}]`:`${b.id} · ${b.name}`;
+    if(isBlocked){o.disabled=true;o.style.color='#64748b';}
     sel.appendChild(o);
   });
   if(cur)sel.value=cur;
@@ -939,7 +952,9 @@ function onBuyer(){
   const b=getBuyers().find(x=>x.id===id);
   if(!b){box.classList.remove('on');return;}
   const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
-  document.getElementById('bname').textContent=b.name;
+  const _bs=b.status||'Active';
+  const _bb=(b.active===false||_bs==='Inactive'||_bs==='On Hold');
+  document.getElementById('bname').textContent=b.name+(_bb?' ['+_bs+']':'');
   document.getElementById('broute').textContent=b.route||'';
   if(PARTY_ACCESS){
     document.getElementById('blim').textContent=fi(b.credit);
@@ -960,7 +975,7 @@ async function loadProducts(){
   try{
     const r=await fetch(`${SCRIPT_URL}?action=products&t=${Date.now()}`);
     const data=await r.json();
-    if(data.ok&&data.products)window.PRODS=data.products;
+    if(data.ok&&data.products)window.PRODS=data.products.filter(p=>p.active!==false);
   }catch(e){}
 }
 window.PRODS=[
@@ -1029,6 +1044,13 @@ function calcSum(){
 async function submitOrder(){
   const bid=document.getElementById('bsel').value;
   if(!bid){toast('⚠️ Select a party first','er');return;}
+  // Block order if party is on hold or inactive
+  const _party=getBuyers().find(x=>x.id===bid);
+  if(_party){
+    const _st=_party.status||'Active';
+    if(_party.active===false||_st==='Inactive'){toast('⛔ This party is Inactive — orders not allowed','er');return;}
+    if(_st==='On Hold'){toast('⚠️ This party is On Hold — orders not allowed','er');return;}
+  }
   const fl=lines.filter(l=>l.code&&l.qty>0);
   if(!fl.length){toast('⚠️ Add at least one product','er');return;}
   
@@ -1272,10 +1294,12 @@ function renderParties(){
   if(!list.length){c.innerHTML='<div class="empty">No parties found.</div>';return;}
   c.innerHTML=list.map(b=>{
     const av=(b.credit||0)-(b.outstanding||0);
-    return `<div class="pi2" onclick="pickParty('${b.id}')">
-      <div class="pav">🏪</div>
+    const _ps=b.status||'Active';
+    const _pblocked=(b.active===false||_ps==='Inactive'||_ps==='On Hold');
+    return `<div class="pi2" onclick="${_pblocked?'':"pickParty('"+b.id+"')"}" style="${_pblocked?'opacity:.5;cursor:default':''}">
+      <div class="pav">${_ps==='On Hold'?'⏸️':_ps==='Inactive'?'🚫':'🏪'}</div>
       <div style="flex:1;min-width:0">
-        <div class="pnm">${b.name}</div>
+        <div class="pnm">${b.name}${_pblocked?' <span style="font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(239,68,68,.15);color:var(--red)">${_ps}</span>':''}</div>
         <div class="pid">${b.id}</div>
         <div class="pro">${b.route||''} · ${PARTY_ACCESS?'Avail ₹'+av.toLocaleString('en-IN'):''}${b.lat&&b.lng?' · <a href="https://maps.google.com/?q='+b.lat+','+b.lng+'" target="_blank" style="color:var(--a2);text-decoration:none" onclick="event.stopPropagation()">📍 Map</a>':''}</div>
       </div>
@@ -1348,7 +1372,13 @@ async function addParty(){
   if(!name){toast('⚠️ Party name required','er');document.getElementById('nname').focus();return;}
   if(!phone){toast('⚠️ Contact number required','er');document.getElementById('nphone').focus();return;}
   const buyers=getBuyers();
-  if(buyers.some(b=>b.name.toLowerCase()===name.toLowerCase())){toast('⚠️ Party already exists!','er');return;}
+  const _existing=buyers.find(b=>b.name.toLowerCase()===name.toLowerCase());
+  if(_existing){
+    const _est=_existing.status||'Active';
+    if(_existing.active===false||_est==='Inactive'){toast('⛔ '+name+' is Inactive and cannot be re-added','er');return;}
+    if(_est==='On Hold'){toast('⚠️ '+name+' is On Hold. Contact admin before adding','er');return;}
+    toast('⚠️ Party already exists!','er');return;
+  }
   
   const newB={
     id:nextBID(),name,phone,

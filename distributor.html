@@ -698,6 +698,11 @@ async function doSetup(){
     const d=await r.json();
     const found=(d.distributors||[]).find(x=>x.id===id);
     if(!found){document.getElementById('setupErr').style.display='block';return;}
+    if(found.active===false){
+      document.getElementById('setupErr').textContent='❌ This account has been deactivated. Contact admin.';
+      document.getElementById('setupErr').style.display='block';
+      return;
+    }
     document.getElementById('setupErr').style.display='none';
     distId=id;distInfo=found;distName=found.name;
     localStorage.setItem('kravins_dist_id',id);
@@ -716,7 +721,14 @@ async function initApp(){
       const r=await fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`);
       const d=await r.json();
       const f=(d.distributors||[]).find(x=>x.id===distId);
-      if(f){distInfo=f;distName=f.name;}else{distName=distId;}
+      if(f){
+        if(f.active===false){
+          localStorage.removeItem('kravins_dist_id');
+          document.body.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#050a14;color:#64748b;font-family:Outfit,sans-serif;font-size:14px;text-align:center;padding:30px;gap:12px"><div style="font-size:48px">🔒</div><div style="font-size:18px;font-weight:700;color:#ef4444">Access Suspended</div><div style="font-size:13px;max-width:280px;line-height:1.7">Your distributor account has been deactivated.<br>Please contact admin.</div></div>';
+          return;
+        }
+        distInfo=f;distName=f.name;
+      }else{distName=distId;}
     }catch(e){distName=distId;}
   }
   document.getElementById('setupScreen').style.display='none';
