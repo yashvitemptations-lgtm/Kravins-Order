@@ -755,17 +755,16 @@ let SNAME = SID;
 let DIST_ID = 'D001';
 let PARTY_ACCESS = true;
 // ── Cache version — increment this when data structure changes ───────
-const CACHE_VER = '3';  // bump this to force clear old mobile cache
+const CACHE_VER = '4';  // bumped to force clear stale unfiltered party cache
 const LK = {b:`B_${SID}_v${CACHE_VER}`, o:`O_${SID}`};
 
 // Clear old cache keys from previous versions on first load
 (function(){
   try {
-    const oldKeys = Object.keys(localStorage).filter(k =>
-      (k.startsWith('B_') || k.startsWith('O_')) && !k.includes('_v'+CACHE_VER)
-    );
+    // Clear ALL buyer cache keys — force fresh filtered data from server
+    const oldKeys = Object.keys(localStorage).filter(k => k.startsWith('B_'));
     oldKeys.forEach(k => localStorage.removeItem(k));
-    if(oldKeys.length) console.log('Cleared '+oldKeys.length+' stale cache keys');
+    if(oldKeys.length) console.log('Cleared '+oldKeys.length+' buyer cache keys');
   } catch(e) {}
 })();
 let lastDashData = null; // Store latest dashboard data for KPI modals
@@ -1151,9 +1150,9 @@ async function loadBuyers(){
         if(p.addedBy==='DIST:'+DIST_ID) return true;      // assigned to this SM's distributor
         return false;                                      // all others hidden
       });
-      const merged=[...visible,...getBuyers()];
-      const unique=merged.filter((b,i,a)=>a.findIndex(x=>x.id===b.id)===i);
-      saveBuyers(unique);
+      // STRICT: save ONLY the filtered visible list — never merge with old localStorage
+      // This ensures no stale unallocated parties remain
+      saveBuyers(visible);
     } else {
       // Fallback: master buyers sheet
       const r2=await fetch(`${SCRIPT_URL}?action=buyers&t=${Date.now()}`);
