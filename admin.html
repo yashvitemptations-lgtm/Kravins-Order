@@ -1658,9 +1658,9 @@ function renderParties(){
       const stBg=st==='Active'?'rgba(34,197,94,.1)':st==='On Hold'?'rgba(234,179,8,.1)':'rgba(239,68,68,.1)';
       const rowBg=i%2===0?'var(--s1)':'var(--bg)';
       const area=[p.route,p.address].filter(Boolean).join(' · ').slice(0,45)||'—';
-      const assignedLabel=p.addedBy
-        ?(p.addedBy.startsWith('DIST:')?'🚚 '+p.addedBy.replace('DIST:',''):'👤 '+p.addedBy)
-        :'—';
+      const smLabel   = p.addedBy   ? '👤 '+p.addedBy   : '';
+      const distLabel = p.distAlloc ? '🚚 '+p.distAlloc : '';
+      const assignedLabel = [smLabel,distLabel].filter(Boolean).join(' · ') || '—';
       return `<div style="display:grid;grid-template-columns:2fr 1fr 2fr 1.2fr 1fr 1fr 1fr;
         gap:0;padding:9px 10px;background:${rowBg};border-bottom:1px solid var(--bdr);
         align-items:center;${st!=='Active'?'opacity:.7':''}">
@@ -2923,7 +2923,14 @@ async function loadDistAllocations(){
     if(d.ok) allParties=d.parties||[];
   }
   // Distributor allocation stored as addedBy='DIST:D001'
-  distAllocAssigned=new Set(allParties.filter(p=>(p.distAlloc||'')=== distId).map(p=>p.id)); // col 22 only
+  // Fetch dist allocations from separate Dist_Alloc sheet
+  try {
+    const ra = await fetch(`${SCRIPT_URL}?action=distAlloc&distId=${distId}&t=${Date.now()}`);
+    const da = await ra.json();
+    distAllocAssigned = new Set(da.ok ? (da.partyIds||[]) : []);
+  } catch(e) {
+    distAllocAssigned = new Set(allParties.filter(p=>(p.distAlloc||'')=== distId).map(p=>p.id));
+  }
   const dist=allDistributors.find(x=>x.id===distId);
   const distName=dist?dist.name:distId;
   body.innerHTML=`
@@ -2996,9 +3003,9 @@ function openPartyEdit(partyId){
   // Build SM options
   const smOpts = '<option value="">— Unallocated —</option>'
     + allSalesmen.map(s=>`<option value="${s.id}" ${p.addedBy===s.id?'selected':''}>${s.id} · ${s.name}</option>`).join('');
-  // Build Dist options  
+  // Build Dist options — use p.distAlloc (separate Dist_Alloc sheet)
   const distOpts = '<option value="">— None —</option>'
-    + allDistributors.map(d=>`<option value="DIST:${d.id}" ${'DIST:'+d.id===p.addedBy?'selected':''}>${d.id} · ${d.name}</option>`).join('');
+    + allDistributors.map(d=>`<option value="${d.id}" ${(p.distAlloc||'')=== d.id?'selected':''}>${d.id} · ${d.name}</option>`).join('');
 
   // Current assignment type
   const isDistAlloc = p.addedBy && p.addedBy.startsWith('DIST:');
@@ -3094,16 +3101,16 @@ function openPartyEdit(partyId){
         </div>
       </div>
 
-      <!-- Allocation — SM and Dist separately -->
+      <!-- Allocation — SM and Dist are INDEPENDENT -->
       <div style="background:var(--s2);border-radius:9px;padding:11px;margin:8px 0;border:1px solid var(--bdr)">
         <div style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">🗂️ Party Allocation</div>
         <div class="fld"><label>Assign to Salesman</label>
-          <select class="finp" id="pe-sm-alloc" onchange="peDistAlloc('')">${smOpts}</select>
+          <select class="finp" id="pe-sm-alloc">${smOpts}</select>
         </div>
         <div class="fld" style="margin-top:6px"><label>Assign to Distributor</label>
-          <select class="finp" id="pe-dist-alloc" onchange="peSmAlloc('')">${distOpts}</select>
+          <select class="finp" id="pe-dist-alloc">${distOpts}</select>
         </div>
-        <div style="font-size:10px;color:var(--mut);margin-top:5px">Only one allocation applies — selecting either clears the other.</div>
+        <div style="font-size:10px;color:var(--grn);margin-top:5px">✅ Both can be set independently — they don't affect each other.</div>
       </div>
 
       <!-- Notes -->
@@ -3144,18 +3151,15 @@ function openPartyEdit(partyId){
   document.getElementById('partyEditOv').classList.add('on');
 }
 
-// Clear SM alloc when dist selected and vice versa
-function peSmAlloc(v){ const el=document.getElementById('pe-sm-alloc'); if(el) el.value=v; }
-function peDistAlloc(v){ const el=document.getElementById('pe-dist-alloc'); if(el) el.value=v; }
 
 function closePartyEdit(){ document.getElementById('partyEditOv').classList.remove('on'); editingParty=null; }
 
 async function savePartyEdit(){
   if(!editingParty) return;
-  // Determine allocation: SM takes priority over Dist
-  const _smAlloc  = document.getElementById('pe-sm-alloc')?.value||'';
-  const _distAlloc= document.getElementById('pe-dist-alloc')?.value||'';
-  const _addedBy  = _smAlloc || _distAlloc || '';
+  // SM and Dist allocations are independent
+  const _smAlloc   = document.getElementById('pe-sm-alloc')?.value||'';
+  const _distAlloc = document.getElementById('pe-dist-alloc')?.value||'';
+  const _addedBy   = _smAlloc; // addedBy = SM only
   const updated={
     id:          editingParty.id,
     name:        document.getElementById('pe-name').value.trim(),
@@ -3185,8 +3189,15 @@ async function savePartyEdit(){
       body:JSON.stringify({action:'updatePartyFull',party:updated})});
     const d=await r.json();
     if(d.ok){
+      // Also save dist allocation to separate sheet
+      const distId = _distAlloc;
+      await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+        body:JSON.stringify({action:'saveDistPartyAllocations',
+          distId: distId||'__CLEAR__',
+          partyIds: distId ? [updated.id] : [],
+          singleParty: true, partyId: updated.id})});
       const idx=allParties.findIndex(x=>x.id===updated.id);
-      if(idx>=0) allParties[idx]={...allParties[idx],...updated};
+      if(idx>=0){ allParties[idx]={...allParties[idx],...updated}; allParties[idx].distAlloc=distId; }
       toast('✅ Party updated','ok');
       closePartyEdit();
       renderParties();
