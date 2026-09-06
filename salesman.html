@@ -749,7 +749,7 @@ function clearSession(){
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz70y3yn3VHlpV1yFrLP0l5L3CduXtDoU0tl_TbBhzCnXQZlIrNoEm4DHgZkmbVIabg/exec';
 
 // ── Dynamic ID from URL: salesman.html?sm=SM001 ─────────────────────
-const _urlSID = (new URLSearchParams(window.location.search).get('sm')||'').toUpperCase();
+const _urlSID = (new URLSearchParams(window.location.search).get('sm')||'').toUpperCase().trim();
 let SID   = _urlSID || '';
 let SNAME = SID;
 let DIST_ID = 'D001';
@@ -1395,18 +1395,28 @@ function shareFromModal(){
 }
 
 // ═══ HISTORY ══════════════════════════════════════════════════════════
-function renderHistory(){
-  // Merge server orders + local orders, server takes priority
-  const serverOrders=(lastDashData&&lastDashData.allOrders)?lastDashData.allOrders:[];
-  const localOrders=getOrders();
-  const map={};
-  serverOrders.forEach(o=>map[o.oid]=o);
-  localOrders.forEach(o=>{if(!map[o.oid])map[o.oid]=o;});
-  const orders=Object.values(map).sort((a,b)=>b.oid>a.oid?1:-1);
-  
-  const c=document.getElementById('histList');
-  if(!orders.length){c.innerHTML='<div class="empty">No orders yet.<br>Submit your first order!</div>';return;}
-  c.innerHTML=orders.map(o=>{
+async function renderHistory(){
+  const el=document.getElementById('histList');
+  el.innerHTML='<div class="empty">Loading…</div>';
+  try{
+    const r=await fetch(`${SCRIPT_URL}?action=orders&smId=${SID}&t=${Date.now()}`);
+    const data=await r.json();
+    const serverOrders=(data.ok&&data.orders)?data.orders:[];
+    const map={};
+    serverOrders.forEach(o=>map[o.oid]=o);
+    getOrders().forEach(o=>{if(!map[o.oid])map[o.oid]=o;}); // unsynced local
+    const orders=Object.values(map).sort((a,b)=>b.oid>a.oid?1:-1);
+    renderHistoryList(el, orders);
+  }catch(e){
+    const orders=getOrders().sort((a,b)=>b.oid>a.oid?1:-1);
+    if(orders.length) el.innerHTML='<div style="font-size:11px;color:var(--ylw);padding:8px;text-align:center">⚠️ Offline — showing cached orders</div>';
+    renderHistoryList(el, orders, true);
+  }
+}
+
+function renderHistoryList(el, orders, offline){
+  if(!orders.length){el.innerHTML='<div class="empty">No orders yet.<br>Submit your first order!</div>';return;}
+  const rows=orders.map(o=>{
     const dateStr=normDate(o.date||o.at);
     const d=dateStr?new Date(dateStr).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'-';
     const isCancelled=o.status==='Cancelled';
@@ -1416,14 +1426,17 @@ function renderHistory(){
       <div class="hh"><span class="hoid">${o.oid}</span><span class="hd">${d}</span></div>
       <div class="hb">${o.bname}</div>
       <div class="hm">
-        <span>${items.length} item${items.length>1?'s':''}</span>
+        <span>${items.length} item${items.length!==1?'s':''}</span>
         <span style="color:${isCancelled?'var(--red)':'var(--a2)'};font-family:var(--m)">₹${(o.gt||0).toLocaleString('en-IN')}</span>
-        <span class="sb ${o.status==='Dispatched'?'sd':isCancelled?'sc':'sp'}">${o.status}</span>
+        <span class="sb ${o.status==='Dispatched'?'sd':isCancelled?'sc':'sp'}">${o.status||'Pending'}</span>
         ${syncBadge}
       </div>
     </div>`;
-  }).join('');
+  });
+  if(offline) el.innerHTML=(el.innerHTML||'')+rows.join('');
+  else el.innerHTML=rows.join('');
 }
+
 
 function openModal(oid){
   // Check server orders FIRST, then localStorage
