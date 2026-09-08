@@ -356,7 +356,7 @@ textarea{resize:none;line-height:1.5;min-height:58px}
               Target: <span id="todaySalesTgt" style="color:var(--txt)">—</span>
             </div>
           </div>
-          <div style="width:64px;height:64px;flex-shrink:0">
+          <div style="width:80px;height:80px;flex-shrink:0">
             <canvas id="todaySalesChart"></canvas>
           </div>
         </div>
@@ -373,7 +373,7 @@ textarea{resize:none;line-height:1.5;min-height:58px}
               Target: <span id="todayShopsTgt" style="color:var(--txt)">—</span>
             </div>
           </div>
-          <div style="width:64px;height:64px;flex-shrink:0">
+          <div style="width:80px;height:80px;flex-shrink:0">
             <canvas id="todayShopsChart"></canvas>
           </div>
         </div>
@@ -395,7 +395,7 @@ textarea{resize:none;line-height:1.5;min-height:58px}
             <div class="pamt" id="mtdAmt">₹0</div>
             <div class="ptgt">of <span id="mtdTgt">₹50,000</span></div>
           </div>
-          <div style="width:56px;height:56px;flex-shrink:0;margin-left:8px">
+          <div style="width:70px;height:70px;flex-shrink:0;margin-left:8px">
             <canvas id="mtdSalesChart"></canvas>
           </div>
         </div>
@@ -413,7 +413,7 @@ textarea{resize:none;line-height:1.5;min-height:58px}
             <div class="pamt" id="ytdAmt">₹0</div>
             <div class="ptgt">of <span id="ytdTgt">₹600K</span></div>
           </div>
-          <div style="width:56px;height:56px;flex-shrink:0;margin-left:8px">
+          <div style="width:70px;height:70px;flex-shrink:0;margin-left:8px">
             <canvas id="ytdSalesChart"></canvas>
           </div>
         </div>
@@ -1082,57 +1082,65 @@ async function initApp(){
 // ═══ MINI PIE CHARTS ═══════════════════════════════════════════════
 const _miniPieCharts = {};
 
+// Chart.js plugin to draw % text in center of donut
+const centerTextPlugin = {
+  id: 'centerText',
+  afterDraw(chart) {
+    if(!chart.config.options.plugins.centerText) return;
+    const {ctx, chartArea} = chart;
+    const {text, color} = chart.config.options.plugins.centerText;
+    const cx = (chartArea.left + chartArea.right) / 2;
+    const cy = (chartArea.top + chartArea.bottom) / 2;
+    ctx.save();
+    ctx.font = 'bold 11px Outfit,sans-serif';
+    ctx.fillStyle = color || '#f1f5f9';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, cx, cy);
+    ctx.restore();
+  }
+};
+if(window.Chart) Chart.register(centerTextPlugin);
+
 function renderMiniPie(canvasId, pct, color){
   const canvas = document.getElementById(canvasId);
   if(!canvas) return;
+  // Wait for Chart.js to be ready
+  if(!window.Chart){ setTimeout(()=>renderMiniPie(canvasId,pct,color),300); return; }
+  if(!Chart.registry.plugins.get('centerText')) Chart.register(centerTextPlugin);
+
   const remaining = Math.max(0, 100 - pct);
-  const data = {
-    datasets:[{
-      data: [pct, remaining],
-      backgroundColor: [color, 'rgba(255,255,255,.08)'],
-      borderWidth: 0,
-      cutout: '68%'
-    }]
-  };
-  const opts = {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: {
-      legend: {display:false},
-      tooltip: {enabled:false}
+  const cfg = {
+    type: 'doughnut',
+    data: {
+      datasets:[{
+        data: [pct, remaining],
+        backgroundColor: [color, 'rgba(255,255,255,.07)'],
+        borderWidth: 0,
+        cutout: '70%'
+      }]
     },
-    animation: {duration: 600}
-  };
-  if(_miniPieCharts[canvasId]){
-    _miniPieCharts[canvasId].data = data;
-    _miniPieCharts[canvasId].update();
-  } else {
-    _miniPieCharts[canvasId] = new Chart(canvas, {type:'doughnut', data, options:opts});
-  }
-  // Draw pct text in center
-  const ctx = canvas.getContext('2d');
-  const cx = canvas.width/2, cy = canvas.height/2;
-  ctx.save();
-  ctx.font = 'bold '+(canvas.width>60?'11':'9')+'px Outfit,sans-serif';
-  ctx.fillStyle = '#f1f5f9';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  // Text drawn after chart renders
-  setTimeout(()=>{
-    ctx.clearRect(0,0,0,0); // Chart.js handles canvas - just update
-    const ch = _miniPieCharts[canvasId];
-    if(ch){
-      const meta = ch.getDatasetMeta(0);
-      if(meta && meta.data[0]){
-        const {x,y} = meta.data[0];
-        ctx.font = 'bold '+(canvas.width>60?'11':'9')+'px Outfit,sans-serif';
-        ctx.fillStyle='#f1f5f9';
-        ctx.textAlign='center';
-        ctx.textBaseline='middle';
-        ctx.fillText(pct+'%', x, y);
-      }
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {display:false},
+        tooltip: {enabled:false},
+        centerText: {text: pct+'%', color:'#f1f5f9'}
+      },
+      animation: {duration:500}
     }
-  }, 650);
+  };
+
+  if(_miniPieCharts[canvasId]){
+    const ch = _miniPieCharts[canvasId];
+    ch.data.datasets[0].data = [pct, remaining];
+    ch.data.datasets[0].backgroundColor = [color, 'rgba(255,255,255,.07)'];
+    ch.options.plugins.centerText = {text:pct+'%', color:'#f1f5f9'};
+    ch.update();
+  } else {
+    _miniPieCharts[canvasId] = new Chart(canvas, cfg);
+  }
 }
 
 // ═══ TABS ═════════════════════════════════════════════════════════════
@@ -1183,60 +1191,58 @@ async function loadDashboard(){
     document.getElementById('ytdTgt').textContent=fi(ytdTgt);
     document.getElementById('ytdBar').style.width=Math.min(s.ytdPct,100)+'%';
     
-    // Dynamic targets from SM master
-    const shopsTarget = s.shopsTarget||0;
-    const partiesTarget = s.partiesTarget||0;
-    const monthlyTarget = s.target||50000;
-    const todayTarget = Math.round(monthlyTarget/26); // approx daily target
+    // ── All targets come from server getDashboard summary ──────────
+    const shopsTarget     = s.shopsTarget     || 0;
+    const partiesTarget   = s.partiesTarget   || 0;
+    const dailySalesTgt   = s.dailySalesTarget || 0;
+    const dailyShopsTgt   = s.dailyShopsTarget || 0;
 
-    // ── Today's Sales ───────────────────────────────────────────
-    const todaySalesVal = s.todaySales||0;
-    const todaySalesPct = todayTarget>0 ? Math.min(Math.round(todaySalesVal/todayTarget*100),100) : 0;
-    const el_todaySalesTgt = document.getElementById('todaySalesTgt');
-    const el_todaySalesPct = document.getElementById('todaySalesPct');
-    if(el_todaySalesTgt) el_todaySalesTgt.textContent = todayTarget>0 ? fi(todayTarget) : 'No target set';
-    if(el_todaySalesPct) el_todaySalesPct.textContent = todayTarget>0 ? todaySalesPct+'% of daily target' : fi(todaySalesVal)+' sold today';
+    // ── Today's Sales ────────────────────────────────────────────
+    const todaySalesVal = s.todaySales || 0;
+    const todaySalesPct = dailySalesTgt > 0 ? Math.min(Math.round(todaySalesVal/dailySalesTgt*100),100) : 0;
+    const el_tst = document.getElementById('todaySalesTgt');
+    const el_tsp = document.getElementById('todaySalesPct');
+    if(el_tst) el_tst.textContent = dailySalesTgt > 0 ? fi(dailySalesTgt) : 'No target set';
+    if(el_tsp) el_tsp.textContent = dailySalesTgt > 0 ? todaySalesPct+'% of daily target' : fi(todaySalesVal)+' sold today';
     renderMiniPie('todaySalesChart', todaySalesPct, '#3b82f6');
 
-    // ── Today's Shops ────────────────────────────────────────────
-    const todayShopsVal = s.todayShops||0;
-    const dailyShopsTarget = shopsTarget>0 ? Math.max(1,Math.round(shopsTarget/26)) : 0;
-    const todayShopsPct = dailyShopsTarget>0 ? Math.min(Math.round(todayShopsVal/dailyShopsTarget*100),100) : 0;
-    const el_todayShopsTgt = document.getElementById('todayShopsTgt');
-    const el_todayShopsPct = document.getElementById('todayShopsPct');
-    if(el_todayShopsTgt) el_todayShopsTgt.textContent = dailyShopsTarget>0 ? dailyShopsTarget+' shops/day' : 'No target set';
-    if(el_todayShopsPct) el_todayShopsPct.textContent = dailyShopsTarget>0 ? todayShopsPct+'% of daily target' : todayShopsVal+' shops today';
+    // ── Today's Shops ─────────────────────────────────────────────
+    const todayShopsVal = s.todayShops || 0;
+    const todayShopsPct = dailyShopsTgt > 0 ? Math.min(Math.round(todayShopsVal/dailyShopsTgt*100),100) : 0;
+    const el_tss = document.getElementById('todayShopsTgt');
+    const el_tsp2 = document.getElementById('todayShopsPct');
+    if(el_tss) el_tss.textContent = dailyShopsTgt > 0 ? dailyShopsTgt+' shops/day' : (shopsTarget>0 ? shopsTarget+'/month' : 'No target set');
+    if(el_tsp2) el_tsp2.textContent = dailyShopsTgt > 0 ? todayShopsPct+'% of daily target' : todayShopsVal+' shops today';
     renderMiniPie('todayShopsChart', todayShopsPct, '#22c55e');
 
-    // ── MTD Sales ────────────────────────────────────────────────
-    const mtdPct = s.mtdPct||0;
-    renderMiniPie('mtdSalesChart', Math.min(mtdPct,100), '#3b82f6');
+    // ── MTD Sales ─────────────────────────────────────────────────
+    renderMiniPie('mtdSalesChart', Math.min(s.mtdPct||0,100), '#3b82f6');
 
-    // ── YTD Sales ────────────────────────────────────────────────
-    const ytdPct = s.ytdPct||0;
-    renderMiniPie('ytdSalesChart', Math.min(ytdPct,100), '#22c55e');
+    // ── YTD Sales ─────────────────────────────────────────────────
+    renderMiniPie('ytdSalesChart', Math.min(s.ytdPct||0,100), '#22c55e');
 
-    // ── MTD Shops ────────────────────────────────────────────────
-    const mtdShopsVal = s.mtdShops||0;
+    // ── MTD Shops ─────────────────────────────────────────────────
+    const mtdShopsVal = s.mtdShops || 0;
     const shopsPct = shopsTarget>0 ? Math.min(Math.round(mtdShopsVal/shopsTarget*100),100) : 0;
     const el_shopTgt = document.getElementById('shopTgt');
     if(el_shopTgt) el_shopTgt.textContent = shopsTarget>0 ? shopsTarget+' shops' : 'No target';
     const shopGapVal = shopsTarget>0 ? shopsTarget-mtdShopsVal : 0;
-    document.getElementById('mtdShops').textContent=mtdShopsVal;
+    document.getElementById('mtdShops').textContent = mtdShopsVal;
     document.getElementById('shopGap').textContent = shopsTarget>0
       ? (shopGapVal>0 ? shopGapVal+' more to reach '+shopsTarget : '✓ Target met!')
       : mtdShopsVal+' shops this month';
     renderMiniPie('mtdShopsChart', shopsPct, '#f59e0b');
 
-    // ── New Parties ──────────────────────────────────────────────
-    document.getElementById('newParties').textContent=s.newParties||0;
-    const partiesEl=document.getElementById('partiesGap');
+    // ── New Parties ───────────────────────────────────────────────
+    document.getElementById('newParties').textContent = s.newParties||0;
+    const partiesEl = document.getElementById('partiesGap');
     if(partiesEl){
       if(partiesTarget>0){
-        const pGap=partiesTarget-(s.newParties||0);
-        partiesEl.textContent=pGap>0?pGap+' more to reach '+partiesTarget+' target':'✓ Target met!';
+        const pGap = partiesTarget-(s.newParties||0);
+        partiesEl.textContent = pGap>0 ? pGap+' more to reach '+partiesTarget+' target' : '✓ Target met!';
       } else { partiesEl.textContent=''; }
     }
+
     
     // Fetch all orders FIRST — needed for YTD chart AND KPI modals
     try{

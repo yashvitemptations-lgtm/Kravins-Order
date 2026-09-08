@@ -611,7 +611,13 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
         </div>
         <div class="mcard-title" style="margin-top:12px">🎯 Additional Targets</div>
         <div class="g2">
-          <div class="fld"><label>Shops Target (per month)</label><input class="finp" id="smf-shops-target" type="number" placeholder="e.g. 50" min="0"></div>
+          <div class="fld"><label>Monthly Shops Target</label><input class="finp" id="smf-shops-target" type="number" placeholder="e.g. 150" min="0"></div>
+          <div class="fld"><label>Daily Shops Target <span style="font-size:10px;color:var(--mut);font-weight:400">(or leave blank — auto = monthly÷26)</span></label>
+            <input class="finp" id="smf-daily-shops-target" type="number" placeholder="e.g. 6" min="0"></div>
+        </div>
+        <div class="g2">
+          <div class="fld"><label>Daily Sales Target (₹) <span style="font-size:10px;color:var(--mut);font-weight:400">(or leave blank — auto = monthly÷26)</span></label>
+            <input class="finp" id="smf-daily-target" type="number" placeholder="e.g. 10000" min="0"></div>
           <div class="fld"><label>New Parties Target (per month)</label><input class="finp" id="smf-parties-target" type="number" placeholder="e.g. 5" min="0"></div>
         </div>
         <div class="fld"><label>Product Mix Targets <span style="font-size:10px;color:var(--mut);font-weight:400">(target value ₹ per product per month — leave blank to skip)</span></label></div>
@@ -2124,6 +2130,12 @@ function editSmRec(){
     sv('smf-doc-pan',sm.docPan); sv('smf-doc-id',sm.docId); sv('smf-doc-addr',sm.docAddress);
     sv('smf-doc-bank',sm.docBank); sv('smf-doc-photo',sm.docPhoto);
     sv('smf-commpct',sm.commPct); sv('smf-paycycle',sm.payCycle||'Monthly'); sv('smf-notes',sm.notes);
+    sv('smf-pin',sm.pin||'');
+    sv('smf-shops-target',sm.shopsTarget||'');
+    sv('smf-daily-shops-target',sm.dailyShopsTarget||'');
+    sv('smf-daily-target',sm.dailyTarget||'');
+    sv('smf-parties-target',sm.partiesTarget||'');
+    populateProdMixTargets(sm.prodMixTargets||{});
     document.getElementById('smf-comm').value=sm.commEnabled!==false?'Yes':'No';
   },100);
 }
@@ -2161,6 +2173,8 @@ async function saveSalesmanMaster(){
     notes:document.getElementById('smf-notes').value.trim(),
     pin:(document.getElementById('smf-pin')||{value:''}).value.trim(),
     shopsTarget:parseInt(document.getElementById('smf-shops-target')?.value)||0,
+    dailyShopsTarget:parseInt(document.getElementById('smf-daily-shops-target')?.value)||0,
+    dailyTarget:parseInt(document.getElementById('smf-daily-target')?.value)||0,
     partiesTarget:parseInt(document.getElementById('smf-parties-target')?.value)||0,
     prodMixTargets:(()=>{
       const targets={};
