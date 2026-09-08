@@ -427,9 +427,19 @@ textarea{resize:none;line-height:1.5;min-height:58px}
     <div class="card">
       <div class="fld">
         <label>Select Party</label>
-        <select id="bsel" onchange="onBuyer()">
-          <option value="">— Choose a party —</option>
-        </select>
+        <!-- Searchable party picker -->
+        <input type="text" id="partySearch" placeholder="🔍 Type party name..."
+          autocomplete="off" autocorrect="off" spellcheck="false"
+          style="width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;
+          padding:11px 14px;font-family:var(--f);font-size:14px;color:var(--txt);outline:none;margin-bottom:4px"
+          oninput="filterPartyList(this.value)"
+          onfocus="showPartyList()"
+          ontouchstart="showPartyList()"
+          onkeydown="if(event.key==='Enter'){const f=document.querySelector('#partyPickList [data-id]');if(f)f.click();}if(event.key==='Escape')hidePartyList()">
+        <div id="partyPickList" style="display:none;background:var(--s1);border:1.5px solid var(--bdr);
+          border-radius:9px;max-height:260px;overflow-y:auto;margin-bottom:4px;
+          box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
+        <input type="hidden" id="bsel">
       </div>
       <div class="bbox" id="bbox">
         <!-- Shop photo - shown when available -->
@@ -1043,13 +1053,28 @@ async function loadDashboard(){
     document.getElementById('ytdTgt').textContent=fi(ytdTgt);
     document.getElementById('ytdBar').style.width=Math.min(s.ytdPct,100)+'%';
     
-    // Shops
+    // Shops — use dynamic target from SM master
     document.getElementById('mtdShops').textContent=s.mtdShops||0;
-    const shopGap=15-(s.mtdShops||0);
-    document.getElementById('shopGap').textContent=shopGap>0?`${shopGap} more needed`:'✓ Target met';
-    
-    // New Parties
+    const shopsTarget=s.shopsTarget||0;
+    const shopGap=shopsTarget-(s.mtdShops||0);
+    if(shopsTarget>0){
+      document.getElementById('shopGap').textContent=shopGap>0?`${shopGap} more to reach ${shopsTarget} target`:'✓ Target met';
+    } else {
+      document.getElementById('shopGap').textContent=(s.mtdShops||0)+' shops this month';
+    }
+
+    // New Parties — use dynamic target from SM master
     document.getElementById('newParties').textContent=s.newParties||0;
+    const partiesTarget=s.partiesTarget||0;
+    const partiesEl=document.getElementById('partiesGap');
+    if(partiesEl){
+      if(partiesTarget>0){
+        const pGap=partiesTarget-(s.newParties||0);
+        partiesEl.textContent=pGap>0?`${pGap} more to reach ${partiesTarget} target`:'✓ Target met';
+      } else {
+        partiesEl.textContent='';
+      }
+    }
     
     // Fetch all orders FIRST — needed for YTD chart AND KPI modals
     try{
@@ -1167,22 +1192,100 @@ async function loadBuyers(){
 }
 
 function fillBuyerSel(){
-  const sel=document.getElementById('bsel'),cur=sel.value;
-  sel.innerHTML='<option value="">— Choose a party —</option>';
-  getBuyers().forEach(b=>{
-    const o=document.createElement('option');
-    const status=b.status||'Active';
-    const isBlocked=(b.active===false||status==='Inactive'||status==='On Hold');
-    o.value=b.id;
-    o.textContent=isBlocked?`${b.id} · ${b.name} [${status}]`:`${b.id} · ${b.name}`;
-    if(isBlocked){o.disabled=true;o.style.color='#64748b';}
-    sel.appendChild(o);
-  });
-  if(cur)sel.value=cur;
+  // Populate hidden list — used by searchable picker
+  // Nothing to render until user types or taps
 }
 
-function onBuyer(){
-  const id=document.getElementById('bsel').value;
+// ── Searchable Party Picker ────────────────────────────────────────────
+function showPartyList(){
+  filterPartyList(document.getElementById('partySearch').value||'');
+}
+function hidePartyList(){
+  const el=document.getElementById('partyPickList');
+  if(el) setTimeout(()=>el.style.display='none', 150);
+}
+function filterPartyList(q){
+  const el=document.getElementById('partyPickList');
+  if(!el) return;
+  const buyers=getBuyers();
+  const filtered=q.trim()
+    ? buyers.filter(b=>b.name.toLowerCase().includes(q.toLowerCase())||
+        (b.id||'').toLowerCase().includes(q.toLowerCase())||
+        (b.phone||'').includes(q))
+    : buyers;
+  if(!filtered.length){
+    el.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--mut)">No parties found</div>';
+    el.style.display='block';return;
+  }
+  el.innerHTML=filtered.slice(0,30).map(b=>{
+    const st=b.status||'Active';
+    const blocked=b.active===false||st==='Inactive'||st==='On Hold';
+    return `<div onclick="${blocked?'':"selectParty('"+b.id+"')"}"
+      style="padding:11px 14px;border-bottom:1px solid var(--bdr);cursor:${blocked?'default':'pointer'};
+      opacity:${blocked?'.5':'1'}"
+      onmousedown="event.preventDefault()">
+      <div style="font-size:13px;font-weight:600">${b.name}
+        ${blocked?`<span style="font-size:9px;color:var(--red);margin-left:4px">${st}</span>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--mut);margin-top:2px">${b.id}${b.phone?' · '+b.phone:''}${b.route?' · '+b.route:''}</div>
+    </div>`;
+  }).join('');
+  el.style.display='block';
+}
+function selectParty(id){
+  const b=getBuyers().find(x=>x.id===id);
+  if(!b) return;
+  document.getElementById('partySearch').value=b.name;
+  document.getElementById('bsel').value=id;
+  document.getElementById('partyPickList').style.display='none';
+  onBuyer(id);
+}
+
+// ── Searchable Product Picker ──────────────────────────────────────────
+function showProdList(lineId){
+  filterProdList(lineId, document.getElementById('ps-'+lineId)?.value||'');
+}
+function hideProdList(lineId){
+  const el=document.getElementById('pl-'+lineId);
+  if(el) setTimeout(()=>el.style.display='none', 150);
+}
+function filterProdList(lineId, q){
+  const el=document.getElementById('pl-'+lineId);
+  if(!el) return;
+  const prods=window.PRODS||[];
+  const filtered=q.trim()
+    ? prods.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||
+        p.code.toLowerCase().includes(q.toLowerCase()))
+    : prods;
+  if(!filtered.length){
+    el.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--mut)">No products found</div>';
+    el.style.display='block';return;
+  }
+  el.innerHTML=filtered.map(p=>`
+    <div onclick="selectProd(${lineId},'${p.code}')"
+      style="padding:10px 14px;border-bottom:1px solid var(--bdr);cursor:pointer"
+      onmousedown="event.preventDefault()">
+      <div style="font-size:12px;font-weight:600">${p.name}</div>
+      <div style="font-size:11px;color:var(--mut);margin-top:1px">${p.code} · ₹${Number(p.price||0).toLocaleString('en-IN')}</div>
+    </div>`).join('');
+  el.style.display='block';
+}
+function selectProd(lineId, code){
+  const inp=document.getElementById('ps-'+lineId);
+  const hid=document.getElementById('pc-'+lineId);
+  const el=document.getElementById('pl-'+lineId);
+  const p=window.PRODS&&window.PRODS.find(x=>x.code===code);
+  if(!p) return;
+  if(inp) inp.value=p.name;
+  if(hid) hid.value=code;
+  if(el)  el.style.display='none';
+  onPC(lineId, code);
+}
+
+
+
+function onBuyer(id){
+  if(!id) id=document.getElementById('bsel').value;
   const box=document.getElementById('bbox');
   if(!id){
     box.classList.remove('on');
@@ -1259,11 +1362,21 @@ function renderLines(){
     const d=document.createElement('div');
     d.className='pr'+(ln.code?' fi':'');
     d.innerHTML=`<div class="pt">
-      <div class="ps"><label style="font-size:9px;color:var(--mut);display:block;margin-bottom:3px;text-transform:uppercase">Product</label>
-        <select onchange="onPC(${ln.id},this.value)" style="font-size:12px;padding:9px 28px 9px 9px">
-          <option value="">— Select —</option>
-          ${window.PRODS.map(p=>`<option value="${p.code}" ${p.code===ln.code?'selected':''}>${p.code} · ${p.name}</option>`).join('')}
-        </select>
+      <div class="ps" style="position:relative"><label style="font-size:9px;color:var(--mut);display:block;margin-bottom:3px;text-transform:uppercase">Product</label>
+        <input type="text" id="ps-${ln.id}"
+          placeholder="🔍 Search product..."
+          value="${ln.code?(window.PRODS.find(p=>p.code===ln.code)||{name:ln.code}).name:''}"
+          autocomplete="off" autocorrect="off" spellcheck="false"
+          style="width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;
+          padding:9px 12px;font-family:var(--f);font-size:12px;color:var(--txt);outline:none"
+          oninput="filterProdList(${ln.id},this.value)"
+          onfocus="showProdList(${ln.id})"
+          onkeydown="if(event.key==='Escape')hideProdList(${ln.id})">
+        <div id="pl-${ln.id}" style="display:none;position:absolute;left:0;right:0;
+          background:var(--s1);border:1.5px solid var(--bdr);border-radius:9px;
+          max-height:220px;overflow-y:auto;z-index:100;margin-top:2px;
+          box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
+        <input type="hidden" id="pc-${ln.id}" value="${ln.code||''}">
       </div>
       <div class="pq"><label style="font-size:9px;color:var(--mut);display:block;margin-bottom:3px;text-transform:uppercase">Qty</label>
         <input type="number" min="1" value="${ln.qty||''}" placeholder="0"
@@ -1283,6 +1396,8 @@ function calcSum(){
   if(!fl.length){sec.style.display='none';return;}
   sec.style.display='block';
   let gt=0,tc=0;
+  // Sync product codes from hidden inputs before calculating
+  lines.forEach(ln=>{ const h=document.getElementById('pc-'+ln.id); if(h&&h.value) ln.code=h.value; });
   document.getElementById('sumRows').innerHTML=fl.map(ln=>{
     const p=window.PRODS.find(x=>x.code===ln.code);if(!p)return '';
     const lt=p.price*ln.qty;gt+=lt;tc+=lt*p.comm;
@@ -1294,6 +1409,8 @@ function calcSum(){
 
 // ═══ SUBMIT ORDER ═════════════════════════════════════════════════════
 async function submitOrder(){
+  // Sync all product codes from hidden inputs
+  lines.forEach(ln=>{ const h=document.getElementById('pc-'+ln.id); if(h&&h.value) ln.code=h.value; });
   const bid=document.getElementById('bsel').value;
   if(!bid){toast('⚠️ Select a party first','er');return;}
   // Block order if party is on hold or inactive
@@ -1356,7 +1473,11 @@ async function submitOrder(){
 
 // ═══ CLEAR ════════════════════════════════════════════════════════════
 function clearForm(silent=false){
+  const _ps=document.getElementById('partySearch'); if(_ps) _ps.value='';
+  const _pl=document.getElementById('partyPickList'); if(_pl) _pl.style.display='none';
   document.getElementById('bsel').value='';
+  const ps=document.getElementById('partySearch'); if(ps) ps.value='';
+  const pl=document.getElementById('partyPickList'); if(pl) pl.style.display='none';
   document.getElementById('bbox').classList.remove('on');
   document.getElementById('onotes').value='';
   document.getElementById('odate').value=new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"})).toISOString().split('T')[0];

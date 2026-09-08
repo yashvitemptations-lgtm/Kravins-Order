@@ -607,7 +607,18 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
         </div>
         <div class="g2">
           <div class="fld"><label>Territory</label><input class="finp" id="smf-terr" placeholder="North"></div>
-          <div class="fld"><label>Monthly Target (₹)</label><input class="finp" id="smf-target" type="number" value="50000"></div>
+          <div class="fld"><label>Monthly Sales Target (₹)</label><input class="finp" id="smf-target" type="number" value="50000"></div>
+        </div>
+        <div class="mcard-title" style="margin-top:12px">🎯 Additional Targets</div>
+        <div class="g2">
+          <div class="fld"><label>Shops Target (per month)</label><input class="finp" id="smf-shops-target" type="number" placeholder="e.g. 50" min="0"></div>
+          <div class="fld"><label>New Parties Target (per month)</label><input class="finp" id="smf-parties-target" type="number" placeholder="e.g. 5" min="0"></div>
+        </div>
+        <div class="fld"><label>Product Mix Targets <span style="font-size:10px;color:var(--mut);font-weight:400">(target value ₹ per product per month — leave blank to skip)</span></label></div>
+        <div id="smf-prodmix-targets" style="display:grid;gap:6px;margin-top:4px">
+          <!-- Filled dynamically from product list -->
+        </div>
+        <div class="g2" style="display:none">
         </div>
         <div class="fld"><label>Assign Distributor *</label>
           <select class="finp" id="smf-dist"><option value="">— Select —</option></select>
@@ -1231,7 +1242,7 @@ function goTab(tab){
   if(tab==='distributors') renderAllDistributors();
   if(tab==='orders') renderOrders();
   if(tab==='parties'){ renderParties(); loadEditRequests(); }
-  if(tab==='smmaster'){ populateDistDropdown(); renderSmMaster(); }
+  if(tab==='smmaster'){ populateDistDropdown(); renderSmMaster(); populateProdMixTargets(); }
   if(tab==='distmaster') renderDistMaster();
   if(tab==='products') renderProductsMaster();
   if(tab==='access') renderAccessControl();
@@ -2148,7 +2159,18 @@ async function saveSalesmanMaster(){
     docBank:document.getElementById('smf-doc-bank').value.trim(),
     docPhoto:document.getElementById('smf-doc-photo').value.trim(),
     notes:document.getElementById('smf-notes').value.trim(),
-    pin:(document.getElementById('smf-pin')||{value:''}).value.trim()
+    pin:(document.getElementById('smf-pin')||{value:''}).value.trim(),
+    shopsTarget:parseInt(document.getElementById('smf-shops-target')?.value)||0,
+    partiesTarget:parseInt(document.getElementById('smf-parties-target')?.value)||0,
+    prodMixTargets:(()=>{
+      const targets={};
+      document.querySelectorAll('[id^="smf-pmt-"]').forEach(el=>{
+        const code=el.id.replace('smf-pmt-','');
+        const val=parseFloat(el.value)||0;
+        if(val>0) targets[code]=val;
+      });
+      return targets;
+    })()
   }};
   try{
     toast('💾 Saving…','in');
@@ -3575,6 +3597,32 @@ function adminLogout(){
   document.getElementById('adminLoginBtn').textContent='Login →';
   document.getElementById('adminLogin').style.display='flex';
   setTimeout(()=>document.getElementById('adminPinInput').focus(),100);
+}
+
+
+// ═══ PRODUCT MIX TARGETS ══════════════════════════════════════════════
+function populateProdMixTargets(existing){
+  existing = existing || {};
+  const container = document.getElementById('smf-prodmix-targets');
+  if(!container) return;
+  const prods = allProducts || [];
+  if(!prods.length){
+    container.innerHTML='<div style="font-size:11px;color:var(--mut)">Load Products tab first to set product targets</div>';
+    return;
+  }
+  container.innerHTML = prods.filter(p=>p.active!==false).map(p=>`
+    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
+      <div style="font-size:12px;color:var(--txt)">${p.name}
+        <span style="font-size:10px;color:var(--mut);font-family:var(--m)">${p.code}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <span style="font-size:12px;color:var(--mut)">₹</span>
+        <input type="number" id="smf-pmt-${p.code}" placeholder="0" min="0"
+          value="${existing[p.code]||''}"
+          style="width:90px;background:var(--s2);border:1.5px solid var(--bdr);border-radius:7px;
+          padding:6px 8px;font-family:var(--f);font-size:12px;color:var(--txt);outline:none;text-align:right">
+      </div>
+    </div>`).join('');
 }
 
 </script>
