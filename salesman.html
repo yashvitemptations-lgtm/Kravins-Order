@@ -578,10 +578,34 @@ textarea{resize:none;line-height:1.5;min-height:58px}
     </button>
   </div>
 
-  <!-- Today's visit summary -->
+  <!-- Today's visit summary + reports -->
   <div class="sec" style="margin-top:4px">
-    <div class="sl">Today's Visits</div>
-    <div id="visitTodayList"><div class="empty">No visits logged today</div></div>
+    <!-- Sub-tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button onclick="visitSmTab('log')" id="vsm-log"
+        style="flex:1;padding:9px;background:var(--acc);border:none;border-radius:8px;
+        font-family:var(--f);font-size:12px;font-weight:700;color:#fff;cursor:pointer">📋 Today's Log</button>
+      <button onclick="visitSmTab('report')" id="vsm-report"
+        style="flex:1;padding:9px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
+        font-family:var(--f);font-size:12px;font-weight:700;color:var(--mut);cursor:pointer">📊 Reports</button>
+    </div>
+    <!-- LOG pane -->
+    <div id="vsp-log">
+      <div class="sl">Today's Visits</div>
+      <div id="visitTodayList"><div class="empty">No visits logged today</div></div>
+    </div>
+    <!-- REPORTS pane -->
+    <div id="vsp-report" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button onclick="loadSmVisitReport('mtd')" id="vsr-mtd"
+          style="flex:1;padding:8px;background:var(--acc);border:none;border-radius:8px;
+          font-family:var(--f);font-size:11px;font-weight:700;color:#fff;cursor:pointer">MTD</button>
+        <button onclick="loadSmVisitReport('ytd')" id="vsr-ytd"
+          style="flex:1;padding:8px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
+          font-family:var(--f);font-size:11px;font-weight:700;color:var(--mut);cursor:pointer">YTD</button>
+      </div>
+      <div id="sm-visit-report"><div class="empty">Tap MTD or YTD</div></div>
+    </div>
   </div>
 </div>
 
@@ -599,7 +623,15 @@ textarea{resize:none;line-height:1.5;min-height:58px}
       padding:11px 14px;font-family:var(--f);font-size:16px;color:var(--txt);outline:none"
       oninput="filterVisitParty(this.value)">
   </div>
-  <div id="visitPartyList" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+  <!-- Add new party button at bottom of list -->
+  <div style="padding:12px;border-top:1px solid var(--bdr);flex-shrink:0;background:var(--s1)">
+    <button onclick="goAddPartyFromVisit()"
+      style="width:100%;padding:12px;background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.3);
+      border-radius:9px;font-family:var(--f);font-size:13px;font-weight:600;color:var(--a2);cursor:pointer">
+      ➕ Party not found? Add New Party
+    </button>
+  </div>
+  <div id="visitPartyList" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;order:-1"></div>
 </div>
 
 <!-- ════════════════ ORDER PAGE ════════════════ -->
@@ -1306,6 +1338,7 @@ async function loadDashboard(){
     const partiesTarget   = s.partiesTarget   || 0;
     const dailySalesTgt   = s.dailySalesTarget || 0;
     const dailyShopsTgt   = s.dailyShopsTarget || 0;
+    _smVisitTarget = s.visitTarget || 50;
 
     // ── Today's Sales ────────────────────────────────────────────
     const todaySalesVal = s.todaySales || 0;
@@ -2945,6 +2978,20 @@ function renderVisitTab(){
 function selectOutcome(outcome){
   visitOutcomeSelected = outcome;
   document.getElementById('visitOutcome').value = outcome;
+  // If Order Placed → redirect to Order tab, return to Visit after
+  if(outcome === 'Order Placed'){
+    const partyId = document.getElementById('visitPartyId').value;
+    if(partyId){
+      // Flag to return to visit tab after order submit
+      window._visitReturnAfterOrder = true;
+      window._visitPartyId = partyId;
+      // Pre-select party in order tab
+      pickParty(partyId);
+      go('order');
+      toast('✅ Party selected. Submit your order then return to Visit Log.','ok');
+      return;
+    }
+  }
   // Reset all buttons
   Object.keys(OUTCOME_IDS).forEach(o => {
     const btn = document.getElementById(OUTCOME_IDS[o]);
@@ -3086,6 +3133,141 @@ function selectVisitParty(id){
   const lbl = document.getElementById('visitPartyLabel');
   if(lbl&&b){ lbl.textContent=b.name; lbl.style.color='var(--txt)'; }
   closeVisitPartyModal();
+}
+
+
+// ═══ VISIT LOG — EXTRA FUNCTIONS ════════════════════════════════════
+
+// Visit sub-tab switcher (salesman side)
+function visitSmTab(tab){
+  document.getElementById('vsp-log').style.display    = tab==='log'    ? '' : 'none';
+  document.getElementById('vsp-report').style.display = tab==='report' ? '' : 'none';
+  document.getElementById('vsm-log').style.background    = tab==='log'    ? 'var(--acc)' : 'var(--s2)';
+  document.getElementById('vsm-log').style.color          = tab==='log'    ? '#fff' : 'var(--mut)';
+  document.getElementById('vsm-report').style.background  = tab==='report' ? 'var(--acc)' : 'var(--s2)';
+  document.getElementById('vsm-report').style.color       = tab==='report' ? '#fff' : 'var(--mut)';
+  if(tab==='report') loadSmVisitReport('mtd');
+}
+
+// Go to Add Party tab from visit modal, then return to visit
+function goAddPartyFromVisit(){
+  closeVisitPartyModal();
+  window._returnToVisitAfterAdd = true;
+  go('newparty');
+  toast('➕ Add party details. After saving, you will return to Visit Log.','ok');
+}
+
+// After adding party — if flagged, go back to visit tab
+const _origAddParty = typeof addParty === 'function' ? addParty : null;
+
+// Hook into submitOrder to return to visit tab if flagged
+function checkVisitReturnAfterOrder(){
+  if(window._visitReturnAfterOrder){
+    window._visitReturnAfterOrder = false;
+    setTimeout(()=>{
+      go('visit');
+      // Re-select the party in visit tab
+      if(window._visitPartyId){
+        const b = getBuyers().find(x=>x.id===window._visitPartyId);
+        if(b){
+          document.getElementById('visitPartyId').value = b.id;
+          const lbl = document.getElementById('visitPartyLabel');
+          if(lbl){ lbl.textContent = b.name; lbl.style.color='var(--txt)'; }
+        }
+        // Pre-select "Order Placed" outcome
+        selectOutcome('Order Placed');
+        window._visitPartyId = null;
+      }
+      toast('✅ Order submitted! Complete your visit log below.','ok');
+    }, 500);
+  }
+}
+
+// MTD/YTD visit reports for salesman
+let _smVisitTarget = 50; // updated from dashboard
+async function loadSmVisitReport(period){
+  const btn_mtd = document.getElementById('vsr-mtd');
+  const btn_ytd = document.getElementById('vsr-ytd');
+  if(btn_mtd){ btn_mtd.style.background=period==='mtd'?'var(--acc)':'var(--s2)'; btn_mtd.style.color=period==='mtd'?'#fff':'var(--mut)'; }
+  if(btn_ytd){ btn_ytd.style.background=period==='ytd'?'var(--acc)':'var(--s2)'; btn_ytd.style.color=period==='ytd'?'#fff':'var(--mut)'; }
+
+  const body = document.getElementById('sm-visit-report');
+  body.innerHTML='<div class="empty">Loading...</div>';
+
+  const now = new Date();
+  const dateFrom = period==='mtd'
+    ? new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10)
+    : new Date(now.getFullYear(),0,1).toISOString().slice(0,10);
+  const dateTo = now.toISOString().slice(0,10);
+  const days = Math.max(1, Math.round((new Date(dateTo)-new Date(dateFrom))/(1000*60*60*24))+1);
+  const visitTarget = _smVisitTarget * days;
+
+  try{
+    const r = await fetch(`${SCRIPT_URL}?action=visits&smId=${SID}&dateFrom=${dateFrom}&dateTo=${dateTo}&t=${Date.now()}`);
+    const d = await r.json();
+    const visits = d.ok ? (d.visits||[]) : [];
+
+    const totalVisits  = visits.length;
+    const uniqueShops  = new Set(visits.map(v=>v.partyId)).size;
+    const orders       = visits.filter(v=>v.outcome==='Order Placed').length;
+    const conversion   = totalVisits>0 ? Math.round(orders/totalVisits*100) : 0;
+    const visitPct     = visitTarget>0 ? Math.min(Math.round(totalVisits/visitTarget*100),100) : 0;
+    const pctColor     = visitPct>=80?'var(--grn)':visitPct>=50?'var(--ylw)':'var(--red)';
+
+    body.innerHTML=`
+      <!-- Report 1: Shops Visited -->
+      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:12px;padding:14px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">
+          🏪 Shops Visited — ${period.toUpperCase()}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div style="text-align:center">
+            <div style="font-size:28px;font-weight:800;color:var(--a2)">${totalVisits}</div>
+            <div style="font-size:10px;color:var(--mut)">Total Visits</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:28px;font-weight:800;color:var(--pur)">${uniqueShops}</div>
+            <div style="font-size:10px;color:var(--mut)">Unique Shops</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut);margin-bottom:4px">
+          <span>Target: ${visitTarget} visits (${_smVisitTarget}/day × ${days} days)</span>
+          <span style="color:${pctColor};font-weight:700">${visitPct}%</span>
+        </div>
+        <div style="height:6px;background:var(--s2);border-radius:3px;overflow:hidden">
+          <div style="height:100%;background:${pctColor};width:${visitPct}%;border-radius:3px;transition:width .5s"></div>
+        </div>
+      </div>
+
+      <!-- Report 2: Orders from Visits -->
+      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:12px;padding:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">
+          📦 Orders from Visits — ${period.toUpperCase()}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div style="text-align:center">
+            <div style="font-size:26px;font-weight:800;color:var(--grn)">${orders}</div>
+            <div style="font-size:10px;color:var(--mut)">Orders</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:26px;font-weight:800;color:var(--txt)">${totalVisits-orders}</div>
+            <div style="font-size:10px;color:var(--mut)">No Order</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:26px;font-weight:800;color:${conversion>=50?'var(--grn)':conversion>=30?'var(--ylw)':'var(--red)'}">${conversion}%</div>
+            <div style="font-size:10px;color:var(--mut)">Conversion</div>
+          </div>
+        </div>
+        <!-- Outcome breakdown -->
+        ${Object.entries(visits.reduce((acc,v)=>{acc[v.outcome]=(acc[v.outcome]||0)+1;return acc;},{}))
+          .map(([o,n])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--bdr);font-size:11px;margin-top:8px">
+            <span style="color:var(--mut)">${o}</span>
+            <span style="font-weight:700">${n} <span style="color:var(--mut);font-weight:400">(${Math.round(n/totalVisits*100)}%)</span></span>
+          </div>`).join('')}
+      </div>`;
+  }catch(e){
+    body.innerHTML=`<div class="empty">Error loading report</div>`;
+  }
 }
 
 </script>

@@ -646,12 +646,16 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
         <div class="mcard-title" style="margin-top:12px">🎯 Additional Targets</div>
         <div class="g2">
           <div class="fld"><label>Monthly Shops Target</label><input class="finp" id="smf-shops-target" type="number" placeholder="e.g. 150" min="0"></div>
-          <div class="fld"><label>Daily Shops Target <span style="font-size:10px;color:var(--mut);font-weight:400">(or leave blank — auto = monthly÷26)</span></label>
+          <div class="fld"><label>Daily Shops Target <span style="font-size:10px;color:var(--mut);font-weight:400">(auto = monthly÷26 if blank)</span></label>
             <input class="finp" id="smf-daily-shops-target" type="number" placeholder="e.g. 6" min="0"></div>
         </div>
         <div class="g2">
-          <div class="fld"><label>Daily Sales Target (₹) <span style="font-size:10px;color:var(--mut);font-weight:400">(or leave blank — auto = monthly÷26)</span></label>
+          <div class="fld"><label>Daily Sales Target (₹) <span style="font-size:10px;color:var(--mut);font-weight:400">(auto = monthly÷26 if blank)</span></label>
             <input class="finp" id="smf-daily-target" type="number" placeholder="e.g. 10000" min="0"></div>
+          <div class="fld"><label>Daily Visit Target (shops/day)</label>
+            <input class="finp" id="smf-visit-target" type="number" placeholder="e.g. 50" min="0" value="50"></div>
+        </div>
+        <div class="g2">
           <div class="fld"><label>New Parties Target (per month)</label><input class="finp" id="smf-parties-target" type="number" placeholder="e.g. 5" min="0"></div>
         </div>
         <div class="fld"><label>Product Mix Targets <span style="font-size:10px;color:var(--mut);font-weight:400">(target value ₹ per product per month — leave blank to skip)</span></label></div>
@@ -1536,7 +1540,23 @@ function renderLeaderboard(mtdOrd){
 function renderAllSalesmen(){
   const today=getToday();
   const active=allOrders.filter(o=>o.status!=='Cancelled');
-  document.getElementById('allSmGrid').innerHTML=allSalesmen.map((sm,i)=>{
+  const q=(document.getElementById('sm-search')?.value||'').toLowerCase();
+  const stF=document.getElementById('sm-status-filter')?.value||'';
+  const filtered=allSalesmen.filter(sm=>{
+    const mq=!q||sm.name.toLowerCase().includes(q)||(sm.id||'').toLowerCase().includes(q);
+    const mst=!stF||(stF==='active'&&sm.active!==false)||(stF==='inactive'&&sm.active===false);
+    return mq&&mst;
+  });
+  // Update summary counts
+  const actCount=allSalesmen.filter(s=>s.active!==false).length;
+  const inactCount=allSalesmen.length-actCount;
+  const el_a=document.getElementById('sm-count-active');
+  const el_t=document.getElementById('sm-count-total');
+  const el_i=document.getElementById('sm-count-inactive');
+  if(el_a) el_a.textContent=actCount;
+  if(el_t) el_t.textContent=allSalesmen.length;
+  if(el_i) el_i.textContent=inactCount;
+  document.getElementById('allSmGrid').innerHTML=filtered.map((sm,i)=>{
     const smOrd=active.filter(o=>o.smId===sm.id);
     const todayS=smOrd.filter(o=>o.date===today).reduce((s,o)=>s+(o.gt||0),0);
     const mtdS=smOrd.filter(o=>isMTD(o.date)).reduce((s,o)=>s+(o.gt||0),0);
@@ -1553,12 +1573,15 @@ function renderAllSalesmen(){
           <div style="font-size:9px;font-family:var(--m);color:var(--a2)">${sm.id}</div>
         </div>
       </div>
-      <div style="font-size:9px;color:var(--mut);margin-bottom:6px">${sm.territory||''}${sm.distributor?' · '+sm.distributor:''}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="font-size:9px;color:var(--mut)">${sm.territory||''}${sm.distributor?' · '+sm.distributor:''}</span>
+        ${sm.active===false?'<span style="font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(239,68,68,.15);color:var(--red);font-weight:700">INACTIVE</span>':''}
+      </div>
       <div class="smstats">
         <div class="smst"><div class="smstv">${fi(todayS)}</div><div class="smstl">Today</div></div>
         <div class="smst"><div class="smstv">${fi(mtdS)}</div><div class="smstl">MTD</div></div>
         <div class="smst"><div class="smstv">${fi(ytdS)}</div><div class="smstl">YTD</div></div>
-        <div class="smst"><div class="smstv">${mtdShops}</div><div class="smstl">MTD Shops</div></div>
+        <div class="smst"><div class="smstv">${mtdShops}${sm.shopsTarget>0?'/'+(sm.shopsTarget):''}</div><div class="smstl">MTD Shops</div></div>
       </div>
       <div style="margin-top:8px">
         <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--mut);margin-bottom:3px">
@@ -1601,8 +1624,11 @@ function renderSmIndividual(smId){
   document.getElementById('is-mtdPct').className='ppct '+pctClass(mtdPct);
   document.getElementById('is-mtdBar').style.width=Math.min(mtdPct,100)+'%';
   document.getElementById('is-mtdShops').textContent=mtdShops;
-  const shopGap=15-mtdShops;
-  document.getElementById('is-shopGap').textContent=shopGap>0?shopGap+' more shops needed':'✓ Shop target met!';
+  const smShopsTarget=sm.shopsTarget||0;
+  const shopGap=smShopsTarget>0?smShopsTarget-mtdShops:0;
+  document.getElementById('is-shopGap').textContent=smShopsTarget>0
+    ?(shopGap>0?shopGap+' more to reach '+smShopsTarget+' target':'✓ Shop target met!')
+    :mtdShops+' shops this month';
   document.getElementById('is-shopGap').style.color=shopGap>0?'var(--ylw)':'var(--grn)';
   document.getElementById('is-mtdChartLbl').textContent=MONTHS[curM-1]+' '+curY;
 
@@ -2255,6 +2281,7 @@ function editSmRec(){
     }
     sv('smf-join',sm.joiningDate||'');
     sv('smf-shops-target',sm.shopsTarget||'');
+    sv('smf-visit-target',sm.visitTarget||50);
     sv('smf-daily-shops-target',sm.dailyShopsTarget||'');
     sv('smf-daily-target',sm.dailyTarget||'');
     sv('smf-parties-target',sm.partiesTarget||'');
@@ -2296,6 +2323,7 @@ async function saveSalesmanMaster(){
     notes:document.getElementById('smf-notes').value.trim(),
     pin:(document.getElementById('smf-pin')||{value:''}).value.trim(),
     joiningDate:(document.getElementById('smf-joining')||{value:''}).value||'',
+    visitTarget:parseInt(document.getElementById('smf-visit-target')?.value)||50,
     shopsTarget:parseInt(document.getElementById('smf-shops-target')?.value)||0,
     dailyShopsTarget:parseInt(document.getElementById('smf-daily-shops-target')?.value)||0,
     dailyTarget:parseInt(document.getElementById('smf-daily-target')?.value)||0,
