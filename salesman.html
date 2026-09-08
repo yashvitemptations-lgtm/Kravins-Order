@@ -336,6 +336,7 @@ textarea{resize:none;line-height:1.5;min-height:58px}
   <div class="tab" onclick="go('history')">📋 History</div>
   <div class="tab" onclick="go('parties')">🏪 Parties</div>
   <div class="tab" onclick="go('newparty')">➕ Add Party</div>
+  <div class="tab" onclick="go('visit')">📍 Visit</div>
 </div>
 
 <div class="scr">
@@ -491,6 +492,114 @@ textarea{resize:none;line-height:1.5;min-height:58px}
       <button class="abtn" onclick="go('newparty')">➕ Add Party</button>
     </div>
   </div>
+</div>
+
+<!-- ════════════════ VISIT LOG PAGE ════════════════ -->
+<div class="page" id="pg-visit">
+  <div class="sec" style="padding-top:13px">
+    <div class="sl">Log a Shop Visit</div>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:12px;line-height:1.6">
+      Select a party and record the outcome of your visit. GPS is captured automatically.
+    </p>
+
+    <!-- Party selector -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="fld">
+        <label>Select Party / Shop</label>
+        <div id="visitPartyBtn" onclick="openVisitPartyModal()"
+          style="width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;
+          padding:13px 16px;font-family:var(--f);font-size:14px;color:var(--mut);cursor:pointer;
+          display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">🔍</span>
+          <span id="visitPartyLabel">Search party...</span>
+        </div>
+        <input type="hidden" id="visitPartyId">
+      </div>
+    </div>
+
+    <!-- Outcome buttons -->
+    <div class="card" style="margin-bottom:10px">
+      <label style="font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:10px">Visit Outcome</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="outcomeGrid">
+        <button onclick="selectOutcome('Order Placed')" id="out-order"
+          style="padding:12px;border-radius:10px;border:2px solid var(--bdr);background:var(--s2);
+          font-family:var(--f);font-size:12px;font-weight:600;color:var(--txt);cursor:pointer;transition:all .15s">
+          ✅ Order Placed
+        </button>
+        <button onclick="selectOutcome('Visit Next Time')" id="out-next"
+          style="padding:12px;border-radius:10px;border:2px solid var(--bdr);background:var(--s2);
+          font-family:var(--f);font-size:12px;font-weight:600;color:var(--txt);cursor:pointer;transition:all .15s">
+          🔄 Visit Next Time
+        </button>
+        <button onclick="selectOutcome('Not Interested')" id="out-no"
+          style="padding:12px;border-radius:10px;border:2px solid var(--bdr);background:var(--s2);
+          font-family:var(--f);font-size:12px;font-weight:600;color:var(--txt);cursor:pointer;transition:all .15s">
+          ❌ Not Interested
+        </button>
+        <button onclick="selectOutcome('Other')" id="out-other"
+          style="padding:12px;border-radius:10px;border:2px solid var(--bdr);background:var(--s2);
+          font-family:var(--f);font-size:12px;font-weight:600;color:var(--txt);cursor:pointer;transition:all .15s">
+          📝 Other
+        </button>
+      </div>
+      <input type="hidden" id="visitOutcome">
+    </div>
+
+    <!-- Notes -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="fld">
+        <label>Notes (optional)</label>
+        <textarea id="visitNotes" placeholder="Any notes about this visit..."
+          style="width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;
+          padding:11px 14px;font-family:var(--f);font-size:13px;color:var(--txt);outline:none;
+          resize:none;min-height:72px"></textarea>
+      </div>
+    </div>
+
+    <!-- GPS status -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="visitGpsIco" style="font-size:22px">📍</div>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600" id="visitGpsLabel">GPS will auto-capture on save</div>
+          <div style="font-size:10px;color:var(--mut)" id="visitGpsDetail">Allow location permission when prompted</div>
+        </div>
+      </div>
+      <input type="hidden" id="visitLat">
+      <input type="hidden" id="visitLng">
+      <input type="hidden" id="visitAcc">
+    </div>
+
+    <button onclick="saveVisitLog()" id="visitSaveBtn"
+      style="width:100%;padding:15px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
+      border:none;border-radius:11px;font-family:var(--f);font-size:15px;font-weight:700;
+      color:#fff;cursor:pointer;box-shadow:0 4px 16px rgba(124,58,237,.3)">
+      📍 Log Visit
+    </button>
+  </div>
+
+  <!-- Today's visit summary -->
+  <div class="sec" style="margin-top:4px">
+    <div class="sl">Today's Visits</div>
+    <div id="visitTodayList"><div class="empty">No visits logged today</div></div>
+  </div>
+</div>
+
+<!-- VISIT PARTY MODAL -->
+<div id="visitPartyModal" style="display:none;position:fixed;inset:0;background:#050a14;
+  z-index:8001;flex-direction:column;font-family:var(--f)">
+  <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+    border-bottom:1px solid var(--bdr);background:var(--s1);flex-shrink:0">
+    <button onclick="closeVisitPartyModal()"
+      style="padding:8px 12px;background:var(--s2);border:1px solid var(--bdr);
+      border-radius:8px;font-family:var(--f);font-size:13px;color:var(--txt);cursor:pointer">✕</button>
+    <input type="text" id="visitPartySearch" placeholder="Search party..."
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+      style="flex:1;background:var(--s2);border:1.5px solid var(--a2);border-radius:9px;
+      padding:11px 14px;font-family:var(--f);font-size:16px;color:var(--txt);outline:none"
+      oninput="filterVisitParty(this.value)">
+  </div>
+  <div id="visitPartyList" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
 </div>
 
 <!-- ════════════════ ORDER PAGE ════════════════ -->
@@ -1146,13 +1255,14 @@ function renderMiniPie(canvasId, pct, color){
 // ═══ TABS ═════════════════════════════════════════════════════════════
 function go(tab){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',
-    ['dash','order','history','parties','newparty'][i]===tab));
+    ['dash','order','history','parties','newparty','visit'][i]===tab));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.getElementById('pg-'+tab).classList.add('on');
   document.getElementById('abar').classList.toggle('on', tab==='order');
   if(tab==='history') renderHistory();
   if(tab==='parties') renderParties();
   if(tab==='dash') loadDashboard();
+  if(tab==='visit') renderVisitTab();
   window.scrollTo({top:0});
 }
 
@@ -2810,6 +2920,174 @@ setInterval(()=>{
   const curPage=document.querySelector('.page.on').id;
   if(curPage==='pg-dash')loadDashboard();
 },30000);
+
+// ═══ VISIT LOG ════════════════════════════════════════════════════════
+let visitOutcomeSelected = '';
+let visitTodayLog = [];  // local cache of today's visits
+
+const OUTCOME_STYLES = {
+  'Order Placed':   {bg:'rgba(34,197,94,.15)',  border:'var(--grn)', color:'var(--grn)'},
+  'Visit Next Time':{bg:'rgba(59,130,246,.15)', border:'var(--a2)',  color:'var(--a2)'},
+  'Not Interested': {bg:'rgba(239,68,68,.15)',  border:'var(--red)', color:'var(--red)'},
+  'Other':          {bg:'rgba(168,85,247,.15)', border:'var(--pur)', color:'var(--pur)'},
+};
+const OUTCOME_IDS = {
+  'Order Placed':'out-order','Visit Next Time':'out-next',
+  'Not Interested':'out-no','Other':'out-other'
+};
+
+function renderVisitTab(){
+  renderVisitTodayList();
+  // Start GPS pre-capture
+  captureVisitGPS();
+}
+
+function selectOutcome(outcome){
+  visitOutcomeSelected = outcome;
+  document.getElementById('visitOutcome').value = outcome;
+  // Reset all buttons
+  Object.keys(OUTCOME_IDS).forEach(o => {
+    const btn = document.getElementById(OUTCOME_IDS[o]);
+    if(!btn) return;
+    btn.style.background = 'var(--s2)';
+    btn.style.borderColor = 'var(--bdr)';
+    btn.style.color = 'var(--txt)';
+  });
+  // Highlight selected
+  const sel = document.getElementById(OUTCOME_IDS[outcome]);
+  if(sel){
+    const st = OUTCOME_STYLES[outcome];
+    sel.style.background = st.bg;
+    sel.style.borderColor = st.border;
+    sel.style.color = st.color;
+  }
+}
+
+function captureVisitGPS(){
+  if(!navigator.geolocation) return;
+  document.getElementById('visitGpsLabel').textContent = '⏳ Getting location...';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      document.getElementById('visitLat').value = pos.coords.latitude.toFixed(6);
+      document.getElementById('visitLng').value = pos.coords.longitude.toFixed(6);
+      document.getElementById('visitAcc').value = Math.round(pos.coords.accuracy);
+      document.getElementById('visitGpsIco').textContent = '✅';
+      document.getElementById('visitGpsLabel').textContent = 'Location ready ±'+Math.round(pos.coords.accuracy)+'m';
+      document.getElementById('visitGpsDetail').textContent =
+        pos.coords.latitude.toFixed(4)+', '+pos.coords.longitude.toFixed(4);
+    },
+    err => {
+      document.getElementById('visitGpsLabel').textContent = '⚠️ Location unavailable';
+      document.getElementById('visitGpsDetail').textContent = 'Visit will be saved without GPS';
+    },
+    {enableHighAccuracy:true, timeout:15000, maximumAge:30000}
+  );
+}
+
+async function saveVisitLog(){
+  const partyId   = document.getElementById('visitPartyId').value;
+  const outcome   = document.getElementById('visitOutcome').value;
+  const notes     = document.getElementById('visitNotes').value.trim();
+  const lat       = document.getElementById('visitLat').value;
+  const lng       = document.getElementById('visitLng').value;
+  const acc       = document.getElementById('visitAcc').value;
+
+  if(!partyId){ toast('⚠️ Select a party first','er'); return; }
+  if(!outcome){ toast('⚠️ Select visit outcome','er'); return; }
+
+  const party = getBuyers().find(b=>b.id===partyId);
+  const btn   = document.getElementById('visitSaveBtn');
+  btn.disabled = true; btn.textContent = '⏳ Saving...';
+
+  const visit = {
+    smId:SID, smName:SNAME,
+    partyId, partyName:party?party.name:partyId,
+    outcome, notes, lat, lng, accuracy:acc
+  };
+
+  try{
+    const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'saveVisit', visit})});
+    const d = await r.json();
+    if(d.ok){
+      toast('✅ Visit logged — '+outcome,'ok');
+      // Add to today's local list
+      visitTodayLog.unshift({
+        ...visit,
+        time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})
+      });
+      // Reset form
+      document.getElementById('visitPartyId').value='';
+      document.getElementById('visitPartyLabel').textContent='Search party...';
+      document.getElementById('visitPartyLabel').style.color='var(--mut)';
+      document.getElementById('visitOutcome').value='';
+      document.getElementById('visitNotes').value='';
+      visitOutcomeSelected='';
+      Object.keys(OUTCOME_IDS).forEach(o=>{
+        const btn2=document.getElementById(OUTCOME_IDS[o]);
+        if(btn2){btn2.style.background='var(--s2)';btn2.style.borderColor='var(--bdr)';btn2.style.color='var(--txt)';}
+      });
+      renderVisitTodayList();
+      // Re-capture GPS for next visit
+      captureVisitGPS();
+    } else { toast('❌ '+(d.error||'Save failed'),'er'); }
+  }catch(e){ toast('❌ Network error','er'); }
+
+  btn.disabled=false; btn.textContent='📍 Log Visit';
+}
+
+function renderVisitTodayList(){
+  const el = document.getElementById('visitTodayList');
+  if(!el) return;
+  if(!visitTodayLog.length){
+    el.innerHTML='<div class="empty">No visits logged today</div>';
+    return;
+  }
+  const outcomeColors={'Order Placed':'var(--grn)','Visit Next Time':'var(--a2)','Not Interested':'var(--red)','Other':'var(--pur)'};
+  el.innerHTML = visitTodayLog.map(v=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;
+      background:var(--s1);border:1px solid var(--bdr);border-radius:10px;margin-bottom:8px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${v.partyName}</div>
+        <div style="font-size:11px;color:${outcomeColors[v.outcome]||'var(--mut)'};margin-top:2px;font-weight:600">${v.outcome}</div>
+        ${v.notes?`<div style="font-size:10px;color:var(--mut);margin-top:2px">${v.notes}</div>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--mut);flex-shrink:0">${v.time||''}</div>
+    </div>`).join('');
+}
+
+// Visit party picker modal
+function openVisitPartyModal(){
+  const modal = document.getElementById('visitPartyModal');
+  modal.style.display = 'flex';
+  filterVisitParty('');
+  setTimeout(()=>{ const inp=document.getElementById('visitPartySearch'); if(inp){inp.value='';inp.focus();} },150);
+}
+function closeVisitPartyModal(){
+  document.getElementById('visitPartyModal').style.display='none';
+}
+function filterVisitParty(q){
+  const buyers = getBuyers();
+  const filtered = q.trim()
+    ? buyers.filter(b=>b.name.toLowerCase().includes(q.toLowerCase())||(b.phone||'').includes(q))
+    : buyers;
+  const list = document.getElementById('visitPartyList');
+  if(!list) return;
+  list.innerHTML = filtered.map(b=>`
+    <div onclick="selectVisitParty('${b.id}')"
+      style="padding:14px 16px;border-bottom:1px solid var(--bdr);cursor:pointer">
+      <div style="font-size:14px;font-weight:600">${b.name}</div>
+      <div style="font-size:11px;color:var(--mut);margin-top:2px">${b.id} · ${b.phone||'—'} · ${b.route||''}</div>
+    </div>`).join('');
+}
+function selectVisitParty(id){
+  const b = getBuyers().find(x=>x.id===id);
+  document.getElementById('visitPartyId').value = id;
+  const lbl = document.getElementById('visitPartyLabel');
+  if(lbl&&b){ lbl.textContent=b.name; lbl.style.color='var(--txt)'; }
+  closeVisitPartyModal();
+}
+
 </script>
 </body>
 </html>

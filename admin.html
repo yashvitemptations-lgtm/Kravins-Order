@@ -283,6 +283,7 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
     <div class="tab"     onclick="goTab('distmaster')">🚚 Dist Master</div>
     <div class="tab"     onclick="goTab('products')">📦 Products</div>
     <div class="tab"     onclick="goTab('access')">🔐 Access</div>
+    <div class="tab"     onclick="goTab('visits')">📍 Visits</div>
     <div class="tab"     onclick="goTab('import')">📥 Import</div>
     <div class="tab"     onclick="goTab('allocate')">🗂️ Allocate</div>
   </div>
@@ -387,6 +388,31 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
 <div class="page" id="pg-salesmen">
   <div class="sec">
     <div class="sl">All Salesmen — Click to Drill Down</div>
+    <!-- Filter bar -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <input type="search" class="fi" placeholder="Search salesman..." id="sm-search"
+        oninput="renderAllSm()" style="flex:1;min-width:160px">
+      <select class="finp" id="sm-status-filter" onchange="renderAllSm()" style="width:140px">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+    <!-- Summary bar -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:20px;font-weight:800;color:var(--a2)" id="sm-count-active">0</div>
+        <div style="font-size:10px;color:var(--mut)">Active</div>
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:20px;font-weight:800;color:var(--grn)" id="sm-count-total">0</div>
+        <div style="font-size:10px;color:var(--mut)">Total</div>
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:20px;font-weight:800;color:var(--ylw)" id="sm-count-inactive">0</div>
+        <div style="font-size:10px;color:var(--mut)">Inactive</div>
+      </div>
+    </div>
     <div class="smgrid" id="allSmGrid"></div>
   </div>
 </div>
@@ -608,6 +634,14 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
         <div class="g2">
           <div class="fld"><label>Territory</label><input class="finp" id="smf-terr" placeholder="North"></div>
           <div class="fld"><label>Monthly Sales Target (₹)</label><input class="finp" id="smf-target" type="number" value="50000"></div>
+        </div>
+        <div class="g2">
+          <div class="fld"><label>Joining / Activation Date</label>
+            <input class="finp" id="smf-joining" type="date"></div>
+          <div class="fld"><label>Active Since</label>
+            <div id="smf-tenure" style="padding:10px 12px;background:var(--s2);border-radius:9px;
+              font-size:12px;color:var(--mut);border:1.5px solid var(--bdr)">—</div>
+          </div>
         </div>
         <div class="mcard-title" style="margin-top:12px">🎯 Additional Targets</div>
         <div class="g2">
@@ -1044,9 +1078,87 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
   </div>
 </div>
 
-</div><!-- /scr -->
 
-<div class="toast" id="toast"></div>
+<!-- ══ VISITS TAB ══ -->
+<div class="page" id="pg-visits">
+
+  <!-- Sub-tabs -->
+  <div class="stab-bar">
+    <div class="stab on" id="vt-log" onclick="visitSubTab('log')">📋 Daily Log</div>
+    <div class="stab" id="vt-map" onclick="visitSubTab('map')">🗺️ Route Map</div>
+    <div class="stab" id="vt-report" onclick="visitSubTab('report')">📊 Reports</div>
+  </div>
+
+  <!-- ── LOG PANE ── -->
+  <div id="vp-log">
+    <div class="sec">
+      <!-- Filters -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div class="fld"><label>Salesman</label>
+          <select class="finp" id="vf-sm" onchange="loadVisitLog()">
+            <option value="">All Salesmen</option>
+          </select>
+        </div>
+        <div class="fld"><label>Date</label>
+          <input class="finp" type="date" id="vf-date" onchange="loadVisitLog()">
+        </div>
+      </div>
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:var(--a2)" id="vs-total">0</div>
+          <div style="font-size:10px;color:var(--mut)">Total Visits</div>
+        </div>
+        <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:var(--grn)" id="vs-orders">0</div>
+          <div style="font-size:10px;color:var(--mut)">Orders Placed</div>
+        </div>
+        <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:var(--ylw)" id="vs-conv">0%</div>
+          <div style="font-size:10px;color:var(--mut)">Conversion</div>
+        </div>
+      </div>
+      <!-- Visit list — time visible to admin only -->
+      <div id="visit-log-list"><div class="empty">Select date and salesman to load visits</div></div>
+    </div>
+  </div>
+
+  <!-- ── MAP PANE ── -->
+  <div id="vp-map" style="display:none">
+    <div class="sec">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div class="fld"><label>Salesman</label>
+          <select class="finp" id="vf-map-sm" onchange="loadVisitMap()">
+            <option value="">Select Salesman</option>
+          </select>
+        </div>
+        <div class="fld"><label>Date</label>
+          <input class="finp" type="date" id="vf-map-date" onchange="loadVisitMap()">
+        </div>
+      </div>
+      <div id="visit-map-container" style="border-radius:12px;overflow:hidden;border:1px solid var(--bdr);background:var(--s2)">
+        <div style="padding:40px;text-align:center;color:var(--mut)">Select salesman and date to view route map</div>
+      </div>
+      <div id="visit-map-stops" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <!-- ── REPORTS PANE ── -->
+  <div id="vp-report" style="display:none">
+    <div class="sec">
+      <!-- Period selector -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button onclick="loadVisitReport('mtd')" id="vrep-mtd"
+          style="padding:7px 16px;background:var(--acc);border:none;border-radius:8px;font-family:var(--f);font-size:12px;font-weight:600;color:#fff;cursor:pointer">MTD</button>
+        <button onclick="loadVisitReport('ytd')" id="vrep-ytd"
+          style="padding:7px 16px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;font-family:var(--f);font-size:12px;font-weight:600;color:var(--mut);cursor:pointer">YTD</button>
+      </div>
+      <!-- Report table -->
+      <div id="visit-report-body"><div class="empty">Click MTD or YTD to load report</div></div>
+    </div>
+  </div>
+
+</div>
 
 <!-- ══ ORDER MODAL ══ -->
 <div class="ov" id="orderOv" onclick="if(event.target===this)closeModal('orderOv')">
@@ -1239,7 +1351,7 @@ function toast(msg,type='ok'){
 // NAVIGATION — original 5 tabs + 2 new master tabs
 // ═══════════════════════════════════════════════════════
 function goTab(tab){
-  const tabNames=['overview','salesmen','distributors','orders','parties','smmaster','distmaster','products','access','import','allocate'];
+  const tabNames=['overview','salesmen','distributors','orders','parties','smmaster','distmaster','products','access','import','allocate','visits'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',tabNames[i]===tab));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   const pg=document.getElementById('pg-'+tab);
@@ -1252,6 +1364,7 @@ function goTab(tab){
   if(tab==='distmaster') renderDistMaster();
   if(tab==='products') renderProductsMaster();
   if(tab==='access') renderAccessControl();
+  if(tab==='visits') renderVisitsTab();
   if(tab==='import') renderImportTab();
   if(tab==='allocate') renderAllocateTab();
   window.scrollTo({top:0});
@@ -2131,6 +2244,16 @@ function editSmRec(){
     sv('smf-doc-bank',sm.docBank); sv('smf-doc-photo',sm.docPhoto);
     sv('smf-commpct',sm.commPct); sv('smf-paycycle',sm.payCycle||'Monthly'); sv('smf-notes',sm.notes);
     sv('smf-pin',sm.pin||'');
+    sv('smf-joining', sm.joiningDate||'');
+    // Show tenure
+    if(sm.joiningDate){
+      const j=new Date(sm.joiningDate);
+      const now=new Date();
+      const months=Math.floor((now-j)/(1000*60*60*24*30));
+      const el=document.getElementById('smf-tenure');
+      if(el) el.textContent=months>0?months+' month'+(months!==1?'s':'')+' (since '+j.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+')':'Joined recently';
+    }
+    sv('smf-join',sm.joiningDate||'');
     sv('smf-shops-target',sm.shopsTarget||'');
     sv('smf-daily-shops-target',sm.dailyShopsTarget||'');
     sv('smf-daily-target',sm.dailyTarget||'');
@@ -2172,6 +2295,7 @@ async function saveSalesmanMaster(){
     docPhoto:document.getElementById('smf-doc-photo').value.trim(),
     notes:document.getElementById('smf-notes').value.trim(),
     pin:(document.getElementById('smf-pin')||{value:''}).value.trim(),
+    joiningDate:(document.getElementById('smf-joining')||{value:''}).value||'',
     shopsTarget:parseInt(document.getElementById('smf-shops-target')?.value)||0,
     dailyShopsTarget:parseInt(document.getElementById('smf-daily-shops-target')?.value)||0,
     dailyTarget:parseInt(document.getElementById('smf-daily-target')?.value)||0,
@@ -3637,6 +3761,228 @@ function populateProdMixTargets(existing){
           padding:6px 8px;font-family:var(--f);font-size:12px;color:var(--txt);outline:none;text-align:right">
       </div>
     </div>`).join('');
+}
+
+
+// ═══════════════════════════════════════════════════════
+// VISITS — Sub-tabs
+// ═══════════════════════════════════════════════════════
+let visitLogData = [];
+
+function visitSubTab(tab){
+  ['log','map','report'].forEach(t=>{
+    document.getElementById('vp-'+t).style.display = t===tab?'':'none';
+    document.getElementById('vt-'+t).classList.toggle('on', t===tab);
+  });
+  if(tab==='log') loadVisitLog();
+  if(tab==='map') loadVisitMap();
+  if(tab==='report') loadVisitReport('mtd');
+}
+
+function initVisitsFilters(){
+  // Populate SM dropdowns
+  ['vf-sm','vf-map-sm'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel||sel.options.length>1) return;
+    allSalesmen.forEach(sm=>{
+      const o=document.createElement('option');
+      o.value=sm.id; o.textContent=sm.id+' · '+sm.name;
+      sel.appendChild(o);
+    });
+  });
+  // Default date = today
+  const today=new Date().toISOString().slice(0,10);
+  const vfd=document.getElementById('vf-date');
+  const vfmd=document.getElementById('vf-map-date');
+  if(vfd&&!vfd.value) vfd.value=today;
+  if(vfmd&&!vfmd.value) vfmd.value=today;
+}
+
+// ── DAILY LOG ──────────────────────────────────────────
+async function loadVisitLog(){
+  initVisitsFilters();
+  const smId  = document.getElementById('vf-sm')?.value||'';
+  const date  = document.getElementById('vf-date')?.value||new Date().toISOString().slice(0,10);
+  const list  = document.getElementById('visit-log-list');
+  list.innerHTML = '<div class="empty">Loading...</div>';
+  try{
+    const url = `${SCRIPT_URL}?action=visits&smId=${smId}&dateFrom=${date}&dateTo=${date}&t=${Date.now()}`;
+    const r = await fetch(url);
+    const d = await r.json();
+    if(!d.ok) throw new Error(d.error);
+    visitLogData = d.visits||[];
+    // Stats
+    const orders = visitLogData.filter(v=>v.outcome==='Order Placed').length;
+    const total  = visitLogData.length;
+    document.getElementById('vs-total').textContent  = total;
+    document.getElementById('vs-orders').textContent = orders;
+    document.getElementById('vs-conv').textContent   = total>0?Math.round(orders/total*100)+'%':'0%';
+    // List — TIME shown to admin only
+    if(!total){
+      list.innerHTML='<div class="empty">No visits recorded for this date</div>';
+      return;
+    }
+    list.innerHTML = visitLogData.map(v=>{
+      const outColor = v.outcome==='Order Placed'?'var(--grn)':v.outcome==='Not Interested'?'var(--red)':'var(--ylw)';
+      const outIcon  = v.outcome==='Order Placed'?'✅':v.outcome==='Not Interested'?'❌':v.outcome==='Visit Next Time'?'🕐':'📝';
+      return `<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:11px 13px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
+          <div>
+            <div style="font-size:13px;font-weight:700">${v.partyName||v.partyId}</div>
+            <div style="font-size:10px;color:var(--mut);margin-top:1px">${v.smId} · ${v.partyId}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;margin-left:8px">
+            <span style="font-size:10px;padding:3px 8px;border-radius:6px;background:rgba(0,0,0,.2);color:${outColor};font-weight:700">${outIcon} ${v.outcome}</span>
+            <div style="font-size:10px;color:var(--mut);margin-top:3px">🕐 ${v.time||''}</div>
+          </div>
+        </div>
+        ${v.notes?`<div style="font-size:11px;color:var(--mut);font-style:italic">"${v.notes}"</div>`:''}
+        ${v.lat&&v.lng?`<a href="https://maps.google.com/?q=${v.lat},${v.lng}" target="_blank"
+          style="font-size:10px;color:var(--a2);text-decoration:none;margin-top:3px;display:inline-block">📍 View location ↗</a>`:''}
+      </div>`;
+    }).join('');
+  }catch(e){
+    list.innerHTML=`<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+// ── ROUTE MAP ──────────────────────────────────────────
+async function loadVisitMap(){
+  initVisitsFilters();
+  const smId = document.getElementById('vf-map-sm')?.value||'';
+  const date = document.getElementById('vf-map-date')?.value||'';
+  const container = document.getElementById('visit-map-container');
+  const stops     = document.getElementById('visit-map-stops');
+  if(!smId||!date){
+    container.innerHTML='<div style="padding:40px;text-align:center;color:var(--mut)">Select salesman and date</div>';
+    return;
+  }
+  container.innerHTML='<div style="padding:40px;text-align:center;color:var(--mut)">Loading map...</div>';
+  try{
+    const r = await fetch(`${SCRIPT_URL}?action=visits&smId=${smId}&dateFrom=${date}&dateTo=${date}&t=${Date.now()}`);
+    const d = await r.json();
+    if(!d.ok) throw new Error(d.error);
+    const visits = (d.visits||[]).filter(v=>v.lat&&v.lng);
+    if(!visits.length){
+      container.innerHTML='<div style="padding:40px;text-align:center;color:var(--mut)">No GPS data for this date</div>';
+      stops.innerHTML='';
+      return;
+    }
+    // Build Google Maps embed URL with waypoints
+    const origin   = `${visits[0].lat},${visits[0].lng}`;
+    const dest     = `${visits[visits.length-1].lat},${visits[visits.length-1].lng}`;
+    const waypts   = visits.slice(1,-1).map(v=>`${v.lat},${v.lng}`).join('|');
+    const mapsUrl  = `https://www.google.com/maps/embed/v1/directions?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&origin=${origin}&destination=${dest}${waypts?'&waypoints='+waypts:''}&mode=driving`;
+    // Fallback: use static map if directions key unavailable
+    const fallback = `https://maps.google.com/maps?q=${origin}&output=embed&z=13`;
+    container.style.height='350px';
+    container.innerHTML=`<iframe width="100%" height="350" frameborder="0" style="border:0;border-radius:12px"
+      src="${fallback}" allowfullscreen></iframe>`;
+    // Stop list with sequence
+    stops.innerHTML=`<div style="margin-top:8px">
+      <div style="font-size:11px;font-weight:700;color:var(--mut);margin-bottom:8px">${visits.length} stops with GPS</div>
+      ${visits.map((v,i)=>`<div style="display:flex;gap:9px;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:12px;align-items:center">
+        <div style="width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+        <div style="flex:1"><strong>${v.partyName}</strong><br><span style="color:var(--mut);font-size:10px">${v.time} · ${v.outcome}</span></div>
+        <a href="https://maps.google.com/?q=${v.lat},${v.lng}" target="_blank" style="font-size:10px;color:var(--a2)">📍</a>
+      </div>`).join('')}
+    </div>`;
+  }catch(e){
+    container.innerHTML=`<div style="padding:40px;text-align:center;color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+// ── REPORTS (MTD / YTD) ────────────────────────────────
+async function loadVisitReport(period){
+  // Update button styles
+  document.getElementById('vrep-mtd').style.background = period==='mtd'?'var(--acc)':'var(--s2)';
+  document.getElementById('vrep-mtd').style.color      = period==='mtd'?'#fff':'var(--mut)';
+  document.getElementById('vrep-ytd').style.background = period==='ytd'?'var(--acc)':'var(--s2)';
+  document.getElementById('vrep-ytd').style.color      = period==='ytd'?'#fff':'var(--mut)';
+
+  const body = document.getElementById('visit-report-body');
+  body.innerHTML='<div class="empty">Loading...</div>';
+  const now = new Date();
+  const dateFrom = period==='mtd'
+    ? new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10)
+    : new Date(now.getFullYear(),0,1).toISOString().slice(0,10);
+  const dateTo = now.toISOString().slice(0,10);
+
+  try{
+    const r = await fetch(`${SCRIPT_URL}?action=visits&dateFrom=${dateFrom}&dateTo=${dateTo}&t=${Date.now()}`);
+    const d = await r.json();
+    if(!d.ok) throw new Error(d.error);
+    const visits = d.visits||[];
+
+    // Aggregate by SM
+    const smMap = {};
+    visits.forEach(v=>{
+      if(!smMap[v.smId]) smMap[v.smId]={smId:v.smId,smName:v.smName||v.smId,visits:0,orders:0,shops:new Set()};
+      smMap[v.smId].visits++;
+      smMap[v.smId].shops.add(v.partyId);
+      if(v.outcome==='Order Placed') smMap[v.smId].orders++;
+    });
+
+    const rows = Object.values(smMap).sort((a,b)=>b.visits-a.visits);
+    if(!rows.length){ body.innerHTML='<div class="empty">No visits in this period</div>'; return; }
+
+    const DAILY_VISIT_TARGET = 50;
+    const days = Math.round((new Date(dateTo)-new Date(dateFrom))/(1000*60*60*24))+1;
+    const visitTarget = DAILY_VISIT_TARGET * days;
+
+    body.innerHTML=`
+      <!-- Report 1: Shops Visited -->
+      <div style="font-size:12px;font-weight:700;color:var(--a2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">
+        🏪 Shops Visited — ${period.toUpperCase()} (Target: ${visitTarget})
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 12px;
+          font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--bdr)">
+          <div>Salesman</div><div style="text-align:center">Visits</div>
+          <div style="text-align:center">Unique Shops</div><div style="text-align:center">vs Target</div>
+        </div>
+        ${rows.map(r=>{
+          const pct=Math.min(Math.round(r.visits/visitTarget*100),999);
+          const barColor=pct>=100?'var(--grn)':pct>=70?'var(--ylw)':'var(--red)';
+          return `<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:9px 12px;
+            border-bottom:1px solid var(--bdr);align-items:center">
+            <div style="font-size:12px;font-weight:600">${r.smName}<br>
+              <span style="font-size:9px;color:var(--mut)">${r.smId}</span></div>
+            <div style="text-align:center;font-weight:700;color:var(--a2)">${r.visits}</div>
+            <div style="text-align:center;color:var(--txt)">${r.shops.size}</div>
+            <div style="text-align:center">
+              <span style="font-size:11px;font-weight:700;color:${barColor}">${pct}%</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- Report 2: Orders -->
+      <div style="font-size:12px;font-weight:700;color:var(--a2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">
+        📦 Orders from Visits — ${period.toUpperCase()}
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 12px;
+          font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--bdr)">
+          <div>Salesman</div><div style="text-align:center">Orders</div>
+          <div style="text-align:center">Visits</div><div style="text-align:center">Conversion</div>
+        </div>
+        ${rows.map(r=>{
+          const conv=r.visits>0?Math.round(r.orders/r.visits*100):0;
+          const convColor=conv>=50?'var(--grn)':conv>=30?'var(--ylw)':'var(--red)';
+          return `<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:9px 12px;
+            border-bottom:1px solid var(--bdr);align-items:center">
+            <div style="font-size:12px;font-weight:600">${r.smName}<br>
+              <span style="font-size:9px;color:var(--mut)">${r.smId}</span></div>
+            <div style="text-align:center;font-weight:700;color:var(--grn)">${r.orders}</div>
+            <div style="text-align:center;color:var(--mut)">${r.visits}</div>
+            <div style="text-align:center;font-weight:700;color:${convColor}">${conv}%</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }catch(e){
+    body.innerHTML=`<div class="empty">Error: ${e.message}</div>`;
+  }
 }
 
 </script>
