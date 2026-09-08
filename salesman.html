@@ -277,6 +277,35 @@ textarea{resize:none;line-height:1.5;min-height:58px}
   </div>
 </div>
 
+<!-- PARTY SEARCH MODAL (full screen for mobile) -->
+<div id="partyModal" style="display:none;position:fixed;inset:0;background:#050a14;
+  z-index:8000;flex-direction:column;font-family:var(--f)">
+  <!-- Modal Header -->
+  <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+    border-bottom:1px solid var(--bdr);background:var(--s1);flex-shrink:0">
+    <button onclick="closePartyModal()"
+      style="padding:8px 12px;background:var(--s2);border:1px solid var(--bdr);
+      border-radius:8px;font-family:var(--f);font-size:13px;color:var(--txt);cursor:pointer;
+      flex-shrink:0">✕</button>
+    <input type="text" id="partyModalSearch"
+      placeholder="Search party name, phone..."
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+      style="flex:1;background:var(--s2);border:1.5px solid var(--a2);border-radius:9px;
+      padding:11px 14px;font-family:var(--f);font-size:16px;color:var(--txt);outline:none"
+      oninput="filterPartyModal(this.value)">
+  </div>
+  <!-- Results count -->
+  <div id="partyModalCount"
+    style="padding:8px 14px;font-size:11px;color:var(--mut);flex-shrink:0;
+    background:var(--s1);border-bottom:1px solid var(--bdr)">
+    Tap a party to select
+  </div>
+  <!-- Party list -->
+  <div id="partyModalList"
+    style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  </div>
+</div>
+
 <!-- HEADER -->
 <div class="hdr">
   <div class="htop">
@@ -427,18 +456,14 @@ textarea{resize:none;line-height:1.5;min-height:58px}
     <div class="card">
       <div class="fld">
         <label>Select Party</label>
-        <!-- Searchable party picker -->
-        <input type="text" id="partySearch" placeholder="🔍 Type party name..."
-          autocomplete="off" autocorrect="off" spellcheck="false"
+        <!-- Party picker button — opens full-screen modal -->
+        <div id="partyPickBtn" onclick="openPartyModal()"
           style="width:100%;background:var(--s2);border:1.5px solid var(--bdr);border-radius:9px;
-          padding:11px 14px;font-family:var(--f);font-size:14px;color:var(--txt);outline:none;margin-bottom:4px"
-          oninput="filterPartyList(this.value)"
-          onfocus="showPartyList()"
-          ontouchstart="showPartyList()"
-          onkeydown="if(event.key==='Enter'){const f=document.querySelector('#partyPickList [data-id]');if(f)f.click();}if(event.key==='Escape')hidePartyList()">
-        <div id="partyPickList" style="display:none;background:var(--s1);border:1.5px solid var(--bdr);
-          border-radius:9px;max-height:260px;overflow-y:auto;margin-bottom:4px;
-          box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
+          padding:13px 16px;font-family:var(--f);font-size:14px;color:var(--mut);cursor:pointer;
+          display:flex;align-items:center;gap:10px;margin-bottom:4px;-webkit-tap-highlight-color:transparent">
+          <span style="font-size:18px">🔍</span>
+          <span id="partyPickLabel">Type to search party...</span>
+        </div>
         <input type="hidden" id="bsel">
       </div>
       <div class="bbox" id="bbox">
@@ -1204,6 +1229,75 @@ function hidePartyList(){
   const el=document.getElementById('partyPickList');
   if(el) setTimeout(()=>el.style.display='none', 150);
 }
+function openPartyModal(){
+  const modal = document.getElementById('partyModal');
+  modal.style.display = 'flex';
+  filterPartyModal('');
+  // Focus the search input after a short delay (mobile keyboard)
+  setTimeout(()=>{
+    const inp = document.getElementById('partyModalSearch');
+    if(inp){ inp.value=''; inp.focus(); }
+  }, 150);
+}
+
+function closePartyModal(){
+  document.getElementById('partyModal').style.display = 'none';
+}
+
+function filterPartyModal(q){
+  const buyers = getBuyers();
+  const filtered = q.trim()
+    ? buyers.filter(b =>
+        b.name.toLowerCase().includes(q.toLowerCase()) ||
+        (b.phone||'').includes(q) ||
+        (b.id||'').toLowerCase().includes(q.toLowerCase()) ||
+        (b.route||'').toLowerCase().includes(q.toLowerCase()))
+    : buyers;
+
+  const countEl = document.getElementById('partyModalCount');
+  if(countEl) countEl.textContent = filtered.length + ' parties' + (q?' matching "'+q+'"':'');
+
+  const list = document.getElementById('partyModalList');
+  if(!list) return;
+
+  if(!filtered.length){
+    list.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--mut)">No parties found</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(b => {
+    const st = b.status||'Active';
+    const blocked = b.active===false || st==='Inactive' || st==='On Hold';
+    const stColor = st==='On Hold'?'var(--ylw)':st==='Inactive'?'var(--red)':'';
+    return `<div onclick="${blocked?'':"selectPartyFromModal('"+b.id+"')"}"
+      style="padding:14px 16px;border-bottom:1px solid var(--bdr);
+      ${blocked?'opacity:.45;cursor:not-allowed':'cursor:pointer;active:background:var(--s2)'};
+      -webkit-tap-highlight-color:rgba(59,130,246,.1)">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:14px;font-weight:600;color:var(--txt)">${b.name}</span>
+        ${blocked?`<span style="font-size:9px;padding:1px 6px;border-radius:4px;
+          background:rgba(239,68,68,.15);color:${stColor}">${st}</span>`:''}
+      </div>
+      <div style="font-size:12px;color:var(--mut);margin-top:3px">
+        ${b.id} · ${b.phone||'—'} · ${b.route||b.territory||''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectPartyFromModal(id){
+  closePartyModal();
+  // Update the picker button label
+  const b = getBuyers().find(x=>x.id===id);
+  const label = document.getElementById('partyPickLabel');
+  if(label && b) label.textContent = b.name;
+  if(label && b) label.style.color = 'var(--txt)';
+  // Set hidden value and trigger buyer load
+  document.getElementById('bsel').value = id;
+  onBuyer(id);
+}
+
+
 function filterPartyList(q){
   const el=document.getElementById('partyPickList');
   if(!el) return;
@@ -1476,6 +1570,8 @@ function clearForm(silent=false){
   const _ps=document.getElementById('partySearch'); if(_ps) _ps.value='';
   const _pl=document.getElementById('partyPickList'); if(_pl) _pl.style.display='none';
   document.getElementById('bsel').value='';
+  const _lbl=document.getElementById('partyPickLabel');
+  if(_lbl){_lbl.textContent='Type to search party...';_lbl.style.color='var(--mut)';}
   const ps=document.getElementById('partySearch'); if(ps) ps.value='';
   const pl=document.getElementById('partyPickList'); if(pl) pl.style.display='none';
   document.getElementById('bbox').classList.remove('on');
@@ -1711,6 +1807,12 @@ function renderParties(){
   }).join('');
 }
 function pickParty(id){
+  // Update party picker button label
+  const b=getBuyers().find(x=>x.id===id);
+  const label=document.getElementById('partyPickLabel');
+  if(label&&b){label.textContent=b.name;label.style.color='var(--txt)';}
+  document.getElementById('bsel').value=id;
+  onBuyer(id);
   go('order');
   setTimeout(()=>{document.getElementById('bsel').value=id;onBuyer();toast('🏪 Party selected','in');},150);
 }
