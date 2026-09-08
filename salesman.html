@@ -345,15 +345,39 @@ textarea{resize:none;line-height:1.5;min-height:58px}
   <div class="sec">
     <div class="sl">Today's Performance</div>
     <div class="grid2">
-      <div class="dcard bl" onclick="showKpiModal('today')">
-        <div class="dicon">💰</div>
-        <div class="dval" id="todaySales">₹0</div>
-        <div class="dlbl">Today's Sales ▸</div>
+      <!-- Today Sales with pie -->
+      <div class="dcard bl" onclick="showKpiModal('today')" style="position:relative;padding-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div class="dicon">💰</div>
+            <div class="dval" id="todaySales">₹0</div>
+            <div class="dlbl">Today Sales ▸</div>
+            <div style="font-size:10px;color:var(--mut);margin-top:2px">
+              Target: <span id="todaySalesTgt" style="color:var(--txt)">—</span>
+            </div>
+          </div>
+          <div style="width:64px;height:64px;flex-shrink:0">
+            <canvas id="todaySalesChart"></canvas>
+          </div>
+        </div>
+        <div style="font-size:10px;margin-top:6px;color:var(--a2);font-weight:600" id="todaySalesPct">—</div>
       </div>
-      <div class="dcard gr" onclick="showKpiModal('shops')">
-        <div class="dicon">🏪</div>
-        <div class="dval" id="todayShops">0</div>
-        <div class="dlbl">Shops Served ▸</div>
+      <!-- Today Shops with pie -->
+      <div class="dcard gr" onclick="showKpiModal('shops')" style="position:relative;padding-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div class="dicon">🏪</div>
+            <div class="dval" id="todayShops">0</div>
+            <div class="dlbl">Shops Today ▸</div>
+            <div style="font-size:10px;color:var(--mut);margin-top:2px">
+              Target: <span id="todayShopsTgt" style="color:var(--txt)">—</span>
+            </div>
+          </div>
+          <div style="width:64px;height:64px;flex-shrink:0">
+            <canvas id="todayShopsChart"></canvas>
+          </div>
+        </div>
+        <div style="font-size:10px;margin-top:6px;color:var(--grn);font-weight:600" id="todayShopsPct">—</div>
       </div>
     </div>
   </div>
@@ -362,24 +386,38 @@ textarea{resize:none;line-height:1.5;min-height:58px}
     <div class="sl">Month & Year Performance</div>
     <div class="grid2">
       <div class="pcard" onclick="showKpiModal('mtd')" style="cursor:pointer">
-        <div class="ptop">
-          <div class="plbl">MTD Sales ▸</div>
-          <div class="ppct" id="mtdPct">0%</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1">
+            <div class="ptop">
+              <div class="plbl">MTD Sales ▸</div>
+              <div class="ppct" id="mtdPct">0%</div>
+            </div>
+            <div class="pamt" id="mtdAmt">₹0</div>
+            <div class="ptgt">of <span id="mtdTgt">₹50,000</span></div>
+          </div>
+          <div style="width:56px;height:56px;flex-shrink:0;margin-left:8px">
+            <canvas id="mtdSalesChart"></canvas>
+          </div>
         </div>
-        <div class="pamt" id="mtdAmt">₹0</div>
-        <div class="ptgt">of <span id="mtdTgt">₹50,000</span> target</div>
-        <div class="pbar">
+        <div class="pbar" style="margin-top:8px">
           <div class="pfill bl" id="mtdBar" style="width:0%"></div>
         </div>
       </div>
       <div class="pcard" onclick="showKpiModal('ytd')" style="cursor:pointer">
-        <div class="ptop">
-          <div class="plbl">YTD Sales ▸</div>
-          <div class="ppct" id="ytdPct">0%</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1">
+            <div class="ptop">
+              <div class="plbl">YTD Sales ▸</div>
+              <div class="ppct" id="ytdPct">0%</div>
+            </div>
+            <div class="pamt" id="ytdAmt">₹0</div>
+            <div class="ptgt">of <span id="ytdTgt">₹600K</span></div>
+          </div>
+          <div style="width:56px;height:56px;flex-shrink:0;margin-left:8px">
+            <canvas id="ytdSalesChart"></canvas>
+          </div>
         </div>
-        <div class="pamt" id="ytdAmt">₹0</div>
-        <div class="ptgt">of <span id="ytdTgt">₹600K</span> target</div>
-        <div class="pbar">
+        <div class="pbar" style="margin-top:8px">
           <div class="pfill gr" id="ytdBar" style="width:0%"></div>
         </div>
       </div>
@@ -419,11 +457,16 @@ textarea{resize:none;line-height:1.5;min-height:58px}
     <div class="grid2">
       <div class="scard" onclick="showKpiModal('mtdshops')" style="cursor:pointer">
         <div class="slbl2">Shops This Month ▸</div>
-        <div class="stop">
-          <div class="sico">🏪</div>
-          <div class="snum" id="mtdShops">0</div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="stop">
+            <div class="sico">🏪</div>
+            <div class="snum" id="mtdShops">0</div>
+          </div>
+          <div style="width:52px;height:52px;flex-shrink:0">
+            <canvas id="mtdShopsChart"></canvas>
+          </div>
         </div>
-        <div class="sdet">Target: <strong id="shopTgt">15 shops</strong></div>
+        <div class="sdet">Target: <strong id="shopTgt">—</strong></div>
         <div class="sdet" style="margin-top:3px;color:var(--ylw)" id="shopGap">—</div>
       </div>
       <div class="scard" onclick="showKpiModal('newparties')" style="cursor:pointer">
@@ -434,6 +477,7 @@ textarea{resize:none;line-height:1.5;min-height:58px}
         </div>
         <div class="sdet">Sales from new: <strong id="newSales">₹0</strong></div>
         <div class="sdet" style="margin-top:3px;color:var(--grn)" id="newPct">—</div>
+        <div class="sdet" style="margin-top:3px;color:var(--ylw);font-size:10px" id="partiesGap"></div>
       </div>
     </div>
   </div>
@@ -1035,6 +1079,62 @@ async function initApp(){
   autoSyncPending();
 }
 
+// ═══ MINI PIE CHARTS ═══════════════════════════════════════════════
+const _miniPieCharts = {};
+
+function renderMiniPie(canvasId, pct, color){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const remaining = Math.max(0, 100 - pct);
+  const data = {
+    datasets:[{
+      data: [pct, remaining],
+      backgroundColor: [color, 'rgba(255,255,255,.08)'],
+      borderWidth: 0,
+      cutout: '68%'
+    }]
+  };
+  const opts = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {display:false},
+      tooltip: {enabled:false}
+    },
+    animation: {duration: 600}
+  };
+  if(_miniPieCharts[canvasId]){
+    _miniPieCharts[canvasId].data = data;
+    _miniPieCharts[canvasId].update();
+  } else {
+    _miniPieCharts[canvasId] = new Chart(canvas, {type:'doughnut', data, options:opts});
+  }
+  // Draw pct text in center
+  const ctx = canvas.getContext('2d');
+  const cx = canvas.width/2, cy = canvas.height/2;
+  ctx.save();
+  ctx.font = 'bold '+(canvas.width>60?'11':'9')+'px Outfit,sans-serif';
+  ctx.fillStyle = '#f1f5f9';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  // Text drawn after chart renders
+  setTimeout(()=>{
+    ctx.clearRect(0,0,0,0); // Chart.js handles canvas - just update
+    const ch = _miniPieCharts[canvasId];
+    if(ch){
+      const meta = ch.getDatasetMeta(0);
+      if(meta && meta.data[0]){
+        const {x,y} = meta.data[0];
+        ctx.font = 'bold '+(canvas.width>60?'11':'9')+'px Outfit,sans-serif';
+        ctx.fillStyle='#f1f5f9';
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        ctx.fillText(pct+'%', x, y);
+      }
+    }
+  }, 650);
+}
+
 // ═══ TABS ═════════════════════════════════════════════════════════════
 function go(tab){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',
@@ -1064,6 +1164,11 @@ async function loadDashboard(){
     // Today
     document.getElementById('todaySales').textContent=fi(s.todaySales);
     document.getElementById('todayShops').textContent=s.todayShops||0;
+    // Show today shops vs target hint
+    const todayShopsEl=document.getElementById('todayShops');
+    if(todayShopsEl&&s.shopsTarget>0){
+      todayShopsEl.title='Target: '+s.shopsTarget+' shops/month';
+    }
     
     // MTD
     document.getElementById('mtdAmt').textContent=fi(s.mtdSales);
@@ -1078,27 +1183,59 @@ async function loadDashboard(){
     document.getElementById('ytdTgt').textContent=fi(ytdTgt);
     document.getElementById('ytdBar').style.width=Math.min(s.ytdPct,100)+'%';
     
-    // Shops — use dynamic target from SM master
-    document.getElementById('mtdShops').textContent=s.mtdShops||0;
-    const shopsTarget=s.shopsTarget||0;
-    const shopGap=shopsTarget-(s.mtdShops||0);
-    if(shopsTarget>0){
-      document.getElementById('shopGap').textContent=shopGap>0?`${shopGap} more to reach ${shopsTarget} target`:'✓ Target met';
-    } else {
-      document.getElementById('shopGap').textContent=(s.mtdShops||0)+' shops this month';
-    }
+    // Dynamic targets from SM master
+    const shopsTarget = s.shopsTarget||0;
+    const partiesTarget = s.partiesTarget||0;
+    const monthlyTarget = s.target||50000;
+    const todayTarget = Math.round(monthlyTarget/26); // approx daily target
 
-    // New Parties — use dynamic target from SM master
+    // ── Today's Sales ───────────────────────────────────────────
+    const todaySalesVal = s.todaySales||0;
+    const todaySalesPct = todayTarget>0 ? Math.min(Math.round(todaySalesVal/todayTarget*100),100) : 0;
+    const el_todaySalesTgt = document.getElementById('todaySalesTgt');
+    const el_todaySalesPct = document.getElementById('todaySalesPct');
+    if(el_todaySalesTgt) el_todaySalesTgt.textContent = todayTarget>0 ? fi(todayTarget) : 'No target set';
+    if(el_todaySalesPct) el_todaySalesPct.textContent = todayTarget>0 ? todaySalesPct+'% of daily target' : fi(todaySalesVal)+' sold today';
+    renderMiniPie('todaySalesChart', todaySalesPct, '#3b82f6');
+
+    // ── Today's Shops ────────────────────────────────────────────
+    const todayShopsVal = s.todayShops||0;
+    const dailyShopsTarget = shopsTarget>0 ? Math.max(1,Math.round(shopsTarget/26)) : 0;
+    const todayShopsPct = dailyShopsTarget>0 ? Math.min(Math.round(todayShopsVal/dailyShopsTarget*100),100) : 0;
+    const el_todayShopsTgt = document.getElementById('todayShopsTgt');
+    const el_todayShopsPct = document.getElementById('todayShopsPct');
+    if(el_todayShopsTgt) el_todayShopsTgt.textContent = dailyShopsTarget>0 ? dailyShopsTarget+' shops/day' : 'No target set';
+    if(el_todayShopsPct) el_todayShopsPct.textContent = dailyShopsTarget>0 ? todayShopsPct+'% of daily target' : todayShopsVal+' shops today';
+    renderMiniPie('todayShopsChart', todayShopsPct, '#22c55e');
+
+    // ── MTD Sales ────────────────────────────────────────────────
+    const mtdPct = s.mtdPct||0;
+    renderMiniPie('mtdSalesChart', Math.min(mtdPct,100), '#3b82f6');
+
+    // ── YTD Sales ────────────────────────────────────────────────
+    const ytdPct = s.ytdPct||0;
+    renderMiniPie('ytdSalesChart', Math.min(ytdPct,100), '#22c55e');
+
+    // ── MTD Shops ────────────────────────────────────────────────
+    const mtdShopsVal = s.mtdShops||0;
+    const shopsPct = shopsTarget>0 ? Math.min(Math.round(mtdShopsVal/shopsTarget*100),100) : 0;
+    const el_shopTgt = document.getElementById('shopTgt');
+    if(el_shopTgt) el_shopTgt.textContent = shopsTarget>0 ? shopsTarget+' shops' : 'No target';
+    const shopGapVal = shopsTarget>0 ? shopsTarget-mtdShopsVal : 0;
+    document.getElementById('mtdShops').textContent=mtdShopsVal;
+    document.getElementById('shopGap').textContent = shopsTarget>0
+      ? (shopGapVal>0 ? shopGapVal+' more to reach '+shopsTarget : '✓ Target met!')
+      : mtdShopsVal+' shops this month';
+    renderMiniPie('mtdShopsChart', shopsPct, '#f59e0b');
+
+    // ── New Parties ──────────────────────────────────────────────
     document.getElementById('newParties').textContent=s.newParties||0;
-    const partiesTarget=s.partiesTarget||0;
     const partiesEl=document.getElementById('partiesGap');
     if(partiesEl){
       if(partiesTarget>0){
         const pGap=partiesTarget-(s.newParties||0);
-        partiesEl.textContent=pGap>0?`${pGap} more to reach ${partiesTarget} target`:'✓ Target met';
-      } else {
-        partiesEl.textContent='';
-      }
+        partiesEl.textContent=pGap>0?pGap+' more to reach '+partiesTarget+' target':'✓ Target met!';
+      } else { partiesEl.textContent=''; }
     }
     
     // Fetch all orders FIRST — needed for YTD chart AND KPI modals
