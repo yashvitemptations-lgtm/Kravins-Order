@@ -1156,6 +1156,21 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
           style="padding:7px 16px;background:var(--acc);border:none;border-radius:8px;font-family:var(--f);font-size:12px;font-weight:600;color:#fff;cursor:pointer">MTD</button>
         <button onclick="loadVisitReport('ytd')" id="vrep-ytd"
           style="padding:7px 16px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;font-family:var(--f);font-size:12px;font-weight:600;color:var(--mut);cursor:pointer">YTD</button>
+        <!-- Custom date range -->
+        <input type="date" id="vrep-from" class="finp" style="padding:6px 10px;font-size:11px;width:130px">
+        <span style="font-size:11px;color:var(--mut)">to</span>
+        <input type="date" id="vrep-to" class="finp" style="padding:6px 10px;font-size:11px;width:130px">
+        <button onclick="loadVisitReport('custom')"
+          style="padding:7px 14px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);border-radius:8px;font-family:var(--f);font-size:12px;font-weight:600;color:var(--pur);cursor:pointer">Go</button>
+      </div>
+      <!-- Export buttons -->
+      <div style="display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap">
+        <button onclick="exportVisitReport('csv')"
+          style="padding:6px 12px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:7px;font-family:var(--f);font-size:11px;font-weight:600;color:var(--grn);cursor:pointer">📥 CSV</button>
+        <button onclick="exportVisitReport('excel')"
+          style="padding:6px 12px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:7px;font-family:var(--f);font-size:11px;font-weight:600;color:var(--a2);cursor:pointer">📊 Excel</button>
+        <button onclick="exportVisitReport('pdf')"
+          style="padding:6px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:7px;font-family:var(--f);font-size:11px;font-weight:600;color:var(--red);cursor:pointer">📄 PDF</button>
       </div>
       <!-- Report table -->
       <div id="visit-report-body"><div class="empty">Click MTD or YTD to load report</div></div>
@@ -3931,10 +3946,21 @@ async function loadVisitReport(period){
   const body = document.getElementById('visit-report-body');
   body.innerHTML='<div class="empty">Loading...</div>';
   const now = new Date();
-  const dateFrom = period==='mtd'
-    ? new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10)
-    : new Date(now.getFullYear(),0,1).toISOString().slice(0,10);
-  const dateTo = now.toISOString().slice(0,10);
+  let dateFrom, dateTo;
+  if(period==='custom'){
+    dateFrom = document.getElementById('vrep-from')?.value || new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+    dateTo   = document.getElementById('vrep-to')?.value   || now.toISOString().slice(0,10);
+  } else {
+    dateFrom = period==='mtd'
+      ? new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10)
+      : new Date(now.getFullYear(),0,1).toISOString().slice(0,10);
+    dateTo = now.toISOString().slice(0,10);
+  }
+  // Store for export
+  window._lastVisitReportData  = null;
+  window._lastVisitReportPeriod = period;
+  window._lastVisitReportFrom   = dateFrom;
+  window._lastVisitReportTo     = dateTo;
 
   try{
     const r = await fetch(`${SCRIPT_URL}?action=visits&dateFrom=${dateFrom}&dateTo=${dateTo}&t=${Date.now()}`);
@@ -3953,6 +3979,7 @@ async function loadVisitReport(period){
 
     const rows = Object.values(smMap).sort((a,b)=>b.visits-a.visits);
     if(!rows.length){ body.innerHTML='<div class="empty">No visits in this period</div>'; return; }
+    window._lastVisitReportData = {visits, rows, days, visitTarget};
 
     const DAILY_VISIT_TARGET = 50;
     const days = Math.round((new Date(dateTo)-new Date(dateFrom))/(1000*60*60*24))+1;
@@ -4010,6 +4037,67 @@ async function loadVisitReport(period){
       </div>`;
   }catch(e){
     body.innerHTML=`<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+
+// ═══ EXPORT VISIT REPORT ═════════════════════════════════════════════
+function exportVisitReport(fmt){
+  const data = window._lastVisitReportData;
+  if(!data){ toast('Generate a report first','er'); return; }
+  const {rows, days, visitTarget} = data;
+  const period = window._lastVisitReportPeriod || 'mtd';
+  const from   = window._lastVisitReportFrom   || '';
+  const to     = window._lastVisitReportTo     || '';
+
+  // Build flat rows for export
+  const headers = ['Salesman ID','Salesman Name','Total Visits','Unique Shops','Orders','Conversion %','vs Target %'];
+  const exportRows = rows.map(r=>[
+    r.smId, r.smName, r.visits, r.shops.size, r.orders,
+    r.visits>0?Math.round(r.orders/r.visits*100)+'%':'0%',
+    visitTarget>0?Math.min(Math.round(r.visits/visitTarget*100),999)+'%':'N/A'
+  ]);
+
+  if(fmt==='csv'){
+    const csv = [headers, ...exportRows].map(r=>r.map(v=>{const s=String(v||'');return '"'+s.replace(/"/g,'""')+'"';}).join(',')).join('\r\n')
+    const blob = new Blob([csv],{type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Visit_Report_${period}_${from}_${to}.csv`;
+    a.click();
+    toast('✅ CSV downloaded','ok');
+  } else if(fmt==='excel'){
+    // Build minimal XLSX using base64 (simple TSV wrapped in XML)
+    const tsv = [headers, ...exportRows].map(r=>r.join('\t')).join('\r\n')
+    const blob = new Blob([tsv],{type:'application/vnd.ms-excel'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Visit_Report_${period}_${from}_${to}.xls`;
+    a.click();
+    toast('✅ Excel downloaded','ok');
+  } else if(fmt==='pdf'){
+    // Print to PDF using window.print
+    const content = `
+      <html><head><style>
+        body{font-family:Arial,sans-serif;font-size:12px;padding:20px}
+        h2{color:#1e3a5f;margin-bottom:4px}
+        p{color:#666;margin-bottom:16px;font-size:11px}
+        table{width:100%;border-collapse:collapse}
+        th{background:#1e3a5f;color:#fff;padding:8px 10px;text-align:left;font-size:11px}
+        td{padding:7px 10px;border-bottom:1px solid #ddd;font-size:11px}
+        tr:nth-child(even){background:#f5f7fa}
+      </style></head><body>
+      <h2>Visit Report — ${period.toUpperCase()}</h2>
+      <p>Period: ${from} to ${to} | Generated: ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</p>
+      <table>
+        <tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr>
+        ${exportRows.map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}
+      </table>
+      </body></html>`;
+    const w = window.open('','_blank');
+    w.document.write(content);
+    w.document.close();
+    w.print();
   }
 }
 

@@ -1500,6 +1500,21 @@ async function loadBuyers(){
     }
   }catch(e){ console.error('loadBuyers error:',e); }
   fillBuyerSel();
+  toast(`✅ ${newB.name} added as ${newB.id}`,'ok');
+  if(window._returnToVisitAfterAdd){
+    window._returnToVisitAfterAdd=false;
+    setTimeout(()=>{
+      go('visit');
+      document.getElementById('visitPartyId').value=newB.id;
+      const lbl=document.getElementById('visitPartyLabel');
+      if(lbl){lbl.textContent=newB.name;lbl.style.color='var(--txt)';}
+      const vb=document.getElementById('visitPartyBtn');
+      if(vb){const sp=vb.querySelector('span:last-child');if(sp){sp.textContent=newB.name;sp.style.color='var(--txt)';}}
+      toast('🏪 '+newB.name+' selected. Choose visit outcome.','ok');
+    },800);
+  } else {
+    setTimeout(()=>{go('order');document.getElementById('bsel').value=newB.id;onBuyer();},1500);
+  }
 }
 
 function fillBuyerSel(){
@@ -1822,7 +1837,9 @@ async function submitOrder(){
     tc:items.reduce((s,i)=>s+i.commAmt,0),
     notes:document.getElementById('onotes').value.trim(),
     distributor:DIST_ID,
-    status:'Pending',at:new Date().toISOString(),synced:false
+    status:'Pending',
+    at:new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})).toISOString(),
+    synced:false
   };
   
   // Save locally
@@ -1848,7 +1865,31 @@ async function submitOrder(){
   
   btn.disabled=false;btn.textContent='✅  Submit Order';
   clearForm(true);
-  setTimeout(()=>{go('history');loadDashboard();},3000);
+  if(window._visitReturnAfterOrder){
+    window._visitReturnAfterOrder=false;
+    setTimeout(()=>{
+      go('visit');
+      if(window._visitPartyId){
+        const b=getBuyers().find(x=>x.id===window._visitPartyId);
+        if(b){
+          document.getElementById('visitPartyId').value=b.id;
+          const lbl=document.getElementById('visitPartyLabel');
+          if(lbl){lbl.textContent=b.name;lbl.style.color='var(--txt)';}
+          const vb=document.getElementById('visitPartyBtn');
+          if(vb){const sp=vb.querySelector('span:last-child');if(sp){sp.textContent=b.name;sp.style.color='var(--txt)';}}
+        }
+        visitOutcomeSelected='Order Placed';
+        document.getElementById('visitOutcome').value='Order Placed';
+        const ob=document.getElementById('out-order');
+        if(ob){ob.style.background='rgba(34,197,94,.15)';ob.style.borderColor='var(--grn)';ob.style.color='var(--grn)';}
+        window._visitPartyId=null;
+      }
+      toast('✅ Order submitted! Add notes and submit visit log.','ok');
+      loadDashboard();
+    },600);
+  } else {
+    setTimeout(()=>{go('history');loadDashboard();},3000);
+  }
 }
 
 // ═══ CLEAR ════════════════════════════════════════════════════════════
@@ -1966,9 +2007,11 @@ function openModal(oid){
   document.getElementById('mBody').innerHTML=h;
   
   // Time window check: 30 mins for salesman
+  // Use IST time for both order time and now to avoid timezone mismatch
   const orderTime = o.at ? new Date(o.at) : null;
-  const now = new Date();
-  const minsSince = orderTime ? Math.floor((now - orderTime)/60000) : 999;
+  const nowIST = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const orderIST = orderTime ? new Date(orderTime.toLocaleString('en-US',{timeZone:'Asia/Kolkata'})) : null;
+  const minsSince = orderIST ? Math.floor((nowIST - orderIST)/60000) : 999;
   const canEdit = o.status !== 'Cancelled' && (minsSince <= EDIT_WINDOW_MINS);
   const canCancel = o.status !== 'Cancelled' && (minsSince <= EDIT_WINDOW_MINS);
   
@@ -2969,10 +3012,25 @@ const OUTCOME_IDS = {
   'Not Interested':'out-no','Other':'out-other'
 };
 
-function renderVisitTab(){
-  renderVisitTodayList();
-  // Start GPS pre-capture
+async function renderVisitTab(){
+  renderVisitTodayList(); // show local cache immediately
   captureVisitGPS();
+  // Also fetch today's visits from server to show full list
+  try{
+    const today = new Date().toISOString().slice(0,10);
+    const r = await fetch(`${SCRIPT_URL}?action=visits&smId=${SID}&dateFrom=${today}&dateTo=${today}&t=${Date.now()}`);
+    const d = await r.json();
+    if(d.ok && d.visits && d.visits.length){
+      // Merge server visits with local (server is source of truth)
+      // Don't show time to salesman
+      visitTodayLog = d.visits.map(v=>({
+        partyId:v.partyId, partyName:v.partyName,
+        outcome:v.outcome, notes:v.notes||''
+        // time intentionally excluded
+      }));
+      renderVisitTodayList();
+    }
+  }catch(e){} // silently fail — local cache already shown
 }
 
 function selectOutcome(outcome){
@@ -3099,7 +3157,6 @@ function renderVisitTodayList(){
         <div style="font-size:11px;color:${outcomeColors[v.outcome]||'var(--mut)'};margin-top:2px;font-weight:600">${v.outcome}</div>
         ${v.notes?`<div style="font-size:10px;color:var(--mut);margin-top:2px">${v.notes}</div>`:''}
       </div>
-      <div style="font-size:11px;color:var(--mut);flex-shrink:0">${v.time||''}</div>
     </div>`).join('');
 }
 
