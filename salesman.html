@@ -3201,15 +3201,30 @@ function renderVisitTodayList(){
     return;
   }
   const outcomeColors={'Order Placed':'var(--grn)','Visit Next Time':'var(--a2)','Not Interested':'var(--red)','Other':'var(--pur)'};
-  el.innerHTML = visitTodayLog.map(v=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;
-      background:var(--s1);border:1px solid var(--bdr);border-radius:10px;margin-bottom:8px">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600">${v.partyName}</div>
-        <div style="font-size:11px;color:${outcomeColors[v.outcome]||'var(--mut)'};margin-top:2px;font-weight:600">${v.outcome}</div>
-        ${v.notes?`<div style="font-size:10px;color:var(--mut);margin-top:2px">${v.notes}</div>`:''}
+  const outcomeIcons={'Order Placed':'✅','Visit Next Time':'🕐','Not Interested':'❌','Other':'📝'};
+  el.innerHTML = visitTodayLog.map(v=>{
+    const party = getBuyers().find(b=>b.id===v.partyId)||{};
+    const addr  = party.address||party.addr1||'';
+    return `<div onclick="openVisitedPartyDetail('${v.partyId}')"
+      style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;
+      margin-bottom:8px;padding:11px 13px;cursor:pointer;
+      -webkit-tap-highlight-color:rgba(59,130,246,.1)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700">${v.partyName}
+            <span style="font-size:10px;color:var(--a2)"> ↗</span>
+          </div>
+          ${addr?`<div style="font-size:10px;color:var(--mut);margin-top:2px;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${addr}</div>`:''}
+        </div>
+        <span style="font-size:10px;padding:3px 8px;border-radius:6px;margin-left:8px;flex-shrink:0;
+          background:rgba(0,0,0,.15);color:${outcomeColors[v.outcome]||'var(--mut)'};font-weight:700">
+          ${outcomeIcons[v.outcome]||'📝'} ${v.outcome}
+        </span>
       </div>
-    </div>`).join('');
+      ${v.notes?`<div style="font-size:10px;color:var(--mut);font-style:italic">"${v.notes}"</div>`:''}
+    </div>`;
+  }).join('');
 }
 
 // Visit party picker modal
@@ -3377,6 +3392,13 @@ async function loadSmVisitReport(period){
   }catch(e){
     body.innerHTML=`<div class="empty">Error loading report</div>`;
   }
+}
+
+
+// Open party detail from visit today log (salesman side)
+function openVisitedPartyDetail(partyId){
+  // Reuse the existing party detail modal
+  openPartyDetail(partyId);
 }
 
 </script>
