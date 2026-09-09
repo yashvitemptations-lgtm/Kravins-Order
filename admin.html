@@ -3872,19 +3872,24 @@ async function loadVisitLog(){
       const outColor = v.outcome==='Order Placed'?'var(--grn)':v.outcome==='Not Interested'?'var(--red)':'var(--ylw)';
       const outIcon  = v.outcome==='Order Placed'?'✅':v.outcome==='Not Interested'?'❌':v.outcome==='Visit Next Time'?'🕐':'📝';
       return `<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:11px 13px;margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
-          <div>
-            <div style="font-size:13px;font-weight:700">${v.partyName||v.partyId}</div>
+        <!-- Clickable header -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;
+          cursor:pointer" onclick="openVisitPartyDetail('${v.partyId}')">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700">${v.partyName||v.partyId}
+              <span style="font-size:10px;color:var(--a2);margin-left:4px">↗ details</span>
+            </div>
             <div style="font-size:10px;color:var(--mut);margin-top:1px">${v.smId} · ${v.partyId}</div>
+            ${(()=>{const p=allParties.find(x=>x.id===v.partyId);return p&&p.address?`<div style="font-size:10px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${p.address}</div>`:''})()}
           </div>
           <div style="text-align:right;flex-shrink:0;margin-left:8px">
             <span style="font-size:10px;padding:3px 8px;border-radius:6px;background:rgba(0,0,0,.2);color:${outColor};font-weight:700">${outIcon} ${v.outcome}</span>
             <div style="font-size:10px;color:var(--mut);margin-top:3px">🕐 ${v.time||''}</div>
           </div>
         </div>
-        ${v.notes?`<div style="font-size:11px;color:var(--mut);font-style:italic">"${v.notes}"</div>`:''}
+        ${v.notes?`<div style="font-size:11px;color:var(--mut);font-style:italic;margin-bottom:4px">"${v.notes}"</div>`:''}
         ${v.lat&&v.lng?`<a href="https://maps.google.com/?q=${v.lat},${v.lng}" target="_blank"
-          style="font-size:10px;color:var(--a2);text-decoration:none;margin-top:3px;display:inline-block">📍 View location ↗</a>`:''}
+          style="font-size:10px;color:var(--a2);text-decoration:none">📍 View GPS location ↗</a>`:''}
       </div>`;
     }).join('');
   }catch(e){
@@ -3915,15 +3920,50 @@ async function loadVisitMap(){
       return;
     }
     // Build Google Maps embed URL with waypoints
-    const origin   = `${visits[0].lat},${visits[0].lng}`;
-    const dest     = `${visits[visits.length-1].lat},${visits[visits.length-1].lng}`;
-    const waypts   = visits.slice(1,-1).map(v=>`${v.lat},${v.lng}`).join('|');
-    const mapsUrl  = `https://www.google.com/maps/embed/v1/directions?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&origin=${origin}&destination=${dest}${waypts?'&waypoints='+waypts:''}&mode=driving`;
-    // Fallback: use static map if directions key unavailable
-    const fallback = `https://maps.google.com/maps?q=${origin}&output=embed&z=13`;
-    container.style.height='350px';
-    container.innerHTML=`<iframe width="100%" height="350" frameborder="0" style="border:0;border-radius:12px"
-      src="${fallback}" allowfullscreen></iframe>`;
+    // Build Google Maps URL with all stops as waypoints
+    const origin = `${visits[0].lat},${visits[0].lng}`;
+    const dest   = `${visits[visits.length-1].lat},${visits[visits.length-1].lng}`;
+    const midpts = visits.slice(1,-1).map(v=>`${v.lat},${v.lng}`);
+
+    // Google Maps Directions URL (opens in browser/app with full route)
+    const wayptStr = midpts.length ? '/'+midpts.join('/') : '';
+    const gmUrl = `https://www.google.com/maps/dir/${origin}${wayptStr}/${dest}`;
+
+    // For embed: use static map showing all pins
+    const markers = visits.map((v,i)=>`markers=color:${i===0?'green':i===visits.length-1?'red':'blue'}%7Clabel:${i+1}%7C${v.lat},${v.lng}`).join('&');
+    const staticUrl = `https://maps.googleapis.com/maps/api/staticmap?size=600x350&${markers}&path=color:0x0000ff80|weight:3|${visits.map(v=>`${v.lat},${v.lng}`).join('|')}&key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY`;
+
+    container.style.height='auto';
+    container.innerHTML=`
+      <!-- Open full route in Google Maps -->
+      <a href="${gmUrl}" target="_blank"
+        style="display:block;width:100%;padding:14px;background:linear-gradient(135deg,#1a73e8,#0d47a1);
+        border-radius:12px 12px 0 0;font-family:var(--f);font-size:14px;font-weight:700;
+        color:#fff;text-align:center;text-decoration:none">
+        🗺️ Open Full Route in Google Maps ↗
+      </a>
+      <!-- Sequenced stop list as visual map -->
+      <div style="background:var(--s1);border:1px solid var(--bdr);border-top:none;
+        border-radius:0 0 12px 12px;padding:12px">
+        <div style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;
+          letter-spacing:.06em;margin-bottom:10px">Route Sequence — ${visits.length} stops</div>
+        ${visits.map((v,i)=>`
+          <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;
+            border-bottom:1px solid var(--bdr);position:relative">
+            ${i<visits.length-1?`<div style="position:absolute;left:11px;top:28px;bottom:-8px;
+              width:2px;background:rgba(59,130,246,.3)"></div>`:''}
+            <div style="width:24px;height:24px;border-radius:50%;flex-shrink:0;
+              background:${i===0?'#22c55e':i===visits.length-1?'#ef4444':'#3b82f6'};
+              color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;
+              justify-content:center;z-index:1">${i+1}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:700">${v.partyName}</div>
+              <div style="font-size:10px;color:var(--mut)">${v.time} · <span style="color:${v.outcome==='Order Placed'?'var(--grn)':v.outcome==='Not Interested'?'var(--red)':'var(--ylw)'}">${v.outcome}</span></div>
+            </div>
+            <a href="https://maps.google.com/?q=${v.lat},${v.lng}" target="_blank"
+              style="font-size:10px;color:var(--a2);text-decoration:none;flex-shrink:0">📍</a>
+          </div>`).join('')}
+      </div>`;
     // Stop list with sequence
     stops.innerHTML=`<div style="margin-top:8px">
       <div style="font-size:11px;font-weight:700;color:var(--mut);margin-bottom:8px">${visits.length} stops with GPS</div>
@@ -4102,6 +4142,49 @@ function exportVisitReport(fmt){
     w.document.close();
     w.print();
   }
+}
+
+
+// Open party detail from visit log
+function openVisitPartyDetail(partyId){
+  const p = allParties.find(x=>x.id===partyId);
+  if(!p){ toast('Party details not loaded yet','er'); return; }
+  // Reuse party edit overlay in view-only mode
+  editingParty = p;
+  document.getElementById('partyEditTitle').textContent = '🏪 ' + p.name;
+  const fi = n=>'₹'+Number(n||0).toLocaleString('en-IN');
+  const stOpts = ['Active','On Hold','Inactive']
+    .map(s=>`<option value="${s}"${(p.status||'Active')===s?' selected':''}>${s}</option>`).join('');
+  document.getElementById('partyEditBody').innerHTML=`
+    <div class="mcard">
+      <div class="g2">
+        <div class="fld"><label>Party ID</label><input class="finp" value="${p.id}" readonly style="opacity:.6"></div>
+        <div class="fld"><label>Status</label><input class="finp" value="${p.status||'Active'}" readonly style="opacity:.6"></div>
+      </div>
+      <div class="fld"><label>Contact Person</label><input class="finp" value="${p.contact||'—'}" readonly></div>
+      <div class="g2">
+        <div class="fld"><label>Phone</label><input class="finp" value="${p.phone||'—'}" readonly></div>
+        <div class="fld"><label>WhatsApp</label><input class="finp" value="${p.whatsapp||'—'}" readonly></div>
+      </div>
+      <div class="fld"><label>Address</label><input class="finp" value="${p.address||'—'}" readonly></div>
+      <div class="g2">
+        <div class="fld"><label>Route / Beat</label><input class="finp" value="${p.route||'—'}" readonly></div>
+        <div class="fld"><label>Territory</label><input class="finp" value="${p.territory||'—'}" readonly></div>
+      </div>
+      <div class="g2">
+        <div class="fld"><label>GST</label><input class="finp" value="${p.gst||'—'}" readonly></div>
+        <div class="fld"><label>Terms</label><input class="finp" value="${p.terms||'—'}" readonly></div>
+      </div>
+      <div class="g2">
+        <div class="fld"><label>Credit Limit</label><input class="finp" value="${fi(p.credit)}" readonly></div>
+        <div class="fld"><label>Outstanding</label><input class="finp" value="${fi(p.outstanding)}" readonly></div>
+      </div>
+      ${p.lat&&p.lng?`<div style="margin-top:8px"><a href="https://maps.google.com/?q=${p.lat},${p.lng}" target="_blank" style="font-size:12px;color:var(--a2)">📍 View on Google Maps ↗</a></div>`:''}
+      ${p.photo?`<img src="${p.photo}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;border:1px solid var(--bdr);margin-top:8px">`:''}
+    </div>
+    <button class="mbtn pri" onclick="openPartyEdit('${p.id}')">✏️ Edit This Party</button>
+    <button class="mbtn sec" onclick="closePartyEdit()">Close</button>`;
+  document.getElementById('partyEditOv').classList.add('on');
 }
 
 </script>
