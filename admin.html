@@ -2274,6 +2274,9 @@ function closeSmDet(){ document.getElementById('smDetOv').classList.remove('on')
 function editSmRec(){
   closeSmDet(); smSubTab('add');
   const sm=masterSmRec; if(!sm) return;
+  // Populate dropdowns first
+  populateDistDropdown();
+  populateProdMixTargets(sm.prodMixTargets||{});
   setTimeout(()=>{
     const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
     sv('smf-id',sm.id); sv('smf-name',sm.name); sv('smf-phone',sm.phone); sv('smf-wa',sm.whatsapp);
@@ -2311,7 +2314,7 @@ async function saveSalesmanMaster(){
   const phone=(document.getElementById('smf-phone').value||'').trim();
   const dist=document.getElementById('smf-dist').value;
   if(!id||!name||!phone){toast('⚠️ ID, Name and Phone required','er');return;}
-  if(!dist){toast('⚠️ Please select a distributor','er');return;}
+  if(!dist){ toast('⚠️ Please assign a distributor','er'); return; }
   const payload={action:'addSalesman',salesman:{
     id,name,phone,
     whatsapp:document.getElementById('smf-wa').value.trim(),
