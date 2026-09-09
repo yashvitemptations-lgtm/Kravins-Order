@@ -1049,14 +1049,25 @@ function getVisits(smId, distId, dateFrom, dateTo) {
     var r = rows[i];
     if (!r[0]) continue;
     if (smId   && String(r[3]).trim() !== String(smId).trim())   continue;
-    if (dateFrom && r[1] < dateFrom) continue;
-    if (dateTo   && r[1] > dateTo)   continue;
+    var rDate = r[1] instanceof Date
+      ? Utilities.formatDate(r[1], 'Asia/Kolkata', 'yyyy-MM-dd')
+      : String(r[1]||'').trim();
+    if (dateFrom && rDate < dateFrom) continue;
+    if (dateTo   && rDate > dateTo)   continue;
+    // Format date and time as plain strings — avoid Date object serialization bug
+    var visitDate = r[1] instanceof Date
+      ? Utilities.formatDate(r[1], 'Asia/Kolkata', 'yyyy-MM-dd')
+      : String(r[1]||'').trim();
+    var visitTime = r[2] instanceof Date
+      ? Utilities.formatDate(r[2], 'Asia/Kolkata', 'HH:mm:ss')
+      : String(r[2]||'').trim();
     visits.push({
-      id:r[0], date:r[1], time:r[2],
-      smId:r[3], smName:r[4],
-      partyId:r[5], partyName:r[6],
-      outcome:r[7], notes:r[8],
-      lat:r[9], lng:r[10], accuracy:r[11]
+      id:r[0], date:visitDate, time:visitTime,
+      smId:String(r[3]||'').trim(), smName:String(r[4]||'').trim(),
+      partyId:String(r[5]||'').trim(), partyName:String(r[6]||'').trim(),
+      outcome:String(r[7]||'').trim(), notes:String(r[8]||'').trim(),
+      lat:String(r[9]||'').trim(), lng:String(r[10]||'').trim(),
+      accuracy:String(r[11]||'').trim()
     });
   }
   return {ok:true, visits:visits};
