@@ -591,7 +591,36 @@ textarea{resize:none;line-height:1.5;min-height:58px}
     </div>
     <!-- LOG pane -->
     <div id="vsp-log">
-      <div class="sl">Today's Visits</div>
+      <!-- Today's visit progress bar -->
+      <div id="visitTodayProgress" style="background:var(--s1);border:1px solid var(--bdr);
+        border-radius:12px;padding:12px 14px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:700;color:var(--txt)">Today's Visits</div>
+          <div style="font-size:12px;font-weight:800;color:var(--a2)" id="vt-fraction">0 / 50</div>
+        </div>
+        <div style="height:8px;background:var(--s2);border-radius:4px;overflow:hidden;margin-bottom:8px">
+          <div id="vt-bar" style="height:100%;width:0%;border-radius:4px;
+            background:linear-gradient(90deg,var(--acc),var(--grn));transition:width .5s"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px">
+          <div style="text-align:center;background:var(--s2);border-radius:8px;padding:6px 4px">
+            <div style="font-size:16px;font-weight:800;color:var(--a2)" id="vt-total">0</div>
+            <div style="font-size:9px;color:var(--mut)">Visited</div>
+          </div>
+          <div style="text-align:center;background:var(--s2);border-radius:8px;padding:6px 4px">
+            <div style="font-size:16px;font-weight:800;color:var(--grn)" id="vt-orders">0</div>
+            <div style="font-size:9px;color:var(--mut)">Orders</div>
+          </div>
+          <div style="text-align:center;background:var(--s2);border-radius:8px;padding:6px 4px">
+            <div style="font-size:16px;font-weight:800;color:var(--ylw)" id="vt-pending">0</div>
+            <div style="font-size:9px;color:var(--mut)">Remaining</div>
+          </div>
+          <div style="text-align:center;background:var(--s2);border-radius:8px;padding:6px 4px">
+            <div style="font-size:16px;font-weight:800" id="vt-pct" style="color:var(--a2)">0%</div>
+            <div style="font-size:9px;color:var(--mut)">Done</div>
+          </div>
+        </div>
+      </div>
       <div id="visitTodayList"><div class="empty">No visits logged today</div></div>
     </div>
     <!-- REPORTS pane -->
@@ -3144,6 +3173,29 @@ async function saveVisitLog(){
 function renderVisitTodayList(){
   const el = document.getElementById('visitTodayList');
   if(!el) return;
+
+  // Update progress bar
+  const total   = visitTodayLog.length;
+  const target  = _smVisitTarget || 50;
+  const orders  = visitTodayLog.filter(v=>v.outcome==='Order Placed').length;
+  const pct     = Math.min(Math.round(total/target*100), 100);
+  const remaining = Math.max(0, target - total);
+  const barColor  = pct>=100?'var(--grn)':pct>=60?'var(--ylw)':'var(--acc)';
+
+  const vtFrac = document.getElementById('vt-fraction');
+  const vtBar  = document.getElementById('vt-bar');
+  const vtTotal= document.getElementById('vt-total');
+  const vtOrd  = document.getElementById('vt-orders');
+  const vtPend = document.getElementById('vt-pending');
+  const vtPct  = document.getElementById('vt-pct');
+
+  if(vtFrac) vtFrac.textContent  = total + ' / ' + target;
+  if(vtBar)  { vtBar.style.width=pct+'%'; vtBar.style.background='linear-gradient(90deg,'+barColor+','+barColor+'bb)'; }
+  if(vtTotal)vtTotal.textContent = total;
+  if(vtOrd)  vtOrd.textContent   = orders;
+  if(vtPend) vtPend.textContent  = remaining;
+  if(vtPct)  { vtPct.textContent=pct+'%'; vtPct.style.color=pct>=100?'var(--grn)':pct>=60?'var(--ylw)':'var(--red)'; }
+
   if(!visitTodayLog.length){
     el.innerHTML='<div class="empty">No visits logged today</div>';
     return;
