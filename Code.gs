@@ -67,7 +67,7 @@ function doGet(e) {
     else if (p.action === 'editRequests')    r = getEditRequests();
     else if (p.action === 'migrateDistAlloc')  r = migrateDistAlloc();
     else if (p.action === 'distAlloc')          r = {ok:true, partyIds:getDistPartyAlloc(p.distId)};
-    else if (p.action === 'visits')             r = getVisits(p.smId, p.distId, p.from, p.to);
+    else if (p.action === 'visits')             r = getVisits(p.smId, p.distId, p.from||p.dateFrom, p.to||p.dateTo);
     else if (p.action === 'visitStats')         r = getVisitStats(p.smId);
     else r = {ok:false, error:'Unknown action'};
   } catch(e) {
