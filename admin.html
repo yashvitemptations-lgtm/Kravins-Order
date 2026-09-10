@@ -3981,17 +3981,20 @@ async function loadVisitMap(){
 // ── REPORTS (MTD / YTD) ────────────────────────────────
 async function loadVisitReport(period){
   // Update button styles
-  document.getElementById('vrep-mtd').style.background = period==='mtd'?'var(--acc)':'var(--s2)';
-  document.getElementById('vrep-mtd').style.color      = period==='mtd'?'#fff':'var(--mut)';
-  document.getElementById('vrep-ytd').style.background = period==='ytd'?'var(--acc)':'var(--s2)';
-  document.getElementById('vrep-ytd').style.color      = period==='ytd'?'#fff':'var(--mut)';
+  ['mtd','ytd'].forEach(p=>{
+    const btn=document.getElementById('vrep-'+p);
+    if(btn){ btn.style.background=p===period?'var(--acc)':'var(--s2)'; btn.style.color=p===period?'#fff':'var(--mut)'; }
+  });
 
   const body = document.getElementById('visit-report-body');
   body.innerHTML='<div class="empty">Loading...</div>';
   const now = new Date();
+
+  // ── Date range ────────────────────────────────────────────────────
   let dateFrom, dateTo;
   if(period==='custom'){
-    dateFrom = document.getElementById('vrep-from')?.value || new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+    dateFrom = document.getElementById('vrep-from')?.value ||
+               new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
     dateTo   = document.getElementById('vrep-to')?.value   || now.toISOString().slice(0,10);
   } else {
     dateFrom = period==='mtd'
@@ -3999,8 +4002,11 @@ async function loadVisitReport(period){
       : new Date(now.getFullYear(),0,1).toISOString().slice(0,10);
     dateTo = now.toISOString().slice(0,10);
   }
+  // Fix declare before use
+  const days        = Math.max(1, Math.round((new Date(dateTo)-new Date(dateFrom))/(1000*60*60*24))+1);
+  const visitTarget = 50 * days;
+
   // Store for export
-  window._lastVisitReportData  = null;
   window._lastVisitReportPeriod = period;
   window._lastVisitReportFrom   = dateFrom;
   window._lastVisitReportTo     = dateTo;
@@ -4011,73 +4017,158 @@ async function loadVisitReport(period){
     if(!d.ok) throw new Error(d.error);
     const visits = d.visits||[];
 
-    // Aggregate by SM
+    if(!visits.length){ body.innerHTML='<div class="empty">No visits in this period</div>'; return; }
+
+    // ── Aggregate per SM ─────────────────────────────────────────────
     const smMap = {};
     visits.forEach(v=>{
-      if(!smMap[v.smId]) smMap[v.smId]={smId:v.smId,smName:v.smName||v.smId,visits:0,orders:0,shops:new Set()};
-      smMap[v.smId].visits++;
+      if(!smMap[v.smId]) smMap[v.smId]={
+        smId:v.smId, smName:v.smName||v.smId,
+        visitList:[], orderList:[], shops:new Set()
+      };
+      smMap[v.smId].visitList.push(v);
       smMap[v.smId].shops.add(v.partyId);
-      if(v.outcome==='Order Placed') smMap[v.smId].orders++;
+      if(v.outcome==='Order Placed') smMap[v.smId].orderList.push(v);
     });
 
-    const rows = Object.values(smMap).sort((a,b)=>b.visits-a.visits);
-    if(!rows.length){ body.innerHTML='<div class="empty">No visits in this period</div>'; return; }
+    const rows = Object.values(smMap).sort((a,b)=>b.visitList.length-a.visitList.length);
     window._lastVisitReportData = {visits, rows, days, visitTarget};
 
-    const DAILY_VISIT_TARGET = 50;
-    const days = Math.round((new Date(dateTo)-new Date(dateFrom))/(1000*60*60*24))+1;
-    const visitTarget = DAILY_VISIT_TARGET * days;
+    const outcomeColor = o=>o==='Order Placed'?'var(--grn)':o==='Not Interested'?'var(--red)':'var(--ylw)';
 
     body.innerHTML=`
-      <!-- Report 1: Shops Visited -->
-      <div style="font-size:12px;font-weight:700;color:var(--a2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">
-        🏪 Shops Visited — ${period.toUpperCase()} (Target: ${visitTarget})
-      </div>
-      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:16px">
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 12px;
-          font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--bdr)">
-          <div>Salesman</div><div style="text-align:center">Visits</div>
-          <div style="text-align:center">Unique Shops</div><div style="text-align:center">vs Target</div>
-        </div>
-        ${rows.map(r=>{
-          const pct=Math.min(Math.round(r.visits/visitTarget*100),999);
-          const barColor=pct>=100?'var(--grn)':pct>=70?'var(--ylw)':'var(--red)';
-          return `<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:9px 12px;
-            border-bottom:1px solid var(--bdr);align-items:center">
-            <div style="font-size:12px;font-weight:600">${r.smName}<br>
-              <span style="font-size:9px;color:var(--mut)">${r.smId}</span></div>
-            <div style="text-align:center;font-weight:700;color:var(--a2)">${r.visits}</div>
-            <div style="text-align:center;color:var(--txt)">${r.shops.size}</div>
-            <div style="text-align:center">
-              <span style="font-size:11px;font-weight:700;color:${barColor}">${pct}%</span>
-            </div>
-          </div>`;
-        }).join('')}
+
+      <!-- ═══ REPORT 1: SHOPS VISITED ═══ -->
+      <div style="font-size:12px;font-weight:700;color:var(--a2);margin-bottom:8px;
+        text-transform:uppercase;letter-spacing:.05em">
+        🏪 Shops Visited — ${period==='custom'?dateFrom+' to '+dateTo:period.toUpperCase()}
+        <span style="font-size:10px;color:var(--mut);font-weight:400">(Target: ${visitTarget} visits)</span>
       </div>
 
-      <!-- Report 2: Orders -->
-      <div style="font-size:12px;font-weight:700;color:var(--a2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">
-        📦 Orders from Visits — ${period.toUpperCase()}
+      ${rows.map(row=>{
+        const total = row.visitList.length;
+        const pct   = Math.min(Math.round(total/visitTarget*100),999);
+        const bc    = pct>=100?'var(--grn)':pct>=70?'var(--ylw)':'var(--red)';
+        return `
+        <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;
+          overflow:hidden;margin-bottom:10px">
+          <!-- SM summary row -->
+          <div style="display:grid;grid-template-columns:1fr auto auto auto;
+            gap:12px;padding:10px 12px;align-items:center;cursor:pointer;
+            border-bottom:1px solid var(--bdr)"
+            onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+            <div>
+              <div style="font-size:13px;font-weight:700">${row.smName}
+                <span style="font-size:10px;color:var(--mut)">${row.smId}</span>
+              </div>
+              <div style="height:4px;background:var(--s2);border-radius:2px;margin-top:5px;overflow:hidden">
+                <div style="height:100%;width:${Math.min(pct,100)}%;background:${bc};border-radius:2px"></div>
+              </div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:18px;font-weight:800;color:var(--a2)">${total}</div>
+              <div style="font-size:9px;color:var(--mut)">Visits</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:18px;font-weight:800;color:var(--pur)">${row.shops.size}</div>
+              <div style="font-size:9px;color:var(--mut)">Shops</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:18px;font-weight:800;color:${bc}">${pct}%</div>
+              <div style="font-size:9px;color:var(--mut)">Target</div>
+            </div>
+          </div>
+          <!-- Party list (expandable, hidden by default) -->
+          <div style="display:none">
+            <div style="padding:8px 12px;font-size:9px;font-weight:700;color:var(--mut);
+              text-transform:uppercase;border-bottom:1px solid var(--bdr)">
+              Party Details — ${total} visits
+            </div>
+            ${row.visitList.map((v,i)=>{
+              const party=allParties.find(p=>p.id===v.partyId)||{};
+              return `<div style="display:grid;grid-template-columns:auto 1fr auto;
+                gap:8px;padding:9px 12px;border-bottom:1px solid var(--bdr);align-items:center">
+                <div style="width:22px;height:22px;border-radius:50%;background:var(--s2);
+                  font-size:10px;font-weight:800;color:var(--mut);display:flex;
+                  align-items:center;justify-content:center">${i+1}</div>
+                <div>
+                  <div style="font-size:12px;font-weight:600">${v.partyName}</div>
+                  <div style="font-size:10px;color:var(--mut)">${party.address||party.route||''}</div>
+                  ${v.notes?`<div style="font-size:10px;color:var(--mut);font-style:italic">"${v.notes}"</div>`:''}
+                </div>
+                <span style="font-size:10px;padding:2px 7px;border-radius:5px;
+                  background:rgba(0,0,0,.15);color:${outcomeColor(v.outcome)};font-weight:700;
+                  white-space:nowrap">${v.outcome}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+
+      <!-- ═══ REPORT 2: ORDERS FROM VISITS ═══ -->
+      <div style="font-size:12px;font-weight:700;color:var(--a2);margin:16px 0 8px;
+        text-transform:uppercase;letter-spacing:.05em">
+        📦 Orders from Visits — ${period==='custom'?dateFrom+' to '+dateTo:period.toUpperCase()}
       </div>
-      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden">
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 12px;
-          font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;border-bottom:1px solid var(--bdr)">
-          <div>Salesman</div><div style="text-align:center">Orders</div>
-          <div style="text-align:center">Visits</div><div style="text-align:center">Conversion</div>
-        </div>
-        ${rows.map(r=>{
-          const conv=r.visits>0?Math.round(r.orders/r.visits*100):0;
-          const convColor=conv>=50?'var(--grn)':conv>=30?'var(--ylw)':'var(--red)';
-          return `<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:9px 12px;
-            border-bottom:1px solid var(--bdr);align-items:center">
-            <div style="font-size:12px;font-weight:600">${r.smName}<br>
-              <span style="font-size:9px;color:var(--mut)">${r.smId}</span></div>
-            <div style="text-align:center;font-weight:700;color:var(--grn)">${r.orders}</div>
-            <div style="text-align:center;color:var(--mut)">${r.visits}</div>
-            <div style="text-align:center;font-weight:700;color:${convColor}">${conv}%</div>
-          </div>`;
-        }).join('')}
-      </div>`;
+
+      ${rows.filter(r=>r.visitList.length>0).map(row=>{
+        const total = row.visitList.length;
+        const orders= row.orderList.length;
+        const conv  = total>0?Math.round(orders/total*100):0;
+        const cc    = conv>=50?'var(--grn)':conv>=30?'var(--ylw)':'var(--red)';
+        return `
+        <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;
+          overflow:hidden;margin-bottom:10px">
+          <!-- SM summary -->
+          <div style="display:grid;grid-template-columns:1fr auto auto auto;
+            gap:12px;padding:10px 12px;align-items:center;cursor:pointer;
+            border-bottom:1px solid var(--bdr)"
+            onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+            <div>
+              <div style="font-size:13px;font-weight:700">${row.smName}
+                <span style="font-size:10px;color:var(--mut)">${row.smId}</span>
+              </div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:18px;font-weight:800;color:var(--grn)">${orders}</div>
+              <div style="font-size:9px;color:var(--mut)">Orders</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:18px;font-weight:800;color:var(--mut)">${total}</div>
+              <div style="font-size:9px;color:var(--mut)">Visits</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:18px;font-weight:800;color:${cc}">${conv}%</div>
+              <div style="font-size:9px;color:var(--mut)">Conv.</div>
+            </div>
+          </div>
+          <!-- Party list by outcome (expandable) -->
+          <div style="display:none">
+            <div style="padding:8px 12px;font-size:9px;font-weight:700;color:var(--mut);
+              text-transform:uppercase;border-bottom:1px solid var(--bdr)">
+              Visit Details — tap SM header to collapse
+            </div>
+            ${row.visitList.map((v,i)=>{
+              const party=allParties.find(p=>p.id===v.partyId)||{};
+              return `<div style="display:grid;grid-template-columns:auto 1fr auto;
+                gap:8px;padding:9px 12px;border-bottom:1px solid var(--bdr);align-items:center">
+                <div style="width:22px;height:22px;border-radius:50%;flex-shrink:0;
+                  background:${v.outcome==='Order Placed'?'rgba(34,197,94,.15)':'var(--s2)'};
+                  font-size:10px;font-weight:800;color:var(--mut);display:flex;
+                  align-items:center;justify-content:center">${i+1}</div>
+                <div>
+                  <div style="font-size:12px;font-weight:600">${v.partyName}</div>
+                  <div style="font-size:10px;color:var(--mut)">${party.address||party.route||''}</div>
+                </div>
+                <span style="font-size:10px;padding:2px 7px;border-radius:5px;
+                  background:rgba(0,0,0,.15);color:${outcomeColor(v.outcome)};font-weight:700;
+                  white-space:nowrap">${v.outcome}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('')}`;
+
   }catch(e){
     body.innerHTML=`<div class="empty">Error: ${e.message}</div>`;
   }
