@@ -2723,7 +2723,7 @@ let suggestPartyData = null;
 
 // Open party detail modal
 let pdPartyId = null;
-function openPartyDetail(partyId){
+async function openPartyDetail(partyId){
   const b = getBuyers().find(x=>x.id===partyId);
   if(!b){ toast('Party not found','er'); return; }
   pdPartyId = partyId;
@@ -2764,10 +2764,17 @@ function openPartyDetail(partyId){
   document.getElementById('pdBody').innerHTML = h;
   document.getElementById('partyDetailOv').classList.add('on');
 
-  // Load orders for this party
+  // Load orders for this party from server
   const ordersSection = document.getElementById('pdOrdersSection');
   if(ordersSection){
-    const partyOrders = getOrders().filter(o=>o.bid===partyId&&o.status!=='Cancelled');
+    ordersSection.innerHTML='<div style="font-size:11px;color:var(--mut);padding:8px 0">Loading orders...</div>';
+    let partyOrders = getOrders().filter(o=>o.bid===partyId&&o.status!=='Cancelled');
+    // Also try server for complete history
+    try{
+      const ro = await fetch(`${SCRIPT_URL}?action=orders&smId=${SID}&t=${Date.now()}`);
+      const dor = await ro.json();
+      if(dor.ok && dor.orders) partyOrders = dor.orders.filter(o=>o.bid===partyId&&o.status!=='Cancelled');
+    }catch(e){}
     if(partyOrders.length){
       const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
       ordersSection.innerHTML=`
@@ -3102,21 +3109,20 @@ const OUTCOME_IDS = {
 };
 
 async function renderVisitTab(){
-  renderVisitTodayList(); // show local cache immediately
   captureVisitGPS();
-  // Also fetch today's visits from server to show full list
+  // Always clear first — never show stale data from previous days
+  visitTodayLog = [];
+  renderVisitTodayList();
   try{
     const today = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})).toISOString().slice(0,10);
     const r = await fetch(`${SCRIPT_URL}?action=visits&smId=${SID}&dateFrom=${today}&dateTo=${today}&t=${Date.now()}`);
     const d = await r.json();
-    // Always replace with server data (today only) — never accumulate old days
     visitTodayLog = (d.ok && d.visits ? d.visits : []).map(v=>({
       partyId:v.partyId, partyName:v.partyName,
       outcome:v.outcome, notes:v.notes||''
-      // time intentionally excluded from salesman view
     }));
     renderVisitTodayList();
-  }catch(e){} // silently fail — local cache already shown
+  }catch(e){ renderVisitTodayList(); }
 }
 
 function selectOutcome(outcome){
@@ -3391,9 +3397,20 @@ async function loadSmVisitReport(period){
   const visitTarget = _smVisitTarget * days;
 
   try{
-    const r = await fetch(`${SCRIPT_URL}?action=visits&smId=${SID}&dateFrom=${dateFrom}&dateTo=${dateTo}&t=${Date.now()}`);
-    const d = await r.json();
-    const visits = d.ok ? (d.visits||[]) : [];
+    // Fetch visits AND orders from server for this period
+    const [rv, ro] = await Promise.all([
+      fetch(`${SCRIPT_URL}?action=visits&smId=${SID}&dateFrom=${dateFrom}&dateTo=${dateTo}&t=${Date.now()}`),
+      fetch(`${SCRIPT_URL}?action=orders&smId=${SID}&t=${Date.now()}`)
+    ]);
+    const dv = await rv.json();
+    const dor = await ro.json();
+    const visits = dv.ok ? (dv.visits||[]) : [];
+    // Store orders filtered to this date range for party lookup
+    window._smReportOrders = (dor.ok ? (dor.orders||[]) : getOrders())
+      .filter(o=>{
+        const od=(o.date||'').slice(0,10);
+        return od>=dateFrom && od<=dateTo;
+      });
 
     const totalVisits  = visits.length;
     const uniqueShops  = new Set(visits.map(v=>v.partyId)).size;
@@ -3436,7 +3453,7 @@ async function loadSmVisitReport(period){
       <div style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;
         letter-spacing:.06em;margin-bottom:8px">All Visits (tap to see order)</div>
       ${visits.map((v,i)=>{
-        const partyOrds = getOrders().filter(o=>o.bid===v.partyId&&o.status!=='Cancelled'&&(o.date||'').slice(0,10)>=dateFrom&&(o.date||'').slice(0,10)<=dateTo);
+        const partyOrds = (window._smReportOrders||[]).filter(o=>o.bid===v.partyId&&o.status!=='Cancelled');
         return `<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;
           margin-bottom:7px;overflow:hidden">
           <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer"
