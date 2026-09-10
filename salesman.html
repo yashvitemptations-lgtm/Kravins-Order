@@ -3115,7 +3115,7 @@ async function renderVisitTab(){
   renderVisitTodayList();
   try{
     const today = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})).toISOString().slice(0,10);
-    const r = await fetch(`${SCRIPT_URL}?action=visits&smId=${SID}&dateFrom=${today}&dateTo=${today}&t=${Date.now()}`);
+    const r = await fetch(`${SCRIPT_URL}?action=visits&smId=${encodeURIComponent(SID)}&from=${today}&to=${today}&t=${Date.now()}`);
     const d = await r.json();
     visitTodayLog = (d.ok && d.visits ? d.visits : []).map(v=>({
       partyId:v.partyId, partyName:v.partyName,
@@ -3395,14 +3395,20 @@ async function loadSmVisitReport(period){
   const visitTarget=_smVisitTarget*days;
 
   try{
+    // visits API uses 'from'/'to' params; orders API uses 'smId'
     const [rv,ro]=await Promise.all([
-      fetch(SCRIPT_URL+'?action=visits&smId='+encodeURIComponent(SID)+'&dateFrom='+dateFrom+'&dateTo='+dateTo+'&t='+Date.now()),
+      fetch(SCRIPT_URL+'?action=visits&smId='+encodeURIComponent(SID)+'&from='+dateFrom+'&to='+dateTo+'&t='+Date.now()),
       fetch(SCRIPT_URL+'?action=orders&smId='+encodeURIComponent(SID)+'&t='+Date.now())
     ]);
-    const dv=await rv.json();
-    const dor=await ro.json();
+    const dvText=await rv.text();
+    const dorText=await ro.text();
+    let dv={ok:false,visits:[]}, dor={ok:false,orders:[]};
+    try{dv=JSON.parse(dvText);}catch(e){console.error('visits parse error',dvText.slice(0,100));}
+    try{dor=JSON.parse(dorText);}catch(e){console.error('orders parse error',dorText.slice(0,100));}
     const visits=dv.ok?(dv.visits||[]):[];
-    window._smReportOrders=(dor.ok?(dor.orders||[]):getOrders()).filter(function(o){
+    // Filter orders to this date range
+    const allOrds=dor.ok?(dor.orders||[]):getOrders();
+    window._smReportOrders=allOrds.filter(function(o){
       const od=(o.date||'').slice(0,10);
       return od>=dateFrom&&od<=dateTo;
     });
