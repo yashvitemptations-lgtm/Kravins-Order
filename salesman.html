@@ -3209,10 +3209,8 @@ async function saveVisitLog(){
     if(d.ok){
       toast('✅ Visit logged — '+outcome,'ok');
       // Add to today's local list
-      visitTodayLog.unshift({
-        ...visit,
-        time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})
-      });
+      // Reload from server after save — ensures today-only data
+      await renderVisitTab();
       // Reset form
       document.getElementById('visitPartyId').value='';
       document.getElementById('visitPartyLabel').textContent='Search party...';
@@ -3373,127 +3371,140 @@ function checkVisitReturnAfterOrder(){
 // MTD/YTD visit reports for salesman
 let _smVisitTarget = 50; // updated from dashboard
 async function loadSmVisitReport(period){
-  const btn_mtd = document.getElementById('vsr-mtd');
-  const btn_ytd = document.getElementById('vsr-ytd');
-  if(btn_mtd){ btn_mtd.style.background=period==='mtd'?'var(--acc)':'var(--s2)'; btn_mtd.style.color=period==='mtd'?'#fff':'var(--mut)'; }
-  if(btn_ytd){ btn_ytd.style.background=period==='ytd'?'var(--acc)':'var(--s2)'; btn_ytd.style.color=period==='ytd'?'#fff':'var(--mut)'; }
+  const btnMtd=document.getElementById('vsr-mtd');
+  const btnYtd=document.getElementById('vsr-ytd');
+  if(btnMtd){btnMtd.style.background=period==='mtd'?'var(--acc)':'var(--s2)';btnMtd.style.color=period==='mtd'?'#fff':'var(--mut)';}
+  if(btnYtd){btnYtd.style.background=period==='ytd'?'var(--acc)':'var(--s2)';btnYtd.style.color=period==='ytd'?'#fff':'var(--mut)';}
 
-  const body = document.getElementById('sm-visit-report');
+  const body=document.getElementById('sm-visit-report');
   body.innerHTML='<div class="empty">Loading...</div>';
 
-  const now = new Date();
-  let dateFrom, dateTo;
+  const now=new Date();
+  let dateFrom,dateTo;
   if(period==='custom'){
-    dateFrom = document.getElementById('vsr-from')?.value||'';
-    dateTo   = document.getElementById('vsr-to')?.value||'';
-    if(!dateFrom||!dateTo){ body.innerHTML='<div class="empty">Please select date range</div>'; return; }
+    dateFrom=document.getElementById('vsr-from')?.value||'';
+    dateTo=document.getElementById('vsr-to')?.value||'';
+    if(!dateFrom||!dateTo){body.innerHTML='<div class="empty">Select date range</div>';return;}
   } else {
-    dateFrom = period==='mtd'
+    dateFrom=period==='mtd'
       ? new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10)
       : new Date(now.getFullYear(),0,1).toISOString().slice(0,10);
-    dateTo = new Date(now.toLocaleString('en-US',{timeZone:'Asia/Kolkata'})).toISOString().slice(0,10);
+    dateTo=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})).toISOString().slice(0,10);
   }
-  const days = Math.max(1, Math.round((new Date(dateTo)-new Date(dateFrom))/(1000*60*60*24))+1);
-  const visitTarget = _smVisitTarget * days;
+  const days=Math.max(1,Math.round((new Date(dateTo)-new Date(dateFrom))/(1000*60*60*24))+1);
+  const visitTarget=_smVisitTarget*days;
 
   try{
-    // Fetch visits AND orders from server for this period
-    const [rv, ro] = await Promise.all([
-      fetch(`${SCRIPT_URL}?action=visits&smId=${SID}&dateFrom=${dateFrom}&dateTo=${dateTo}&t=${Date.now()}`),
-      fetch(`${SCRIPT_URL}?action=orders&smId=${SID}&t=${Date.now()}`)
+    const [rv,ro]=await Promise.all([
+      fetch(SCRIPT_URL+'?action=visits&smId='+encodeURIComponent(SID)+'&dateFrom='+dateFrom+'&dateTo='+dateTo+'&t='+Date.now()),
+      fetch(SCRIPT_URL+'?action=orders&smId='+encodeURIComponent(SID)+'&t='+Date.now())
     ]);
-    const dv = await rv.json();
-    const dor = await ro.json();
-    const visits = dv.ok ? (dv.visits||[]) : [];
-    // Store orders filtered to this date range for party lookup
-    window._smReportOrders = (dor.ok ? (dor.orders||[]) : getOrders())
-      .filter(o=>{
-        const od=(o.date||'').slice(0,10);
-        return od>=dateFrom && od<=dateTo;
+    const dv=await rv.json();
+    const dor=await ro.json();
+    const visits=dv.ok?(dv.visits||[]):[];
+    window._smReportOrders=(dor.ok?(dor.orders||[]):getOrders()).filter(function(o){
+      const od=(o.date||'').slice(0,10);
+      return od>=dateFrom&&od<=dateTo;
+    });
+
+    const total=visits.length;
+    const orders=visits.filter(function(v){return v.outcome==='Order Placed';}).length;
+    const uniqueShops=new Set(visits.map(function(v){return v.partyId;})).size;
+    const conversion=total>0?Math.round(orders/total*100):0;
+    const visitPct=visitTarget>0?Math.min(Math.round(total/visitTarget*100),100):0;
+    const pctColor=visitPct>=80?'var(--grn)':visitPct>=50?'var(--ylw)':'var(--red)';
+    const fi=function(n){return '₹'+Number(n||0).toLocaleString('en-IN');};
+    const oc=function(o){return o==='Order Placed'?'var(--grn)':o==='Not Interested'?'var(--red)':'var(--ylw)';};
+    const oi=function(o){return o==='Order Placed'?'✅':o==='Not Interested'?'❌':o==='Visit Next Time'?'🕐':'📝';};
+
+    // Summary cards
+    var html='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+      +'<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">'
+      +'<div style="font-size:24px;font-weight:800;color:var(--a2)">'+total+'</div>'
+      +'<div style="font-size:9px;color:var(--mut)">Total Visits</div></div>'
+      +'<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">'
+      +'<div style="font-size:24px;font-weight:800;color:var(--grn)">'+orders+'</div>'
+      +'<div style="font-size:9px;color:var(--mut)">Orders</div></div>'
+      +'<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">'
+      +'<div style="font-size:24px;font-weight:800;color:'+(conversion>=50?'var(--grn)':conversion>=30?'var(--ylw)':'var(--red)')+'">'+conversion+'%</div>'
+      +'<div style="font-size:9px;color:var(--mut)">Conversion</div></div>'
+      +'</div>'
+      +'<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;margin-bottom:12px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut);margin-bottom:5px">'
+      +'<span>Target: '+visitTarget+' ('+_smVisitTarget+'/day × '+days+' days)</span>'
+      +'<span style="color:'+pctColor+';font-weight:700">'+visitPct+'%</span></div>'
+      +'<div style="height:6px;background:var(--s2);border-radius:3px;overflow:hidden">'
+      +'<div style="height:100%;background:'+pctColor+';width:'+visitPct+'%;border-radius:3px"></div>'
+      +'</div></div>';
+
+    // For YTD: group by month
+    if(period==='ytd'){
+      var monthMap={};
+      visits.forEach(function(v){
+        var mo=(v.date||'').slice(0,7);
+        if(!monthMap[mo])monthMap[mo]={visits:[],orders:0};
+        monthMap[mo].visits.push(v);
+        if(v.outcome==='Order Placed')monthMap[mo].orders++;
       });
+      var months=Object.keys(monthMap).sort().reverse();
+      months.forEach(function(mo){
+        var mv=monthMap[mo];
+        var mLabel=new Date(mo+'-02').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+        var mConv=mv.visits.length>0?Math.round(mv.orders/mv.visits.length*100):0;
+        html+='<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:8px">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 13px;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">'
+          +'<div><div style="font-size:13px;font-weight:700">'+mLabel+'</div>'
+          +'<div style="font-size:10px;color:var(--mut)">'+mv.visits.length+' visits · '+mv.orders+' orders · '+mConv+'% conv.</div></div>'
+          +'<span style="font-size:18px;color:var(--mut)">›</span></div>'
+          +'<div style="display:none">';
+        mv.visits.forEach(function(v,i){
+          html+=buildVisitRow(v,i,mo,fi,oc,oi);
+        });
+        html+='</div></div>';
+      });
+    } else {
+      // MTD / Custom: flat list
+      html+='<div style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">All Visits (tap to see order)</div>';
+      visits.forEach(function(v,i){
+        html+=buildVisitRow(v,i,null,fi,oc,oi);
+      });
+    }
 
-    const totalVisits  = visits.length;
-    const uniqueShops  = new Set(visits.map(v=>v.partyId)).size;
-    const orders       = visits.filter(v=>v.outcome==='Order Placed').length;
-    const conversion   = totalVisits>0 ? Math.round(orders/totalVisits*100) : 0;
-    const visitPct     = visitTarget>0 ? Math.min(Math.round(totalVisits/visitTarget*100),100) : 0;
-    const pctColor     = visitPct>=80?'var(--grn)':visitPct>=50?'var(--ylw)':'var(--red)';
-
-    const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
-    const outColor=o=>o==='Order Placed'?'var(--grn)':o==='Not Interested'?'var(--red)':'var(--ylw)';
-    const outIcon=o=>o==='Order Placed'?'✅':o==='Not Interested'?'❌':o==='Visit Next Time'?'🕐':'📝';
-
-    body.innerHTML=`
-      <!-- Summary cards -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-        <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:24px;font-weight:800;color:var(--a2)">${totalVisits}</div>
-          <div style="font-size:9px;color:var(--mut)">Total Visits</div>
-        </div>
-        <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:24px;font-weight:800;color:var(--grn)">${orders}</div>
-          <div style="font-size:9px;color:var(--mut)">Orders</div>
-        </div>
-        <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:24px;font-weight:800;color:${conversion>=50?'var(--grn)':conversion>=30?'var(--ylw)':'var(--red)'}">${conversion}%</div>
-          <div style="font-size:9px;color:var(--mut)">Conversion</div>
-        </div>
-      </div>
-      <!-- Target progress -->
-      <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px;margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut);margin-bottom:5px">
-          <span>Visit Target: ${visitTarget} (${_smVisitTarget}/day × ${days} days)</span>
-          <span style="color:${pctColor};font-weight:700">${visitPct}%</span>
-        </div>
-        <div style="height:6px;background:var(--s2);border-radius:3px;overflow:hidden">
-          <div style="height:100%;background:${pctColor};width:${visitPct}%;border-radius:3px"></div>
-        </div>
-      </div>
-      <!-- Party list — tap to expand order details -->
-      <div style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;
-        letter-spacing:.06em;margin-bottom:8px">All Visits (tap to see order)</div>
-      ${visits.map((v,i)=>{
-        const partyOrds = (window._smReportOrders||[]).filter(o=>o.bid===v.partyId&&o.status!=='Cancelled');
-        return `<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;
-          margin-bottom:7px;overflow:hidden">
-          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer"
-            onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
-            <div style="width:22px;height:22px;border-radius:50%;background:var(--s2);flex-shrink:0;
-              font-size:10px;font-weight:800;color:var(--mut);display:flex;align-items:center;justify-content:center">${i+1}</div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:700">${v.partyName}</div>
-              ${v.notes?`<div style="font-size:10px;color:var(--mut);font-style:italic">"${v.notes}"</div>`:''}
-            </div>
-            <span style="font-size:10px;padding:2px 7px;border-radius:5px;flex-shrink:0;
-              background:rgba(0,0,0,.15);color:${outColor(v.outcome)};font-weight:700">
-              ${outIcon(v.outcome)} ${v.outcome}</span>
-          </div>
-          <!-- Order detail (hidden, expands on tap) -->
-          <div style="display:none;border-top:1px solid var(--bdr);padding:10px 12px;background:var(--s2)">
-            ${partyOrds.length ? partyOrds.map(o=>`
-              <div style="margin-bottom:6px">
-                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-                  <span style="font-size:11px;font-weight:700;color:var(--a2)">${o.oid}</span>
-                  <span style="font-size:10px;color:var(--grn)">${o.status}</span>
-                </div>
-                ${(o.items||[]).map(it=>`
-                  <div style="display:flex;justify-content:space-between;font-size:11px;
-                    padding:3px 0;border-top:1px solid var(--bdr)">
-                    <span style="color:var(--mut)">${it.name||it.code} ×${it.qty}</span>
-                    <span style="font-weight:600">${fi(it.price*it.qty)}</span>
-                  </div>`).join('')}
-                <div style="display:flex;justify-content:space-between;font-size:12px;
-                  font-weight:700;padding-top:5px;margin-top:3px;border-top:1px solid var(--bdr)">
-                  <span>Total</span><span style="color:var(--a2)">${fi(o.gt)}</span>
-                </div>
-              </div>`).join('') :
-              `<div style="font-size:11px;color:var(--mut);text-align:center;padding:6px">No order placed this visit</div>`}
-          </div>
-        </div>`;
-      }).join('')}`;
+    body.innerHTML=html;
   }catch(e){
-    body.innerHTML=`<div class="empty">Error loading report</div>`;
+    body.innerHTML='<div class="empty">Error: '+e.message+'</div>';
   }
+}
+
+function buildVisitRow(v,i,moFilter,fi,oc,oi){
+  var pOrds=(window._smReportOrders||[]).filter(function(o){
+    return o.bid===v.partyId&&o.status!=='Cancelled'&&(!moFilter||(o.date||'').slice(0,7)===moFilter);
+  });
+  var ordHtml=pOrds.length?pOrds.map(function(o){
+    var itemHtml=(o.items||o.lines||[]).map(function(it){
+      var nm=it.name||it.pname||it.code||it.pcode||'Item';
+      var qty=it.qty||it.quantity||1;
+      var tot=it.total||it.lt||(it.price||it.rate||0)*qty||0;
+      return '<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-top:1px solid var(--bdr)">'
+        +'<span style="color:var(--mut)">'+nm+' ×'+qty+'</span><span>'+fi(tot)+'</span></div>';
+    }).join('');
+    return '<div style="margin-bottom:5px">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--a2);margin-bottom:3px">'+o.oid+' · '+(o.date||'')+'</div>'
+      +itemHtml
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;padding-top:4px;border-top:1px solid var(--bdr)">'
+      +'<span>Total</span><span style="color:var(--a2)">'+fi(o.gt||0)+'</span></div></div>';
+  }).join('')
+  :'<div style="font-size:11px;color:var(--mut);text-align:center;padding:6px">No order placed this visit</div>';
+
+  return '<div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;margin-bottom:7px;overflow:hidden">'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">'
+    +'<div style="width:22px;height:22px;border-radius:50%;background:var(--s2);flex-shrink:0;font-size:10px;font-weight:800;color:var(--mut);display:flex;align-items:center;justify-content:center">'+(i+1)+'</div>'
+    +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+v.partyName+'</div>'
+    +(v.notes?'<div style="font-size:10px;color:var(--mut);font-style:italic">"'+v.notes+'"</div>':'')+'</div>'
+    +'<span style="font-size:10px;padding:2px 7px;border-radius:5px;flex-shrink:0;background:rgba(0,0,0,.15);color:'+oc(v.outcome)+';font-weight:700">'+oi(v.outcome)+' '+v.outcome+'</span>'
+    +'</div>'
+    +'<div style="display:none;border-top:1px solid var(--bdr);padding:10px 12px;background:var(--s2)">'+ordHtml+'</div>'
+    +'</div>';
 }
 
 
