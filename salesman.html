@@ -1004,7 +1004,7 @@ let SNAME = SID;
 let DIST_ID = 'D001';
 let PARTY_ACCESS = true;
 // ── Cache version — increment this when data structure changes ───────
-const CACHE_VER = '4';  // bumped to force clear stale unfiltered party cache
+const CACHE_VER = '6';  // force browser refresh for all latest fixes
 const LK = {b:`B_${SID}_v${CACHE_VER}`, o:`O_${SID}`};
 
 // Clear old cache keys from previous versions on first load
@@ -3046,7 +3046,7 @@ async function renderVisitTab(){
   captureVisitGPS();
   // Also fetch today's visits from server to show full list
   try{
-    const today = new Date().toISOString().slice(0,10);
+    const today = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})).toISOString().slice(0,10);
     const r = await fetch(`${SCRIPT_URL}?action=visits&smId=${SID}&dateFrom=${today}&dateTo=${today}&t=${Date.now()}`);
     const d = await r.json();
     if(d.ok && d.visits && d.visits.length){
