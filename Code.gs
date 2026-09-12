@@ -1363,14 +1363,19 @@ function resolveEditRequest(reqId, resolution) {
 
 function fixDuplicatePartyIds() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
-  var sheet = ss.getSheetByName(TAB_PARTIES);
-  if (!sheet || sheet.getLastRow() < 2) return 'No data';
+  var partySheet = ss.getSheetByName(TAB_PARTIES);
+  var orderSheet = ss.getSheetByName(TAB_ORDERS);
+  var visitSheet = ss.getSheetByName(TAB_VISITS);
+  var distSheet  = ss.getSheetByName('Dist_Alloc');
 
-  var rows = sheet.getRange(2,1,sheet.getLastRow()-1,1).getValues();
+  if (!partySheet || partySheet.getLastRow() < 2) return 'No party data';
+
+  var rows = partySheet.getRange(2,1,partySheet.getLastRow()-1,1).getValues();
   var seen = {};
+  var changes = {}; // oldId -> newId map
   var fixed = 0;
 
-  // Find max numeric ID first
+  // Find max numeric ID across all existing IDs
   var maxNum = 0;
   for (var i=0; i<rows.length; i++) {
     var id = String(rows[i][0]||'').trim();
@@ -1378,18 +1383,18 @@ function fixDuplicatePartyIds() {
     if (num > maxNum) maxNum = num;
   }
 
-  // Fix duplicates
+  // Fix duplicates in New_Parties sheet
   for (var i=0; i<rows.length; i++) {
     var id = String(rows[i][0]||'').trim();
     if (!id) continue;
     if (seen[id]) {
-      // Duplicate found — assign new unique ID
       maxNum++;
       var prefix = id.replace(/[0-9]+$/,'') || 'BP';
       var newId = prefix + String(maxNum).padStart(4,'0');
       while (seen[newId]) { maxNum++; newId = prefix + String(maxNum).padStart(4,'0'); }
-      sheet.getRange(i+2, 1).setValue(newId);
-      Logger.log('Row '+(i+2)+': changed '+id+' → '+newId);
+      partySheet.getRange(i+2, 1).setValue(newId);
+      Logger.log('Party row '+(i+2)+': '+id+' → '+newId);
+      changes[id] = newId;
       seen[newId] = true;
       fixed++;
     } else {
@@ -1397,8 +1402,52 @@ function fixDuplicatePartyIds() {
     }
   }
 
-  var msg = 'Done. Fixed '+fixed+' duplicate IDs.';
-  Logger.log(msg);
-  SpreadsheetApp.getUi().alert(msg);
-  return msg;
+  if (fixed === 0) {
+    SpreadsheetApp.getUi().alert('No duplicate party IDs found. All IDs are unique!');
+    return 'No duplicates found';
+  }
+
+  // Update Orders sheet — col 7 = bid (Party ID)
+  if (orderSheet && orderSheet.getLastRow() >= 2) {
+    var ordRows = orderSheet.getRange(2,7,orderSheet.getLastRow()-1,1).getValues();
+    for (var i=0; i<ordRows.length; i++) {
+      var bid = String(ordRows[i][0]||'').trim();
+      if (changes[bid]) {
+        orderSheet.getRange(i+2, 7).setValue(changes[bid]);
+        Logger.log('Order row '+(i+2)+': bid '+bid+' → '+changes[bid]);
+      }
+    }
+  }
+
+  // Update Visit_Log sheet — col 6 = partyId
+  if (visitSheet && visitSheet.getLastRow() >= 2) {
+    var visRows = visitSheet.getRange(2,6,visitSheet.getLastRow()-1,1).getValues();
+    for (var i=0; i<visRows.length; i++) {
+      var vpid = String(visRows[i][0]||'').trim();
+      if (changes[vpid]) {
+        visitSheet.getRange(i+2, 6).setValue(changes[vpid]);
+        Logger.log('Visit row '+(i+2)+': partyId '+vpid+' → '+changes[vpid]);
+      }
+    }
+  }
+
+  // Update Dist_Alloc sheet — col 1 = Party ID
+  if (distSheet && distSheet.getLastRow() >= 2) {
+    var distRows = distSheet.getRange(2,1,distSheet.getLastRow()-1,1).getValues();
+    for (var i=0; i<distRows.length; i++) {
+      var dpid = String(distRows[i][0]||'').trim();
+      if (changes[dpid]) {
+        distSheet.getRange(i+2, 1).setValue(changes[dpid]);
+        Logger.log('Dist_Alloc row '+(i+2)+': '+dpid+' → '+changes[dpid]);
+      }
+    }
+  }
+
+  var summary = 'Fixed '+fixed+' duplicate party IDs.\n\nChanges made:\n';
+  Object.keys(changes).forEach(function(old) {
+    summary += old + ' → ' + changes[old] + '\n';
+  });
+  Logger.log(summary);
+  SpreadsheetApp.getUi().alert(summary);
+  return summary;
 }
