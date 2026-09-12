@@ -3590,8 +3590,10 @@ let _myLat = null, _myLng = null;
 let _routePlan = []; // [{id, name, lat, lng}] — selected stops in order
 
 function haversineKm(lat1,lng1,lat2,lng2){
-  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  var R=6371, dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)
+    +Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)
+    *Math.sin(dLng/2)*Math.sin(dLng/2);
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
@@ -3642,7 +3644,7 @@ function showNearbyParties(myLat, myLng){
       </div>
       <!-- Actions -->
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-        <button onclick="toggleRoute('${b.id}','${b.name.replace(/'/g,"\'")}',${b.lat},${b.lng})"
+        <button onclick="toggleRouteById('${b.id}')"
           style="font-size:10px;padding:5px 8px;
           background:${inPlan?'rgba(59,130,246,.15)':'var(--s2)'};
           border:1px solid ${inPlan?'rgba(59,130,246,.4)':'var(--bdr)'};
@@ -3655,7 +3657,7 @@ function showNearbyParties(myLat, myLng){
           border:1px solid rgba(34,197,94,.25);border-radius:6px;
           font-family:var(--f);font-weight:700;color:var(--grn);cursor:pointer;white-space:nowrap">
           📍 Visit
-        </button>`:''}
+        </button>`:'<span style="font-size:10px;padding:5px 8px;color:var(--grn)">✅</span>'}
         <a href="https://maps.google.com/?q=${b.lat},${b.lng}" target="_blank"
           style="font-size:10px;padding:5px 8px;background:var(--s2);
           border:1px solid var(--bdr);border-radius:6px;font-family:var(--f);
@@ -3665,6 +3667,11 @@ function showNearbyParties(myLat, myLng){
       </div>
     </div>`;
   }).join('');
+}
+
+function toggleRouteById(id){
+  const b=getBuyers().find(x=>x.id===id);
+  if(b) toggleRoute(id, b.name, b.lat, b.lng);
 }
 
 function toggleRoute(id, name, lat, lng){
