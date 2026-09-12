@@ -2180,14 +2180,16 @@ function renderParties(){
   }).join('');
 }
 function pickParty(id){
-  // Update party picker button label
+  // Set bsel FIRST before navigating
+  document.getElementById('bsel').value=id;
   const b=getBuyers().find(x=>x.id===id);
+  // Update party picker button label
   const label=document.getElementById('partyPickLabel');
   if(label&&b){label.textContent=b.name;label.style.color='var(--txt)';}
-  document.getElementById('bsel').value=id;
+  // Show party info immediately
   onBuyer(id);
+  // Then navigate to order tab
   go('order');
-  setTimeout(()=>{document.getElementById('bsel').value=id;onBuyer();toast('🏪 Party selected','in');},150);
 }
 
 // ═══ ADD NEW PARTY ════════════════════════════════════════════════════
