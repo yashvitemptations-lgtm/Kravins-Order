@@ -2281,6 +2281,7 @@ function editSmRec(){
   populateDistDropdown();
   populateProdMixTargets(sm.prodMixTargets||{});
   setTimeout(()=>{
+    populateDistDropdown(); // ensure populated before setting value
     const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
     sv('smf-id',sm.id); sv('smf-name',sm.name); sv('smf-phone',sm.phone); sv('smf-wa',sm.whatsapp);
     sv('smf-terr',sm.territory); sv('smf-target',sm.target||50000); sv('smf-dist',sm.distributor);
@@ -2317,7 +2318,7 @@ async function saveSalesmanMaster(){
   const phone=(document.getElementById('smf-phone').value||'').trim();
   const dist=document.getElementById('smf-dist').value;
   if(!id||!name||!phone){toast('⚠️ ID, Name and Phone required','er');return;}
-  if(!dist){ toast('⚠️ Please assign a distributor','er'); return; }
+  if(!dist){ toast('⚠️ No distributor assigned — saving anyway','in'); }
   const payload={action:'addSalesman',salesman:{
     id,name,phone,
     whatsapp:document.getElementById('smf-wa').value.trim(),
