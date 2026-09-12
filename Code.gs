@@ -1355,3 +1355,50 @@ function resolveEditRequest(reqId, resolution) {
   }
   return {ok:false, error:'Request not found'};
 }
+
+// ════════════════════════════════════════════════════════════════════════
+// FIX DUPLICATE PARTY IDs — Run once from Apps Script editor
+// Tools > Run > fixDuplicatePartyIds
+// ════════════════════════════════════════════════════════════════════════
+
+function fixDuplicatePartyIds() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName(TAB_PARTIES);
+  if (!sheet || sheet.getLastRow() < 2) return 'No data';
+
+  var rows = sheet.getRange(2,1,sheet.getLastRow()-1,1).getValues();
+  var seen = {};
+  var fixed = 0;
+
+  // Find max numeric ID first
+  var maxNum = 0;
+  for (var i=0; i<rows.length; i++) {
+    var id = String(rows[i][0]||'').trim();
+    var num = parseInt(id.replace(/[^0-9]/g,''))||0;
+    if (num > maxNum) maxNum = num;
+  }
+
+  // Fix duplicates
+  for (var i=0; i<rows.length; i++) {
+    var id = String(rows[i][0]||'').trim();
+    if (!id) continue;
+    if (seen[id]) {
+      // Duplicate found — assign new unique ID
+      maxNum++;
+      var prefix = id.replace(/[0-9]+$/,'') || 'BP';
+      var newId = prefix + String(maxNum).padStart(4,'0');
+      while (seen[newId]) { maxNum++; newId = prefix + String(maxNum).padStart(4,'0'); }
+      sheet.getRange(i+2, 1).setValue(newId);
+      Logger.log('Row '+(i+2)+': changed '+id+' → '+newId);
+      seen[newId] = true;
+      fixed++;
+    } else {
+      seen[id] = true;
+    }
+  }
+
+  var msg = 'Done. Fixed '+fixed+' duplicate IDs.';
+  Logger.log(msg);
+  SpreadsheetApp.getUi().alert(msg);
+  return msg;
+}
