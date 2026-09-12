@@ -2790,13 +2790,16 @@ async function openPartyDetail(partyId){
               <span style="font-size:10px;padding:2px 7px;border-radius:5px;
                 background:rgba(34,197,94,.1);color:var(--grn);font-weight:600">${o.status}</span>
             </div>
-            <div style="font-size:10px;color:var(--mut);margin-bottom:5px">${o.date||''}</div>
-            ${(o.items||[]).map(i=>`
-              <div style="display:flex;justify-content:space-between;font-size:11px;
-                padding:3px 0;border-top:1px solid var(--bdr)">
-                <span>${i.name||i.code}</span>
-                <span style="color:var(--txt);font-weight:600">×${i.qty} ${fi(i.price*i.qty)}</span>
-              </div>`).join('')}
+            <div style="font-size:10px;color:var(--mut);margin-bottom:5px">${(()=>{const ds=normDate(o.date||o.at);return ds?new Date(ds).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):''})()}</div>
+            ${(o.items||o.lines||[]).map(i=>{
+                const nm=i.name||i.pname||i.code||i.pcode||'Item';
+                const qty=i.qty||i.quantity||1;
+                const tot=i.total||i.lt||(i.price||i.rate||0)*qty||0;
+                return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-top:1px solid var(--bdr)">
+                  <span style="color:var(--mut)">${nm}</span>
+                  <span style="color:var(--txt);font-weight:600">×${qty} ${fi(tot)}</span>
+                </div>`;
+              }).join('')}
             <div style="display:flex;justify-content:space-between;font-size:12px;
               font-weight:700;margin-top:5px;padding-top:5px;border-top:1px solid var(--bdr)">
               <span>Total</span><span style="color:var(--a2)">${fi(o.gt)}</span>
