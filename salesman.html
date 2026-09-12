@@ -2312,16 +2312,23 @@ async function addParty(){
     addedBy:SID,at:new Date().toISOString()
   };
   
-  buyers.push(newB);saveBuyers(buyers);
-  
-  // Sync to Sheet
+  // Sync to Sheet FIRST — get server-generated unique ID
+  let serverBid = newB.id; // fallback to client ID
   try{
-    await fetch(SCRIPT_URL,{
+    const resp = await fetch(SCRIPT_URL,{
       method:'POST',
       headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action:'addParty',party:newB})
     });
+    const d = await resp.json();
+    if(d.ok && d.bid) serverBid = d.bid; // use server-generated ID
   }catch(e){}
+
+  // Update newB with server-confirmed ID (prevents duplicates)
+  newB.id = serverBid;
+
+  // Now save to local cache with correct ID
+  buyers.push(newB); saveBuyers(buyers);
   
   ['nname','nphone','ncontact','naddr1','naddr2','naddr3','npin','nroute','nterr','ngst','ncredit'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('naddr4').selectedIndex=0;
