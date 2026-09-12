@@ -1370,82 +1370,119 @@ function fixDuplicatePartyIds() {
 
   if (!partySheet || partySheet.getLastRow() < 2) return 'No party data';
 
-  var rows = partySheet.getRange(2,1,partySheet.getLastRow()-1,1).getValues();
-  var seen = {};
-  var changes = {}; // oldId -> newId map
-  var fixed = 0;
+  var lastRow = partySheet.getLastRow();
+  var allData = partySheet.getRange(2,1,lastRow-1,2).getValues(); // col1=ID, col2=Name
+  var seen = {};   // tracks which IDs are confirmed unique
+  var rowChanges = []; // [{row, oldId, newId, partyName}]
 
-  // Find max numeric ID across all existing IDs
+  // Step 1: Find max numeric value across ALL IDs (ignore Infinity)
   var maxNum = 0;
-  for (var i=0; i<rows.length; i++) {
-    var id = String(rows[i][0]||'').trim();
+  for (var i=0; i<allData.length; i++) {
+    var id = String(allData[i][0]||'').trim();
     var num = parseInt(id.replace(/[^0-9]/g,''))||0;
-    if (num > maxNum) maxNum = num;
+    if (isFinite(num) && num > maxNum) maxNum = num;
   }
 
-  // Fix duplicates in New_Parties sheet
-  for (var i=0; i<rows.length; i++) {
-    var id = String(rows[i][0]||'').trim();
+  // Step 2: Mark first occurrence of each ID as seen
+  // Then reassign every duplicate (including Infinity cases) individually
+  var firstSeen = {};
+  for (var i=0; i<allData.length; i++) {
+    var id = String(allData[i][0]||'').trim();
     if (!id) continue;
-    if (seen[id]) {
+    var num = parseInt(id.replace(/[^0-9]/g,''))||0;
+    // Treat as duplicate if: ID already seen, OR numeric part is Infinity/NaN/0
+    var isInvalid = !isFinite(num) || num === 0 || id === 'Infinity' || id.indexOf('Infinity') > -1;
+    if (firstSeen[id] || isInvalid) {
+      // Needs new unique ID — assign individually
       maxNum++;
-      var prefix = id.replace(/[0-9]+$/,'') || 'BP';
+      var prefix = 'BP';
       var newId = prefix + String(maxNum).padStart(4,'0');
-      while (seen[newId]) { maxNum++; newId = prefix + String(maxNum).padStart(4,'0'); }
-      partySheet.getRange(i+2, 1).setValue(newId);
-      Logger.log('Party row '+(i+2)+': '+id+' → '+newId);
-      changes[id] = newId;
+      // Ensure not already used
+      while (seen[newId] || firstSeen[newId]) {
+        maxNum++;
+        newId = prefix + String(maxNum).padStart(4,'0');
+      }
+      rowChanges.push({
+        row: i+2,
+        oldId: id,
+        newId: newId,
+        name: String(allData[i][1]||'').trim()
+      });
       seen[newId] = true;
-      fixed++;
     } else {
+      firstSeen[id] = true;
       seen[id] = true;
     }
   }
 
-  if (fixed === 0) {
-    SpreadsheetApp.getUi().alert('No duplicate party IDs found. All IDs are unique!');
-    return 'No duplicates found';
+  if (rowChanges.length === 0) {
+    SpreadsheetApp.getUi().alert('No duplicate or invalid party IDs found!');
+    return 'No issues found';
   }
 
-  // Update Orders sheet — col 7 = bid (Party ID)
+  // Step 3: Apply changes to New_Parties — each row gets its own unique new ID
+  for (var i=0; i<rowChanges.length; i++) {
+    var ch = rowChanges[i];
+    partySheet.getRange(ch.row, 1).setValue(ch.newId);
+    Logger.log('Party row '+ch.row+' ('+ch.name+'): '+ch.oldId+' → '+ch.newId);
+  }
+
+  // Step 4: Update Orders — need row-level mapping
+  // Orders store bid — but multiple rows may have same old bid pointing to different parties
+  // We can only update orders that now have an ambiguous bid
+  // Best approach: for each changed row, update orders where bid=oldId AND bname matches
   if (orderSheet && orderSheet.getLastRow() >= 2) {
-    var ordRows = orderSheet.getRange(2,7,orderSheet.getLastRow()-1,1).getValues();
-    for (var i=0; i<ordRows.length; i++) {
-      var bid = String(ordRows[i][0]||'').trim();
-      if (changes[bid]) {
-        orderSheet.getRange(i+2, 7).setValue(changes[bid]);
-        Logger.log('Order row '+(i+2)+': bid '+bid+' → '+changes[bid]);
+    var ordData = orderSheet.getRange(2,7,orderSheet.getLastRow()-1,2).getValues(); // col7=bid, col8=bname
+    for (var i=0; i<ordData.length; i++) {
+      var obid = String(ordData[i][0]||'').trim();
+      var obname = String(ordData[i][1]||'').trim();
+      // Find matching change by oldId + party name
+      for (var j=0; j<rowChanges.length; j++) {
+        var ch = rowChanges[j];
+        if (obid === ch.oldId && obname === ch.name) {
+          orderSheet.getRange(i+2, 7).setValue(ch.newId);
+          Logger.log('Order row '+(i+2)+': bid '+obid+'('+obname+') → '+ch.newId);
+          break;
+        }
       }
     }
   }
 
-  // Update Visit_Log sheet — col 6 = partyId
+  // Step 5: Update Visit_Log — col6=partyId, col7=partyName
   if (visitSheet && visitSheet.getLastRow() >= 2) {
-    var visRows = visitSheet.getRange(2,6,visitSheet.getLastRow()-1,1).getValues();
-    for (var i=0; i<visRows.length; i++) {
-      var vpid = String(visRows[i][0]||'').trim();
-      if (changes[vpid]) {
-        visitSheet.getRange(i+2, 6).setValue(changes[vpid]);
-        Logger.log('Visit row '+(i+2)+': partyId '+vpid+' → '+changes[vpid]);
+    var visData = visitSheet.getRange(2,6,visitSheet.getLastRow()-1,2).getValues();
+    for (var i=0; i<visData.length; i++) {
+      var vpid = String(visData[i][0]||'').trim();
+      var vpname = String(visData[i][1]||'').trim();
+      for (var j=0; j<rowChanges.length; j++) {
+        var ch = rowChanges[j];
+        if (vpid === ch.oldId && vpname === ch.name) {
+          visitSheet.getRange(i+2, 6).setValue(ch.newId);
+          Logger.log('Visit row '+(i+2)+': partyId '+vpid+' → '+ch.newId);
+          break;
+        }
       }
     }
   }
 
-  // Update Dist_Alloc sheet — col 1 = Party ID
+  // Step 6: Update Dist_Alloc — col1=PartyID (no name here, use oldId only if unique change)
   if (distSheet && distSheet.getLastRow() >= 2) {
-    var distRows = distSheet.getRange(2,1,distSheet.getLastRow()-1,1).getValues();
-    for (var i=0; i<distRows.length; i++) {
-      var dpid = String(distRows[i][0]||'').trim();
-      if (changes[dpid]) {
-        distSheet.getRange(i+2, 1).setValue(changes[dpid]);
-        Logger.log('Dist_Alloc row '+(i+2)+': '+dpid+' → '+changes[dpid]);
+    var distData = distSheet.getRange(2,1,distSheet.getLastRow()-1,1).getValues();
+    for (var i=0; i<distData.length; i++) {
+      var dpid = String(distData[i][0]||'').trim();
+      // Only update if exactly one change for this oldId (unambiguous)
+      var matches = rowChanges.filter(function(ch){ return ch.oldId === dpid; });
+      if (matches.length === 1) {
+        distSheet.getRange(i+2, 1).setValue(matches[0].newId);
+        Logger.log('Dist_Alloc row '+(i+2)+': '+dpid+' → '+matches[0].newId);
       }
     }
   }
 
-  var summary = 'Fixed '+fixed+' duplicate party IDs.\n\nChanges made:\n';
-  Object.keys(changes).forEach(function(old) {
-    summary += old + ' → ' + changes[old] + '\n';
+  // Step 7: Summary
+  var summary = 'Fixed '+rowChanges.length+' party IDs.\n\nChanges:\n';
+  rowChanges.forEach(function(ch){
+    summary += ch.oldId + ' → ' + ch.newId + '  (' + ch.name + ')\n';
   });
   Logger.log(summary);
   SpreadsheetApp.getUi().alert(summary);
