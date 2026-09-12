@@ -1413,7 +1413,7 @@ function goDistInd(distId){
 // ═══════════════════════════════════════════════════════
 // LOAD DATA
 // ═══════════════════════════════════════════════════════
-async async function loadAll(){
+async function loadAll(){
   try{
     const [r1,r2,r3,r4] = await Promise.all([
       fetch(`${SCRIPT_URL}?action=orders&t=${Date.now()}`),
