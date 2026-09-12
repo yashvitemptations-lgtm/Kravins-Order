@@ -1141,16 +1141,24 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   // ── Show login screen ─────────────────────────────────────────────
   document.getElementById('loginScreen').style.display='flex';
   const loginIdEl = document.getElementById('loginId');
-  if(_urlSID && loginIdEl){
-    loginIdEl.value = _urlSID;
-    loginIdEl.readOnly = true;
-    loginIdEl.style.opacity = '0.6';
-    // Focus PIN after short delay
-    setTimeout(()=>{ const p=document.getElementById('loginPin'); if(p) p.focus(); }, 300);
-  } else if(loginIdEl){
-    loginIdEl.readOnly = false;
-    loginIdEl.style.opacity = '1';
-    setTimeout(()=>loginIdEl.focus(), 300);
+  if(loginIdEl){
+    if(_urlSID){
+      // URL has SM ID — set it, lock it, show it clearly
+      loginIdEl.value = _urlSID;
+      loginIdEl.readOnly = true;
+      loginIdEl.setAttribute('readonly', 'readonly');
+      loginIdEl.style.background = 'rgba(59,130,246,.08)';
+      loginIdEl.style.borderColor = 'rgba(59,130,246,.3)';
+      loginIdEl.style.color = 'var(--txt)';
+      loginIdEl.style.fontWeight = '700';
+      // Focus PIN immediately
+      setTimeout(()=>{ const p=document.getElementById('loginPin'); if(p) p.focus(); }, 100);
+    } else {
+      loginIdEl.readOnly = false;
+      loginIdEl.removeAttribute('readonly');
+      loginIdEl.style.opacity = '1';
+      setTimeout(()=>loginIdEl.focus(), 100);
+    }
   }
   // Login form shown — all data loads in initApp() after successful login
 
@@ -1198,8 +1206,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
 // ═══ LOGIN ════════════════════════════════════════════════════════════
 async function doLogin(){
-  // Read ID from input field (user may have typed it manually)
-  const id  = (document.getElementById('loginId').value||'').trim().toUpperCase() || _urlSID;
+  // If URL has SM ID, always use that (prevents logging in as wrong SM)
+  const id = _urlSID || (document.getElementById('loginId').value||'').trim().toUpperCase();
   const pin = document.getElementById('loginPin').value.trim();
   const errEl = document.getElementById('loginErr');
   const btn = document.getElementById('loginBtn');
