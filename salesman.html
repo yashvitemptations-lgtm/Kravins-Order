@@ -573,6 +573,15 @@ textarea{resize:none;line-height:1.5;min-height:58px}
       <input type="hidden" id="visitAcc">
     </div>
 
+    <!-- Nearby Shops -->
+    <div id="nearbySection" style="display:none;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em">📍 Nearby Shops</div>
+        <button onclick="refreshNearby()" style="font-size:10px;padding:4px 10px;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;font-family:var(--f);color:var(--a2);cursor:pointer">↻ Refresh</button>
+      </div>
+      <div id="nearbyList"></div>
+    </div>
+
     <button onclick="saveVisitLog()" id="visitSaveBtn"
       style="width:100%;padding:15px;background:linear-gradient(135deg,#7c3aed,#6d28d9);
       border:none;border-radius:11px;font-family:var(--f);font-size:15px;font-weight:700;
@@ -3184,6 +3193,9 @@ function captureVisitGPS(){
       document.getElementById('visitGpsLabel').textContent = 'Location ready ±'+Math.round(pos.coords.accuracy)+'m';
       document.getElementById('visitGpsDetail').textContent =
         pos.coords.latitude.toFixed(4)+', '+pos.coords.longitude.toFixed(4);
+      showNearbyParties(pos.coords.latitude, pos.coords.longitude);
+      // Auto-show nearby parties once GPS is ready
+      showNearbyParties(pos.coords.latitude, pos.coords.longitude);
     },
     err => {
       document.getElementById('visitGpsLabel').textContent = '⚠️ Location unavailable';
@@ -3530,6 +3542,117 @@ function buildVisitRow(v,i,moFilter,fi,oc,oi){
 function openVisitedPartyDetail(partyId){
   // Reuse the existing party detail modal
   openPartyDetail(partyId);
+}
+
+
+// ═══ NEARBY PARTIES ═════════════════════════════════════════════════
+let _myLat = null, _myLng = null;
+
+function haversineKm(lat1, lng1, lat2, lng2){
+  const R = 6371;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)*Math.sin(dLat/2)
+    + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)
+    * Math.sin(dLng/2)*Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function showNearbyParties(myLat, myLng){
+  _myLat = myLat; _myLng = myLng;
+  const section = document.getElementById('nearbySection');
+  const list    = document.getElementById('nearbyList');
+  if(!section || !list) return;
+
+  const buyers = getBuyers().filter(b=>b.lat&&b.lng&&b.active!==false);
+  if(!buyers.length){
+    section.style.display='none';
+    return;
+  }
+
+  // Calculate distance for each party
+  const withDist = buyers.map(b=>{
+    const dist = haversineKm(myLat, myLng, parseFloat(b.lat), parseFloat(b.lng));
+    return {...b, dist};
+  }).filter(b=>b.dist<=2) // within 2km
+    .sort((a,b)=>a.dist-b.dist);
+
+  if(!withDist.length){
+    section.style.display='block';
+    list.innerHTML='<div style="font-size:11px;color:var(--mut);text-align:center;padding:10px">No shops found within 2km</div>';
+    return;
+  }
+
+  // Check which are already visited today
+  const visitedToday = new Set(visitTodayLog.map(v=>v.partyId));
+
+  section.style.display='block';
+  list.innerHTML = withDist.slice(0,15).map(b=>{
+    const distM = b.dist < 1 ? Math.round(b.dist*1000)+'m' : b.dist.toFixed(2)+'km';
+    const visited = visitedToday.has(b.id);
+    const st = b.status||'Active';
+    const blocked = st==='Inactive'||st==='On Hold';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;
+      background:var(--s1);border:1px solid var(--bdr);border-radius:10px;
+      margin-bottom:7px;${blocked?'opacity:.5':''}">
+      <!-- Distance badge -->
+      <div style="flex-shrink:0;text-align:center;min-width:44px">
+        <div style="font-size:12px;font-weight:800;color:${b.dist<0.2?'var(--grn)':b.dist<0.5?'var(--ylw)':'var(--a2)'}">${distM}</div>
+        <div style="font-size:8px;color:var(--mut)">away</div>
+      </div>
+      <!-- Party info -->
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700">${b.name}
+          ${visited?'<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(34,197,94,.15);color:var(--grn);margin-left:4px">✅ Visited</span>':''}
+          ${blocked?'<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(239,68,68,.15);color:var(--red);margin-left:4px">${st}</span>':''}
+        </div>
+        <div style="font-size:10px;color:var(--mut);margin-top:1px">${b.route||b.territory||''}</div>
+      </div>
+      <!-- Action buttons -->
+      <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        ${!visited&&!blocked?`<button onclick="selectNearbyParty('${b.id}')"
+          style="font-size:10px;padding:5px 8px;background:rgba(34,197,94,.1);
+          border:1px solid rgba(34,197,94,.3);border-radius:6px;
+          font-family:var(--f);font-weight:700;color:var(--grn);cursor:pointer;white-space:nowrap">
+          📍 Log Visit
+        </button>`:''}
+        <a href="https://maps.google.com/?q=${b.lat},${b.lng}" target="_blank"
+          style="font-size:10px;padding:5px 8px;background:var(--s2);
+          border:1px solid var(--bdr);border-radius:6px;
+          font-family:var(--f);font-weight:600;color:var(--a2);
+          text-decoration:none;text-align:center;white-space:nowrap">
+          🗺️ Map
+        </a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectNearbyParty(partyId){
+  // Pre-select this party in the visit form
+  const b = getBuyers().find(x=>x.id===partyId);
+  if(!b) return;
+  document.getElementById('visitPartyId').value = partyId;
+  const lbl = document.getElementById('visitPartyLabel');
+  if(lbl){ lbl.textContent = b.name; lbl.style.color = 'var(--txt)'; }
+  const btn = document.getElementById('visitPartyBtn');
+  if(btn){
+    const sp = btn.querySelector('span:last-child');
+    if(sp){ sp.textContent = b.name; sp.style.color = 'var(--txt)'; }
+  }
+  // Scroll to outcome buttons
+  document.getElementById('visitOutcome')?.scrollIntoView({behavior:'smooth',block:'center'});
+  toast('🏪 '+b.name+' selected — choose outcome below','ok');
+}
+
+function refreshNearby(){
+  if(_myLat && _myLng){
+    showNearbyParties(_myLat, _myLng);
+  } else {
+    // Re-capture GPS
+    captureVisitGPS();
+    toast('Getting your location...','in');
+  }
 }
 
 </script>
