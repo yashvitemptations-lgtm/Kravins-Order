@@ -573,12 +573,52 @@ textarea{resize:none;line-height:1.5;min-height:58px}
       <input type="hidden" id="visitAcc">
     </div>
 
-    <!-- Nearby Shops -->
+    <!-- Route Planner -->
     <div id="nearbySection" style="display:none;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em">📍 Nearby Shops</div>
-        <button onclick="refreshNearby()" style="font-size:10px;padding:4px 10px;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;font-family:var(--f);color:var(--a2);cursor:pointer">↻ Refresh</button>
+
+      <!-- Header with radius control -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:var(--txt)">📍 Nearby Shops</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <select id="nearbyRadius" onchange="refreshNearby()"
+            style="background:var(--s2);border:1px solid var(--bdr);border-radius:6px;
+            padding:4px 8px;font-family:var(--f);font-size:10px;color:var(--txt)">
+            <option value="0.5">0.5 km</option>
+            <option value="1">1 km</option>
+            <option value="2" selected>2 km</option>
+            <option value="5">5 km</option>
+          </select>
+          <button onclick="refreshNearby()"
+            style="font-size:10px;padding:4px 10px;background:var(--s2);border:1px solid var(--bdr);
+            border-radius:6px;font-family:var(--f);color:var(--a2);cursor:pointer">↻</button>
+        </div>
       </div>
+
+      <!-- Route actions -->
+      <div id="routeActions" style="display:none;margin-bottom:10px;
+        background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);
+        border-radius:10px;padding:10px 12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--a2)">
+            🗺️ Route Plan — <span id="routeCount">0</span> shops selected
+          </div>
+          <button onclick="clearRoute()"
+            style="font-size:10px;padding:3px 8px;background:rgba(239,68,68,.1);
+            border:1px solid rgba(239,68,68,.3);border-radius:5px;
+            font-family:var(--f);color:var(--red);cursor:pointer">✕ Clear</button>
+        </div>
+        <!-- Selected route list -->
+        <div id="routeSelectedList" style="margin-bottom:8px;max-height:120px;overflow-y:auto"></div>
+        <!-- Open in Google Maps -->
+        <button onclick="openRouteMap()"
+          style="width:100%;padding:10px;background:linear-gradient(135deg,#1a73e8,#0d47a1);
+          border:none;border-radius:8px;font-family:var(--f);font-size:13px;
+          font-weight:700;color:#fff;cursor:pointer">
+          🗺️ Open Route in Google Maps ↗
+        </button>
+      </div>
+
+      <!-- Nearby party list -->
       <div id="nearbyList"></div>
     </div>
 
@@ -3545,116 +3585,178 @@ function openVisitedPartyDetail(partyId){
 }
 
 
-// ═══ NEARBY PARTIES ═════════════════════════════════════════════════
+// ═══ NEARBY PARTIES & ROUTE PLANNER ════════════════════════════════
 let _myLat = null, _myLng = null;
+let _routePlan = []; // [{id, name, lat, lng}] — selected stops in order
 
-function haversineKm(lat1, lng1, lat2, lng2){
-  const R = 6371;
-  const dLat = (lat2-lat1)*Math.PI/180;
-  const dLng = (lng2-lng1)*Math.PI/180;
-  const a = Math.sin(dLat/2)*Math.sin(dLat/2)
-    + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)
-    * Math.sin(dLng/2)*Math.sin(dLng/2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+function haversineKm(lat1,lng1,lat2,lng2){
+  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
 function showNearbyParties(myLat, myLng){
-  _myLat = myLat; _myLng = myLng;
-  const section = document.getElementById('nearbySection');
-  const list    = document.getElementById('nearbyList');
-  if(!section || !list) return;
+  _myLat=myLat; _myLng=myLng;
+  const section=document.getElementById('nearbySection');
+  const list=document.getElementById('nearbyList');
+  if(!section||!list) return;
 
-  const buyers = getBuyers().filter(b=>b.lat&&b.lng&&b.active!==false);
-  if(!buyers.length){
-    section.style.display='none';
-    return;
-  }
+  const radius=parseFloat(document.getElementById('nearbyRadius')?.value||'2');
+  const buyers=getBuyers().filter(b=>b.lat&&b.lng&&b.active!==false&&(b.status||'Active')==='Active');
+  if(!buyers.length){ section.style.display='none'; return; }
 
-  // Calculate distance for each party
-  const withDist = buyers.map(b=>{
-    const dist = haversineKm(myLat, myLng, parseFloat(b.lat), parseFloat(b.lng));
-    return {...b, dist};
-  }).filter(b=>b.dist<=2) // within 2km
-    .sort((a,b)=>a.dist-b.dist);
-
-  if(!withDist.length){
-    section.style.display='block';
-    list.innerHTML='<div style="font-size:11px;color:var(--mut);text-align:center;padding:10px">No shops found within 2km</div>';
-    return;
-  }
-
-  // Check which are already visited today
-  const visitedToday = new Set(visitTodayLog.map(v=>v.partyId));
+  const withDist=buyers.map(b=>({
+    ...b, dist:haversineKm(myLat,myLng,parseFloat(b.lat),parseFloat(b.lng))
+  })).filter(b=>b.dist<=radius).sort((a,b)=>a.dist-b.dist);
 
   section.style.display='block';
-  list.innerHTML = withDist.slice(0,15).map(b=>{
-    const distM = b.dist < 1 ? Math.round(b.dist*1000)+'m' : b.dist.toFixed(2)+'km';
-    const visited = visitedToday.has(b.id);
-    const st = b.status||'Active';
-    const blocked = st==='Inactive'||st==='On Hold';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;
-      background:var(--s1);border:1px solid var(--bdr);border-radius:10px;
-      margin-bottom:7px;${blocked?'opacity:.5':''}">
-      <!-- Distance badge -->
-      <div style="flex-shrink:0;text-align:center;min-width:44px">
-        <div style="font-size:12px;font-weight:800;color:${b.dist<0.2?'var(--grn)':b.dist<0.5?'var(--ylw)':'var(--a2)'}">${distM}</div>
-        <div style="font-size:8px;color:var(--mut)">away</div>
+
+  if(!withDist.length){
+    list.innerHTML=`<div style="font-size:11px;color:var(--mut);text-align:center;padding:12px">
+      No shops found within ${radius}km of your location</div>`;
+    return;
+  }
+
+  const visitedToday=new Set(visitTodayLog.map(v=>v.partyId));
+  const inRoute=new Set(_routePlan.map(p=>p.id));
+
+  list.innerHTML=withDist.slice(0,20).map(b=>{
+    const distTxt=b.dist<1?Math.round(b.dist*1000)+'m':b.dist.toFixed(1)+'km';
+    const distColor=b.dist<0.2?'var(--grn)':b.dist<0.5?'var(--ylw)':'var(--a2)';
+    const visited=visitedToday.has(b.id);
+    const inPlan=inRoute.has(b.id);
+    return `<div id="nb-${b.id}" style="display:flex;align-items:center;gap:8px;padding:9px 12px;
+      background:${inPlan?'rgba(59,130,246,.08)':'var(--s1)'};
+      border:1px solid ${inPlan?'rgba(59,130,246,.3)':'var(--bdr)'};
+      border-radius:10px;margin-bottom:6px;transition:all .2s">
+      <!-- Distance -->
+      <div style="flex-shrink:0;text-align:center;min-width:38px">
+        <div style="font-size:11px;font-weight:800;color:${distColor}">${distTxt}</div>
       </div>
-      <!-- Party info -->
+      <!-- Info -->
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:700">${b.name}
-          ${visited?'<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(34,197,94,.15);color:var(--grn);margin-left:4px">✅ Visited</span>':''}
-          ${blocked?'<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(239,68,68,.15);color:var(--red);margin-left:4px">${st}</span>':''}
+          ${visited?'<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(34,197,94,.15);color:var(--grn)">✅ Done</span>':''}
         </div>
-        <div style="font-size:10px;color:var(--mut);margin-top:1px">${b.route||b.territory||''}</div>
+        <div style="font-size:10px;color:var(--mut)">${b.route||b.territory||''} ${b.phone?'· '+b.phone:''}</div>
       </div>
-      <!-- Action buttons -->
+      <!-- Actions -->
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-        ${!visited&&!blocked?`<button onclick="selectNearbyParty('${b.id}')"
-          style="font-size:10px;padding:5px 8px;background:rgba(34,197,94,.1);
-          border:1px solid rgba(34,197,94,.3);border-radius:6px;
+        <button onclick="toggleRoute('${b.id}','${b.name.replace(/'/g,"\'")}',${b.lat},${b.lng})"
+          style="font-size:10px;padding:5px 8px;
+          background:${inPlan?'rgba(59,130,246,.15)':'var(--s2)'};
+          border:1px solid ${inPlan?'rgba(59,130,246,.4)':'var(--bdr)'};
+          border-radius:6px;font-family:var(--f);font-weight:700;
+          color:${inPlan?'var(--a2)':'var(--mut)'};cursor:pointer;white-space:nowrap">
+          ${inPlan?'✓ Added':'+ Route'}
+        </button>
+        ${!visited?`<button onclick="selectNearbyParty('${b.id}')"
+          style="font-size:10px;padding:5px 8px;background:rgba(34,197,94,.08);
+          border:1px solid rgba(34,197,94,.25);border-radius:6px;
           font-family:var(--f);font-weight:700;color:var(--grn);cursor:pointer;white-space:nowrap">
-          📍 Log Visit
+          📍 Visit
         </button>`:''}
         <a href="https://maps.google.com/?q=${b.lat},${b.lng}" target="_blank"
           style="font-size:10px;padding:5px 8px;background:var(--s2);
-          border:1px solid var(--bdr);border-radius:6px;
-          font-family:var(--f);font-weight:600;color:var(--a2);
-          text-decoration:none;text-align:center;white-space:nowrap">
-          🗺️ Map
+          border:1px solid var(--bdr);border-radius:6px;font-family:var(--f);
+          font-weight:600;color:var(--mut);text-decoration:none;text-align:center">
+          🗺️
         </a>
       </div>
     </div>`;
   }).join('');
 }
 
-function selectNearbyParty(partyId){
-  // Pre-select this party in the visit form
-  const b = getBuyers().find(x=>x.id===partyId);
-  if(!b) return;
-  document.getElementById('visitPartyId').value = partyId;
-  const lbl = document.getElementById('visitPartyLabel');
-  if(lbl){ lbl.textContent = b.name; lbl.style.color = 'var(--txt)'; }
-  const btn = document.getElementById('visitPartyBtn');
-  if(btn){
-    const sp = btn.querySelector('span:last-child');
-    if(sp){ sp.textContent = b.name; sp.style.color = 'var(--txt)'; }
+function toggleRoute(id, name, lat, lng){
+  const idx=_routePlan.findIndex(p=>p.id===id);
+  if(idx>=0){
+    _routePlan.splice(idx,1); // remove
+  } else {
+    _routePlan.push({id,name,lat:parseFloat(lat),lng:parseFloat(lng)});
   }
-  // Scroll to outcome buttons
+  updateRoutePanel();
+  showNearbyParties(_myLat,_myLng); // re-render list
+}
+
+function updateRoutePanel(){
+  const actions=document.getElementById('routeActions');
+  const countEl=document.getElementById('routeCount');
+  const selList=document.getElementById('routeSelectedList');
+  if(!actions||!countEl||!selList) return;
+
+  if(_routePlan.length===0){
+    actions.style.display='none';
+    return;
+  }
+  actions.style.display='block';
+  countEl.textContent=_routePlan.length;
+
+  selList.innerHTML=_routePlan.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:6px;padding:4px 0;
+      border-bottom:1px solid rgba(255,255,255,.05)">
+      <div style="width:18px;height:18px;border-radius:50%;
+        background:${i===0?'#22c55e':i===_routePlan.length-1?'#ef4444':'#3b82f6'};
+        color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;
+        justify-content:center;flex-shrink:0">${i+1}</div>
+      <div style="flex:1;font-size:11px;font-weight:600">${p.name}</div>
+      <button onclick="removeFromRoute('${p.id}')"
+        style="font-size:10px;color:var(--mut);background:none;border:none;cursor:pointer;padding:2px">✕</button>
+    </div>`).join('');
+}
+
+function removeFromRoute(id){
+  _routePlan=_routePlan.filter(p=>p.id!==id);
+  updateRoutePanel();
+  showNearbyParties(_myLat,_myLng);
+}
+
+function clearRoute(){
+  _routePlan=[];
+  updateRoutePanel();
+  showNearbyParties(_myLat,_myLng);
+}
+
+function openRouteMap(){
+  if(_routePlan.length===0){ toast('Add shops to your route first','er'); return; }
+
+  // Build Google Maps directions URL
+  // Start = current GPS location, stops = selected parties in order
+  const origin = _myLat&&_myLng ? _myLat+','+_myLng : _routePlan[0].lat+','+_routePlan[0].lng;
+  const stops = _myLat&&_myLng ? _routePlan : _routePlan.slice(1);
+  const dest = stops[stops.length-1];
+  const waypoints = stops.slice(0,-1);
+
+  let url = 'https://www.google.com/maps/dir/?api=1';
+  url += '&origin='+encodeURIComponent(origin);
+  url += '&destination='+encodeURIComponent(dest.lat+','+dest.lng);
+  if(waypoints.length>0){
+    url += '&waypoints='+waypoints.map(p=>encodeURIComponent(p.lat+','+p.lng)).join('|');
+  }
+  url += '&travelmode=driving';
+
+  window.open(url,'_blank');
+  toast('🗺️ Route opened in Google Maps','ok');
+}
+
+function selectNearbyParty(partyId){
+  const b=getBuyers().find(x=>x.id===partyId);
+  if(!b) return;
+  document.getElementById('visitPartyId').value=partyId;
+  const lbl=document.getElementById('visitPartyLabel');
+  if(lbl){lbl.textContent=b.name;lbl.style.color='var(--txt)';}
+  const btn=document.getElementById('visitPartyBtn');
+  if(btn){const sp=btn.querySelector('span:last-child');if(sp){sp.textContent=b.name;sp.style.color='var(--txt)';}}
   document.getElementById('visitOutcome')?.scrollIntoView({behavior:'smooth',block:'center'});
   toast('🏪 '+b.name+' selected — choose outcome below','ok');
 }
 
 function refreshNearby(){
-  if(_myLat && _myLng){
-    showNearbyParties(_myLat, _myLng);
+  if(_myLat&&_myLng){
+    showNearbyParties(_myLat,_myLng);
   } else {
-    // Re-capture GPS
     captureVisitGPS();
     toast('Getting your location...','in');
   }
 }
 
-</script>
-</body>
-</html>
+// ═══
