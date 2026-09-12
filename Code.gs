@@ -1488,3 +1488,76 @@ function fixDuplicatePartyIds() {
   SpreadsheetApp.getUi().alert(summary);
   return summary;
 }
+
+// ════════════════════════════════════════════════════════════════════════
+// GEOCODE ALL PARTIES — Run once from Apps Script editor
+// Tools > Run > geocodeAllParties
+// Fills Latitude/Longitude for parties that have address but no coords
+// ════════════════════════════════════════════════════════════════════════
+
+function geocodeAllParties() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName(TAB_PARTIES);
+  if (!sheet || sheet.getLastRow() < 2) {
+    SpreadsheetApp.getUi().alert('No party data found.');
+    return;
+  }
+
+  // Col positions (1-based):
+  // 1=ID, 2=Name, 5=Address, 15=Lat, 16=Lng
+  var lastRow = sheet.getLastRow();
+  var data = sheet.getRange(2, 1, lastRow-1, 16).getValues();
+
+  var geocoder = Maps.newGeocoder().setRegion('IN');
+  var updated = 0;
+  var skipped = 0;
+  var failed  = 0;
+
+  for (var i = 0; i < data.length; i++) {
+    var id      = String(data[i][0]||'').trim();
+    var name    = String(data[i][1]||'').trim();
+    var address = String(data[i][4]||'').trim();
+    var lat     = String(data[i][14]||'').trim();
+    var lng     = String(data[i][15]||'').trim();
+
+    if (!id || !address) { skipped++; continue; }
+    if (lat && lng)      { skipped++; continue; } // already has coords
+
+    // Append city for better accuracy if not already in address
+    var query = address;
+    if (query.toLowerCase().indexOf('ahmedabad') === -1) {
+      query = query + ', Ahmedabad, Gujarat, India';
+    }
+
+    try {
+      var result = geocoder.geocode(query);
+      if (result.status === 'OK' && result.results.length > 0) {
+        var loc = result.results[0].geometry.location;
+        sheet.getRange(i+2, 15).setValue(loc.lat);
+        sheet.getRange(i+2, 16).setValue(loc.lng);
+        Logger.log('✅ Row '+(i+2)+' ('+name+'): '+loc.lat+', '+loc.lng);
+        updated++;
+      } else {
+        Logger.log('❌ Row '+(i+2)+' ('+name+'): '+result.status+' — '+query);
+        failed++;
+      }
+    } catch(e) {
+      Logger.log('❌ Row '+(i+2)+' error: '+e.toString());
+      failed++;
+    }
+
+    // Pause every 10 rows to avoid hitting API rate limits
+    if ((i+1) % 10 === 0) {
+      Utilities.sleep(1000);
+    }
+  }
+
+  var msg = 'Geocoding complete!\n\n'
+    + '✅ Updated: ' + updated + ' parties\n'
+    + '⏭ Skipped: ' + skipped + ' (already had coords or no address)\n'
+    + '❌ Failed:  ' + failed  + ' (address not found)\n\n'
+    + 'Check View > Logs for details on failed ones.';
+
+  Logger.log(msg);
+  SpreadsheetApp.getUi().alert(msg);
+}
