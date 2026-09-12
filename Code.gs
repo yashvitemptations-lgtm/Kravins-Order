@@ -237,14 +237,40 @@ function saveParty(p) {
   var sheet = makeSheet(ss, TAB_PARTIES, HDR_PARTIES);
   var now = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd-MMM-yyyy HH:mm');
 
+  // Generate unique ID server-side to avoid duplicates from stale client cache
+  var existingIds = {};
+  if (sheet.getLastRow() >= 2) {
+    var idCol = sheet.getRange(2,1,sheet.getLastRow()-1,1).getValues();
+    for (var i=0; i<idCol.length; i++) {
+      var eid = String(idCol[i][0]||'').trim();
+      if (eid) existingIds[eid] = true;
+    }
+  }
+  // Check if client-provided ID is already taken
+  var pid = String(p.id||'').trim();
+  if (!pid || existingIds[pid]) {
+    // Generate new unique ID
+    var nums = Object.keys(existingIds)
+      .map(function(id){ return parseInt(id.replace(/[^0-9]/g,''))||0; })
+      .filter(function(n){ return n>0; });
+    var maxNum = nums.length > 0 ? Math.max.apply(null, nums) : 0;
+    var prefix = pid ? pid.replace(/[0-9]+$/,'') : 'BP';
+    pid = prefix + String(maxNum+1).padStart(4,'0');
+    // Ensure still unique
+    while (existingIds[pid]) {
+      maxNum++;
+      pid = prefix + String(maxNum+1).padStart(4,'0');
+    }
+  }
+
   sheet.appendRow([
-    p.id, p.name, p.contact||'', p.phone||'', p.address||'',
+    pid, p.name, p.contact||'', p.phone||'', p.address||'',
     p.route||'', p.territory||'', p.gst||'', p.terms||'',
     p.credit||0, p.outstanding||0, p.addedBy||'', now,
     p.status||'Active', p.lat||'', p.lng||'', p.photo||'',
     p.whatsapp||'', p.email||'', p.notes||'', p.day||''
   ]);
-  return {ok:true, bid:p.id};
+  return {ok:true, bid:pid};
 }
 
 // ════════════════════════════════════════════════════════════════════════
