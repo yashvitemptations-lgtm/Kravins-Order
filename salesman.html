@@ -1136,18 +1136,19 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     return;
   }
   // ── Check existing session ────────────────────────────────────────
+  // Clear ALL old-format sessions (shared key from before per-SM keys)
+  try { sessionStorage.removeItem('kravins_sm_session'); } catch(e) {}
+
   const sess = getSession();
-  if (sess && sess.id === _urlSID) {
-    // Valid session for this SM — restore and proceed
+  // Valid session ONLY if: key matches URL SM, stored id matches URL SM
+  if (sess && sess.id === _urlSID && _urlSID) {
     SID = sess.id; SNAME = sess.name; DIST_ID = sess.distributor||'D001';
     document.getElementById('loginScreen').style.display='none';
     initApp();
     return;
   }
-  // Session mismatch or no session — clear any old session and show login
-  if (sess && sess.id !== _urlSID) {
-    clearSession(); // clear stale session from a different SM
-  }
+  // Any other case — clear session and show login
+  clearSession();
   // ── Show login screen ─────────────────────────────────────────────
   document.getElementById('loginScreen').style.display='flex';
   // Show correct ID field based on whether URL has SM param
