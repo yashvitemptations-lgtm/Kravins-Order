@@ -724,8 +724,8 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
         <div class="mcard-title">📝 Notes</div>
         <div class="fld"><textarea class="finp" id="smf-notes" placeholder="Any special terms or notes..."></textarea></div>
       </div>
-      <button class="mbtn pri" onclick="saveSalesmanMaster()">✅ Save Salesman</button>
-      <button class="mbtn sec" onclick="smSubTab('list')">Cancel</button>
+      <button type="button" class="mbtn pri" onclick="saveSalesmanMaster()">✅ Save Salesman</button>
+      <button type="button" class="mbtn sec" onclick="smSubTab('list')">Cancel</button>
     </div>
 </div>
 
@@ -1381,7 +1381,7 @@ function goTab(tab){
   if(tab==='distributors') renderAllDistributors();
   if(tab==='orders') renderOrders();
   if(tab==='parties'){ renderParties(); loadEditRequests(); }
-  if(tab==='smmaster'){ populateDistDropdown(); renderSmMaster(); populateProdMixTargets(); }
+  if(tab==='smmaster'){ closeSmDet(); populateDistDropdown(); renderSmMaster(); populateProdMixTargets(); }
   if(tab==='distmaster') renderDistMaster();
   if(tab==='products') renderProductsMaster();
   if(tab==='access') renderAccessControl();
