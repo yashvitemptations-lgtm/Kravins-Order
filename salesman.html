@@ -1052,7 +1052,7 @@ function getIndianDate() {
 // ═══ SESSION ══════════════════════════════════════════════════════════
 // Check if already logged in (session stored in sessionStorage)
 // sessionStorage clears when tab is closed — forces re-login each session
-const SESSION_KEY = 'kravins_sm_session';
+const SESSION_KEY = 'kravins_sm_session_' + (_urlSID||'guest');
 
 function getSession(){
   try{ return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null'); }catch(e){return null;}
