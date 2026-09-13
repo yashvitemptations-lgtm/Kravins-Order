@@ -2281,10 +2281,12 @@ function editSmRec(){
   populateDistDropdown();
   populateProdMixTargets(sm.prodMixTargets||{});
   setTimeout(()=>{
-    populateDistDropdown(); // ensure populated before setting value
+    populateDistDropdown(); // populate dropdown options first
     const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
     sv('smf-id',sm.id); sv('smf-name',sm.name); sv('smf-phone',sm.phone); sv('smf-wa',sm.whatsapp);
-    sv('smf-terr',sm.territory); sv('smf-target',sm.target||50000); sv('smf-dist',sm.distributor);
+    sv('smf-terr',sm.territory); sv('smf-target',sm.target||50000);
+    // Set dist after populate so value sticks
+    setTimeout(()=>sv('smf-dist',sm.distributor||''), 50);
     sv('smf-addr',sm.address); sv('smf-city',sm.city); sv('smf-state',sm.state);
     sv('smf-pan',sm.pan); sv('smf-aadhaar',sm.aadhaar);
     sv('smf-bank',sm.bank); sv('smf-acc',sm.accountNo); sv('smf-ifsc',sm.ifsc); sv('smf-accname',sm.accountName);
@@ -2301,7 +2303,7 @@ function editSmRec(){
       const el=document.getElementById('smf-tenure');
       if(el) el.textContent=months>0?months+' month'+(months!==1?'s':'')+' (since '+j.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+')':'Joined recently';
     }
-    sv('smf-join',sm.joiningDate||'');
+    // smf-joining already set above
     sv('smf-shops-target',sm.shopsTarget||'');
     sv('smf-visit-target',sm.visitTarget||50);
     sv('smf-daily-shops-target',sm.dailyShopsTarget||'');
