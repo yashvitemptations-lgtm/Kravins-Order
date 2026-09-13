@@ -1560,3 +1560,54 @@ function geocodeAllParties() {
   Logger.log(msg);
   SpreadsheetApp.getUi().alert(msg);
 }
+
+// ════════════════════════════════════════════════════════════════════════
+// FIX ORDER BUYER IDs — Run once from Apps Script editor
+// Matches party name in Orders to correct ID in New_Parties sheet
+// ════════════════════════════════════════════════════════════════════════
+function fixOrderBuyerIds() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var orderSheet = ss.getSheetByName(TAB_ORDERS);
+  var partySheet = ss.getSheetByName(TAB_PARTIES);
+  
+  if (!orderSheet || !partySheet) {
+    Logger.log('Sheet not found');
+    return;
+  }
+  
+  // Build name → id map from New_Parties
+  var partyRows = partySheet.getRange(2,1,partySheet.getLastRow()-1,2).getValues();
+  var nameToId = {};
+  for (var i=0; i<partyRows.length; i++) {
+    var pid = String(partyRows[i][0]||'').trim();
+    var pname = String(partyRows[i][1]||'').trim().toLowerCase();
+    if (pid && pname) nameToId[pname] = pid;
+  }
+  
+  // Read Orders — col1=OrderID, col6=BuyerID, col7=BuyerName
+  var orderRows = orderSheet.getRange(2,1,orderSheet.getLastRow()-1,7).getValues();
+  var fixed = 0;
+  var notFound = [];
+  
+  for (var i=0; i<orderRows.length; i++) {
+    var bid = String(orderRows[i][5]||'').trim();
+    var bname = String(orderRows[i][6]||'').trim().toLowerCase();
+    
+    // Fix if bid contains Infinity or B- pattern with Infinity
+    if (bid.indexOf('Infinity') > -1 || bid.indexOf('infinity') > -1 || bid === '') {
+      var correctId = nameToId[bname];
+      if (correctId) {
+        orderSheet.getRange(i+2, 6).setValue(correctId);
+        Logger.log('Row '+(i+2)+': '+bid+' → '+correctId+' ('+bname+')');
+        fixed++;
+      } else {
+        notFound.push('Row '+(i+2)+': "'+bname+'" not found in New_Parties');
+      }
+    }
+  }
+  
+  Logger.log('Fixed: '+fixed+' rows');
+  Logger.log('Not found: '+notFound.length);
+  notFound.forEach(function(n){ Logger.log(n); });
+  Logger.log('Done. Check View > Logs for details.');
+}
