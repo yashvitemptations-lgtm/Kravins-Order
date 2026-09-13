@@ -1611,3 +1611,49 @@ function fixOrderBuyerIds() {
   notFound.forEach(function(n){ Logger.log(n); });
   Logger.log('Done. Check View > Logs for details.');
 }
+
+// ════════════════════════════════════════════════════════════════════════
+// FIX ORDER BUYER IDs — Run once from Apps Script editor
+// Matches each order's buyer name to New_Parties and updates the bid
+// ════════════════════════════════════════════════════════════════════════
+
+function fixOrderBuyerIds() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var orderSheet = ss.getSheetByName(TAB_ORDERS);
+  var partySheet = ss.getSheetByName(TAB_PARTIES);
+
+  if (!orderSheet || orderSheet.getLastRow() < 2) return Logger.log('No orders found');
+  if (!partySheet || partySheet.getLastRow() < 2) return Logger.log('No parties found');
+
+  // Build name→id map from New_Parties (col1=ID, col2=Name)
+  var partyRows = partySheet.getRange(2,1,partySheet.getLastRow()-1,2).getValues();
+  var nameToId = {};
+  for (var i=0; i<partyRows.length; i++) {
+    var pid = String(partyRows[i][0]||'').trim();
+    var pname = String(partyRows[i][1]||'').trim().toLowerCase();
+    if (pid && pname) nameToId[pname] = pid;
+  }
+
+  // Read orders — col6=bid, col7=bname (1-based: col6=index5, col7=index6)
+  var orderRows = orderSheet.getRange(2,1,orderSheet.getLastRow()-1,8).getValues();
+  var fixed = 0;
+  var notFound = [];
+
+  for (var i=0; i<orderRows.length; i++) {
+    var bid   = String(orderRows[i][5]||'').trim();
+    var bname = String(orderRows[i][6]||'').trim().toLowerCase();
+    if (!bname) continue;
+
+    var correctId = nameToId[bname];
+    if (correctId && correctId !== bid) {
+      orderSheet.getRange(i+2, 6).setValue(correctId);
+      Logger.log('Row '+(i+2)+': '+bid+' → '+correctId+' ('+bname+')');
+      fixed++;
+    } else if (!correctId) {
+      notFound.push(bname);
+    }
+  }
+
+  Logger.log('Fixed: '+fixed+' order buyer IDs');
+  Logger.log('Not matched ('+notFound.length+'): '+[...new Set(notFound)].slice(0,20).join(', '));
+}
