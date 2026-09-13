@@ -1358,7 +1358,9 @@ function pctClass(pct){ return pct>=80?'hi':pct>=40?'md':'lo'; }
 
 let toastT;
 function toast(msg,type='ok'){
-  const el=document.getElementById('toast'); clearTimeout(toastT);
+  const el=document.getElementById('toast');
+  if(!el){ console.log('Toast:',msg); return; }
+  clearTimeout(toastT);
   el.textContent=msg; el.className=`toast ${type} on`;
   toastT=setTimeout(()=>el.classList.remove('on'),2500);
 }
@@ -4286,5 +4288,9 @@ function openVisitPartyDetail(partyId){
 }
 
 </script>
+  <div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);
+    background:var(--s2);border:1px solid var(--bdr);border-radius:12px;padding:11px 20px;
+    font-size:13px;font-weight:600;color:var(--txt);z-index:99999;opacity:0;
+    transition:all .25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center"></div>
 </body>
 </html>
