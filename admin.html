@@ -2316,7 +2316,12 @@ function editSmRec(){
 }
 
 async function saveSalesmanMaster(){
-  const id=(document.getElementById('smf-id').value||'').trim().toUpperCase();
+  // DEBUG: confirm function is called
+  const _dbgId=(document.getElementById('smf-id').value||'');
+  const _dbgName=(document.getElementById('smf-name').value||'');
+  const _dbgPhone=(document.getElementById('smf-phone').value||'');
+  toast('🔍 Save clicked — ID:'+_dbgId+' Name:'+_dbgName+' Phone:'+_dbgPhone,'in');
+  const id=_dbgId.trim().toUpperCase();
   const name=(document.getElementById('smf-name').value||'').trim();
   const phone=(document.getElementById('smf-phone').value||'').trim();
   const dist=document.getElementById('smf-dist').value;
