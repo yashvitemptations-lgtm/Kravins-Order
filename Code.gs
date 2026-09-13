@@ -1567,47 +1567,43 @@ function geocodeAllParties() {
 // ════════════════════════════════════════════════════════════════════════
 function fixOrderBuyerIds() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
-  var orderSheet = ss.getSheetByName(TAB_ORDERS);
-  var partySheet = ss.getSheetByName(TAB_PARTIES);
+  var orderSheet = ss.getSheetByName('Orders');
+  var partySheet = ss.getSheetByName('New_Parties');
   if (!orderSheet || orderSheet.getLastRow() < 2) { Logger.log('No orders'); return; }
   if (!partySheet || partySheet.getLastRow() < 2) { Logger.log('No parties'); return; }
 
-  // Build maps from New_Parties
+  // New_Parties: col1=BuyerID, col2=PartyName
   var pRows = partySheet.getRange(2,1,partySheet.getLastRow()-1,2).getValues();
-  var nameToId = {}, idSet = {};
+  var nameToId = {};
   for (var i=0; i<pRows.length; i++) {
-    var pid = String(pRows[i][0]||'').trim();
-    var pnm = String(pRows[i][1]||'').trim().toLowerCase();
-    if (pid && pnm) { nameToId[pnm] = pid; idSet[pid.toLowerCase()] = pid; }
+    var pid  = String(pRows[i][0]||'').trim();
+    var pnm  = String(pRows[i][1]||'').trim().toLowerCase();
+    if (pid && pnm) nameToId[pnm] = pid;
   }
+  Logger.log('Loaded '+Object.keys(nameToId).length+' parties');
 
-  // Read orders with enough columns
-  var lastRow = orderSheet.getLastRow();
-  var oRows = orderSheet.getRange(2,1,lastRow-1,21).getValues();
+  // Orders: col6=BuyerID, col7=BuyerName
+  var oRows = orderSheet.getRange(2,1,orderSheet.getLastRow()-1,7).getValues();
+  Logger.log('First order row: col6='+oRows[0][5]+' col7='+oRows[0][6]);
 
-  // Log first row to understand layout
-  Logger.log('Col1='+oRows[0][0]+' Col4='+oRows[0][3]+' Col5='+oRows[0][4]+' Col6='+oRows[0][5]+' Col7='+oRows[0][6]+' Col8='+oRows[0][7]);
-
-  // Your Orders sheet: col1=OrderID, col4=SalesmanID, col5=SalesmanName, col6=BuyerID, col7=BuyerName
-  var fixed = 0, notFound = [];
+  var fixed = 0, skipped = 0, notFound = [];
   for (var i=0; i<oRows.length; i++) {
-    var bid   = String(oRows[i][5]||'').trim();   // col6 = Buyer ID
-    var bname = String(oRows[i][6]||'').trim();   // col7 = Buyer Name
-    if (!bid && !bname) continue;
-    var bnameL = bname.toLowerCase();
-    var correctId = nameToId[bnameL];
-    // Fix if bid is wrong format (Infinity, B00x, etc) and we know the correct id
-    var isWrong = bid.indexOf('Infinity') > -1 || bid.indexOf('B-') === 0 || (!idSet[bid.toLowerCase()] && bid.indexOf('BP') !== 0 && bid.indexOf('B0') !== 0);
-    if (correctId && bid !== correctId && isWrong) {
-      orderSheet.getRange(i+2, 6).setValue(correctId);
-      Logger.log('Row '+(i+2)+': "'+bid+'" → "'+correctId+'" ('+bname+')');
-      fixed++;
-    } else if (!correctId && bname) {
-      notFound.push(bname+'['+bid+']');
-    }
+    var bid   = String(oRows[i][5]||'').trim();  // col6 = Buyer ID
+    var bname = String(oRows[i][6]||'').trim();  // col7 = Buyer Name
+    if (!bname) { skipped++; continue; }
+
+    var correctId = nameToId[bname.toLowerCase()];
+    if (!correctId) { notFound.push(bname); continue; }
+    if (bid === correctId) continue; // already correct
+
+    // Fix it
+    orderSheet.getRange(i+2, 6).setValue(correctId);
+    Logger.log('Row '+(i+2)+': "'+bid+'" → "'+correctId+'" ('+bname+')');
+    fixed++;
   }
-  Logger.log('Fixed: '+fixed);
-  Logger.log('Not found: '+notFound.slice(0,20).join(' | '));
+
+  Logger.log('Done. Fixed='+fixed+' Skipped='+skipped);
+  Logger.log('Not found in parties: '+[...new Set(notFound)].slice(0,30).join(' | '));
 }
 
 // ════════════════════════════════════════════════════════════════════════
