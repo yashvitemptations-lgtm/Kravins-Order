@@ -247,11 +247,17 @@ textarea{resize:none;line-height:1.5;min-height:58px}
       <div style="font-size:22px;font-weight:800;color:var(--txt)">Kravins Sales</div>
       <div style="font-size:12px;color:var(--mut);margin-top:4px">Salesman Portal</div>
     </div>
-    <div style="margin-bottom:14px">
+    <div style="margin-bottom:14px" id="loginIdWrap">
       <label style="font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;
         letter-spacing:.06em;display:block;margin-bottom:6px">Salesman ID</label>
+      <!-- Shown when SM ID comes from URL — not editable -->
+      <div id="loginIdDisplay" style="display:none;width:100%;background:rgba(59,130,246,.08);
+        border:1.5px solid rgba(59,130,246,.3);border-radius:11px;padding:13px 16px;
+        font-family:var(--f);font-size:15px;color:var(--txt);font-weight:700;
+        letter-spacing:.05em"></div>
+      <!-- Shown when no URL param — user types their ID -->
       <input id="loginId" type="text" placeholder="e.g. SM001"
-        style="width:100%;background:var(--s1);border:1.5px solid var(--bdr);border-radius:11px;
+        style="display:none;width:100%;background:var(--s1);border:1.5px solid var(--bdr);border-radius:11px;
         padding:13px 16px;font-family:var(--f);font-size:15px;color:var(--txt);outline:none;
         text-transform:uppercase"
         oninput="this.value=this.value.toUpperCase()"
@@ -1144,25 +1150,21 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   }
   // ── Show login screen ─────────────────────────────────────────────
   document.getElementById('loginScreen').style.display='flex';
-  const loginIdEl = document.getElementById('loginId');
-  if(loginIdEl){
-    if(_urlSID){
-      // URL has SM ID — set it, lock it, show it clearly
-      loginIdEl.value = _urlSID;
-      loginIdEl.readOnly = true;
-      loginIdEl.setAttribute('readonly', 'readonly');
-      loginIdEl.style.background = 'rgba(59,130,246,.08)';
-      loginIdEl.style.borderColor = 'rgba(59,130,246,.3)';
-      loginIdEl.style.color = 'var(--txt)';
-      loginIdEl.style.fontWeight = '700';
-      // Focus PIN immediately
-      setTimeout(()=>{ const p=document.getElementById('loginPin'); if(p) p.focus(); }, 100);
-    } else {
-      loginIdEl.readOnly = false;
-      loginIdEl.removeAttribute('readonly');
-      loginIdEl.style.opacity = '1';
-      setTimeout(()=>loginIdEl.focus(), 100);
-    }
+  // Show correct ID field based on whether URL has SM param
+  if(_urlSID){
+    // URL has SM ID — show static display, hide editable input
+    const disp = document.getElementById('loginIdDisplay');
+    const inp  = document.getElementById('loginId');
+    if(disp){ disp.style.display='block'; disp.textContent=_urlSID; }
+    if(inp)  { inp.style.display='none'; inp.value=_urlSID; }
+    setTimeout(()=>{ const p=document.getElementById('loginPin'); if(p) p.focus(); }, 100);
+  } else {
+    // No URL param — show editable input
+    const disp = document.getElementById('loginIdDisplay');
+    const inp  = document.getElementById('loginId');
+    if(disp){ disp.style.display='none'; }
+    if(inp)  { inp.style.display='block'; }
+    setTimeout(()=>{ const inp2=document.getElementById('loginId'); if(inp2) inp2.focus(); }, 100);
   }
   // Login form shown — all data loads in initApp() after successful login
 
