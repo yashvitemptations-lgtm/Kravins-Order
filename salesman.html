@@ -1056,6 +1056,7 @@ function getIndianDate() {
 // ═══ SESSION ══════════════════════════════════════════════════════════
 // Check if already logged in (session stored in sessionStorage)
 // sessionStorage clears when tab is closed — forces re-login each session
+const _urlSID = (new URLSearchParams(window.location.search).get('sm')||'').toUpperCase().trim();
 const SESSION_KEY = 'kravins_sm_session_' + (_urlSID||'guest');
 
 function getSession(){
@@ -1072,7 +1073,7 @@ function clearSession(){
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz70y3yn3VHlpV1yFrLP0l5L3CduXtDoU0tl_TbBhzCnXQZlIrNoEm4DHgZkmbVIabg/exec';
 
 // ── Dynamic ID from URL: salesman.html?sm=SM001 ─────────────────────
-const _urlSID = (new URLSearchParams(window.location.search).get('sm')||'').toUpperCase().trim();
+
 let SID   = _urlSID || '';
 let SNAME = SID;
 let DIST_ID = 'D001';
