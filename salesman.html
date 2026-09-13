@@ -1132,11 +1132,15 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   // ── Check existing session ────────────────────────────────────────
   const sess = getSession();
   if (sess && sess.id === _urlSID) {
-    // Valid session — restore and proceed
+    // Valid session for this SM — restore and proceed
     SID = sess.id; SNAME = sess.name; DIST_ID = sess.distributor||'D001';
     document.getElementById('loginScreen').style.display='none';
     initApp();
     return;
+  }
+  // Session mismatch or no session — clear any old session and show login
+  if (sess && sess.id !== _urlSID) {
+    clearSession(); // clear stale session from a different SM
   }
   // ── Show login screen ─────────────────────────────────────────────
   document.getElementById('loginScreen').style.display='flex';
