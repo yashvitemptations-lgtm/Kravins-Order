@@ -1625,35 +1625,58 @@ function fixOrderBuyerIds() {
   if (!orderSheet || orderSheet.getLastRow() < 2) return Logger.log('No orders found');
   if (!partySheet || partySheet.getLastRow() < 2) return Logger.log('No parties found');
 
-  // Build name→id map from New_Parties (col1=ID, col2=Name)
+  // Build lookup maps from New_Parties
   var partyRows = partySheet.getRange(2,1,partySheet.getLastRow()-1,2).getValues();
-  var nameToId = {};
+  var nameToId = {}; // name.lower -> id
+  var idSet = {};    // valid ids
   for (var i=0; i<partyRows.length; i++) {
-    var pid = String(partyRows[i][0]||'').trim();
+    var pid   = String(partyRows[i][0]||'').trim();
     var pname = String(partyRows[i][1]||'').trim().toLowerCase();
-    if (pid && pname) nameToId[pname] = pid;
+    if (pid && pname) { nameToId[pname] = pid; idSet[pid] = true; }
   }
 
-  // Read orders — col6=bid, col7=bname (1-based: col6=index5, col7=index6)
+  // Debug: show what cols 6 and 7 actually contain in first 3 rows
+  var sample = orderSheet.getRange(2,1,Math.min(3,orderSheet.getLastRow()-1),8).getValues();
+  for (var s=0; s<sample.length; s++) {
+    Logger.log('Sample row '+(s+2)+' col6='+sample[s][5]+' col7='+sample[s][6]);
+  }
+
+  // Read all orders — find which column is bid vs bname by checking idSet
   var orderRows = orderSheet.getRange(2,1,orderSheet.getLastRow()-1,8).getValues();
+  
+  // Detect column layout from first data row
+  var col6val = String(orderRows[0][5]||'').trim();
+  var col7val = String(orderRows[0][6]||'').trim();
+  // If col6 looks like a name (not in idSet and not starting with B0/BP/B-) then swap
+  var bidCol, bnameCol;
+  if (idSet[col6val] || /^(B|BP)\d/.test(col6val) || col6val.indexOf('Infinity') > -1) {
+    bidCol = 5; bnameCol = 6; // col6=bid, col7=bname (0-indexed)
+    Logger.log('Layout: col6=bid, col7=bname');
+  } else {
+    bidCol = 6; bnameCol = 5; // col7=bid, col6=bname (0-indexed)
+    Logger.log('Layout: col6=bname, col7=bid (swapped)');
+  }
+
   var fixed = 0;
   var notFound = [];
 
   for (var i=0; i<orderRows.length; i++) {
-    var bid   = String(orderRows[i][5]||'').trim();
-    var bname = String(orderRows[i][6]||'').trim().toLowerCase();
+    var bid   = String(orderRows[i][bidCol]||'').trim();
+    var bname = String(orderRows[i][bnameCol]||'').trim().toLowerCase();
     if (!bname) continue;
 
     var correctId = nameToId[bname];
-    if (correctId && correctId !== bid) {
-      orderSheet.getRange(i+2, 6).setValue(correctId);
-      Logger.log('Row '+(i+2)+': '+bid+' → '+correctId+' ('+bname+')');
+    // Only fix if: bid is wrong (not in idSet or is B-Infinity) AND name matches a party
+    var needsFix = correctId && (!idSet[bid] || bid.indexOf('Infinity') > -1 || bid.indexOf('B-') === 0) && correctId !== bid;
+    if (needsFix) {
+      orderSheet.getRange(i+2, bidCol+1).setValue(correctId);
+      Logger.log('Row '+(i+2)+': bid '+bid+' → '+correctId+' ('+bname+')');
       fixed++;
-    } else if (!correctId) {
-      notFound.push(bname);
+    } else if (!correctId && !idSet[bid]) {
+      notFound.push(bname+'[bid:'+bid+']');
     }
   }
 
   Logger.log('Fixed: '+fixed+' order buyer IDs');
-  Logger.log('Not matched ('+notFound.length+'): '+[...new Set(notFound)].slice(0,20).join(', '));
+  Logger.log('Not matched: '+[...new Set(notFound)].slice(0,30).join(' | '));
 }
