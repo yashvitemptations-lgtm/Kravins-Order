@@ -1416,7 +1416,7 @@ function fixDuplicatePartyIds() {
   }
 
   if (rowChanges.length === 0) {
-    SpreadsheetApp.getUi().alert('No duplicate or invalid party IDs found!');
+    Logger.log('No duplicate or invalid party IDs found!');
     return 'No issues found';
   }
 
@@ -1485,7 +1485,6 @@ function fixDuplicatePartyIds() {
     summary += ch.oldId + ' → ' + ch.newId + '  (' + ch.name + ')\n';
   });
   Logger.log(summary);
-  SpreadsheetApp.getUi().alert(summary);
   return summary;
 }
 
