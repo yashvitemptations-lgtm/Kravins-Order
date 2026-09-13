@@ -1569,47 +1569,45 @@ function fixOrderBuyerIds() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
   var orderSheet = ss.getSheetByName(TAB_ORDERS);
   var partySheet = ss.getSheetByName(TAB_PARTIES);
-  
-  if (!orderSheet || !partySheet) {
-    Logger.log('Sheet not found');
-    return;
+  if (!orderSheet || orderSheet.getLastRow() < 2) { Logger.log('No orders'); return; }
+  if (!partySheet || partySheet.getLastRow() < 2) { Logger.log('No parties'); return; }
+
+  // Build maps from New_Parties
+  var pRows = partySheet.getRange(2,1,partySheet.getLastRow()-1,2).getValues();
+  var nameToId = {}, idSet = {};
+  for (var i=0; i<pRows.length; i++) {
+    var pid = String(pRows[i][0]||'').trim();
+    var pnm = String(pRows[i][1]||'').trim().toLowerCase();
+    if (pid && pnm) { nameToId[pnm] = pid; idSet[pid.toLowerCase()] = pid; }
   }
-  
-  // Build name → id map from New_Parties
-  var partyRows = partySheet.getRange(2,1,partySheet.getLastRow()-1,2).getValues();
-  var nameToId = {};
-  for (var i=0; i<partyRows.length; i++) {
-    var pid = String(partyRows[i][0]||'').trim();
-    var pname = String(partyRows[i][1]||'').trim().toLowerCase();
-    if (pid && pname) nameToId[pname] = pid;
-  }
-  
-  // Read Orders — col1=OrderID, col6=BuyerID, col7=BuyerName
-  var orderRows = orderSheet.getRange(2,1,orderSheet.getLastRow()-1,7).getValues();
-  var fixed = 0;
-  var notFound = [];
-  
-  for (var i=0; i<orderRows.length; i++) {
-    var bid = String(orderRows[i][5]||'').trim();
-    var bname = String(orderRows[i][6]||'').trim().toLowerCase();
-    
-    // Fix if bid contains Infinity or B- pattern with Infinity
-    if (bid.indexOf('Infinity') > -1 || bid.indexOf('infinity') > -1 || bid === '') {
-      var correctId = nameToId[bname];
-      if (correctId) {
-        orderSheet.getRange(i+2, 6).setValue(correctId);
-        Logger.log('Row '+(i+2)+': '+bid+' → '+correctId+' ('+bname+')');
-        fixed++;
-      } else {
-        notFound.push('Row '+(i+2)+': "'+bname+'" not found in New_Parties');
-      }
+
+  // Read orders with enough columns
+  var lastRow = orderSheet.getLastRow();
+  var oRows = orderSheet.getRange(2,1,lastRow-1,21).getValues();
+
+  // Log first row to understand layout
+  Logger.log('Col1='+oRows[0][0]+' Col4='+oRows[0][3]+' Col5='+oRows[0][4]+' Col6='+oRows[0][5]+' Col7='+oRows[0][6]+' Col8='+oRows[0][7]);
+
+  // Your Orders sheet: col1=OrderID, col4=SalesmanID, col5=SalesmanName, col6=BuyerID, col7=BuyerName
+  var fixed = 0, notFound = [];
+  for (var i=0; i<oRows.length; i++) {
+    var bid   = String(oRows[i][5]||'').trim();   // col6 = Buyer ID
+    var bname = String(oRows[i][6]||'').trim();   // col7 = Buyer Name
+    if (!bid && !bname) continue;
+    var bnameL = bname.toLowerCase();
+    var correctId = nameToId[bnameL];
+    // Fix if bid is wrong format (Infinity, B00x, etc) and we know the correct id
+    var isWrong = bid.indexOf('Infinity') > -1 || bid.indexOf('B-') === 0 || (!idSet[bid.toLowerCase()] && bid.indexOf('BP') !== 0 && bid.indexOf('B0') !== 0);
+    if (correctId && bid !== correctId && isWrong) {
+      orderSheet.getRange(i+2, 6).setValue(correctId);
+      Logger.log('Row '+(i+2)+': "'+bid+'" → "'+correctId+'" ('+bname+')');
+      fixed++;
+    } else if (!correctId && bname) {
+      notFound.push(bname+'['+bid+']');
     }
   }
-  
-  Logger.log('Fixed: '+fixed+' rows');
-  Logger.log('Not found: '+notFound.length);
-  notFound.forEach(function(n){ Logger.log(n); });
-  Logger.log('Done. Check View > Logs for details.');
+  Logger.log('Fixed: '+fixed);
+  Logger.log('Not found: '+notFound.slice(0,20).join(' | '));
 }
 
 // ════════════════════════════════════════════════════════════════════════
