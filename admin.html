@@ -2275,7 +2275,9 @@ async function toggleSmActive(){
 }
 function closeSmDet(){ document.getElementById('smDetOv').classList.remove('on'); }
 function editSmRec(){
-  closeSmDet(); smSubTab('add');
+  closeSmDet();
+  goTab('smmaster'); // ensure SM Master page is active before showing form
+  smSubTab('add');
   const sm=masterSmRec; if(!sm) return;
   // Populate dropdowns first
   populateDistDropdown();
