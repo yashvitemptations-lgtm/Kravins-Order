@@ -1672,3 +1672,58 @@ function fixOrderBuyerIds() {
   Logger.log('Fixed: '+fixed+' order buyer IDs');
   Logger.log('Not matched: '+[...new Set(notFound)].slice(0,30).join(' | '));
 }
+
+
+function repairOrderBuyers() {
+  var ss = SpreadsheetApp.openById('174sQJSqaTZDcJFZWVtVMe6Df4D1f0Lg0h1RRkGc397c');
+  var oSheet = ss.getSheetByName('Orders');
+  var pSheet = ss.getSheetByName('New_Parties');
+  
+  // Load party name→id map
+  var pData = pSheet.getRange(2,1,pSheet.getLastRow()-1,2).getValues();
+  var nameMap = {};
+  for (var i=0; i<pData.length; i++) {
+    var id = String(pData[i][0]||'').trim();
+    var nm = String(pData[i][1]||'').trim().toLowerCase();
+    if (id && nm) nameMap[nm] = id;
+  }
+  Logger.log('Parties: '+Object.keys(nameMap).length);
+  
+  // Read all order rows
+  var oData = oSheet.getRange(2,1,oSheet.getLastRow()-1,21).getValues();
+  
+  // Log first non-empty row
+  for (var i=0; i<oData.length; i++) {
+    if (oData[i][0]) {
+      Logger.log('First data row: '+JSON.stringify(oData[i].slice(0,8)));
+      break;
+    }
+  }
+  
+  var fixed = 0, notFound = [];
+  for (var i=0; i<oData.length; i++) {
+    if (!oData[i][0]) continue; // skip empty rows
+    // Try col6 as name, col7 as id
+    var nm6 = String(oData[i][5]||'').trim();
+    var id7 = String(oData[i][6]||'').trim();
+    // Try col7 as name, col6 as id  
+    var nm7 = String(oData[i][6]||'').trim();
+    var id6 = String(oData[i][5]||'').trim();
+    
+    var correctId = nameMap[nm6.toLowerCase()] || nameMap[nm7.toLowerCase()];
+    if (!correctId) { if(nm6||nm7) notFound.push((nm6||nm7)+'['+id6+'/'+id7+']'); continue; }
+    
+    // Determine which col has the wrong id and fix it
+    if (nameMap[nm6.toLowerCase()] && id7 !== correctId) {
+      oSheet.getRange(i+2, 7).setValue(correctId);
+      Logger.log('Fix row '+(i+2)+' col7: '+id7+' -> '+correctId+' ('+nm6+')');
+      fixed++;
+    } else if (nameMap[nm7.toLowerCase()] && id6 !== correctId) {
+      oSheet.getRange(i+2, 6).setValue(correctId);
+      Logger.log('Fix row '+(i+2)+' col6: '+id6+' -> '+correctId+' ('+nm7+')');
+      fixed++;
+    }
+  }
+  Logger.log('Fixed: '+fixed);
+  Logger.log('Not found: '+[...new Set(notFound)].slice(0,20).join(' | '));
+}
