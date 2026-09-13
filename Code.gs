@@ -1576,34 +1576,32 @@ function fixOrderBuyerIds() {
   var pRows = partySheet.getRange(2,1,partySheet.getLastRow()-1,2).getValues();
   var nameToId = {};
   for (var i=0; i<pRows.length; i++) {
-    var pid  = String(pRows[i][0]||'').trim();
-    var pnm  = String(pRows[i][1]||'').trim().toLowerCase();
+    var pid = String(pRows[i][0]||'').trim();
+    var pnm = String(pRows[i][1]||'').trim().toLowerCase();
     if (pid && pnm) nameToId[pnm] = pid;
   }
-  Logger.log('Loaded '+Object.keys(nameToId).length+' parties');
+  Logger.log('Parties loaded: '+Object.keys(nameToId).length);
 
-  // Orders: col6=BuyerID, col7=BuyerName
+  // Orders sheet (YOUR layout): col6=BuyerName, col7=BuyerID
   var oRows = orderSheet.getRange(2,1,orderSheet.getLastRow()-1,7).getValues();
-  Logger.log('First order row: col6='+oRows[0][5]+' col7='+oRows[0][6]);
 
-  var fixed = 0, skipped = 0, notFound = [];
+  var fixed = 0, notFound = [];
   for (var i=0; i<oRows.length; i++) {
-    var bid   = String(oRows[i][5]||'').trim();  // col6 = Buyer ID
-    var bname = String(oRows[i][6]||'').trim();  // col7 = Buyer Name
-    if (!bname) { skipped++; continue; }
+    var bname = String(oRows[i][5]||'').trim();  // col6 = Buyer Name
+    var bid   = String(oRows[i][6]||'').trim();  // col7 = Buyer ID
+    if (!bname) continue;
 
     var correctId = nameToId[bname.toLowerCase()];
-    if (!correctId) { notFound.push(bname); continue; }
-    if (bid === correctId) continue; // already correct
+    if (!correctId) { notFound.push(bname+'['+bid+']'); continue; }
+    if (bid === correctId) continue;
 
-    // Fix it
-    orderSheet.getRange(i+2, 6).setValue(correctId);
-    Logger.log('Row '+(i+2)+': "'+bid+'" → "'+correctId+'" ('+bname+')');
+    // Update col7 with correct ID
+    orderSheet.getRange(i+2, 7).setValue(correctId);
+    Logger.log('Row '+(i+2)+': "'+bid+'" to "'+correctId+'" ('+bname+')');
     fixed++;
   }
-
-  Logger.log('Done. Fixed='+fixed+' Skipped='+skipped);
-  Logger.log('Not found in parties: '+[...new Set(notFound)].slice(0,30).join(' | '));
+  Logger.log('Fixed: '+fixed);
+  Logger.log('Not found: '+[...new Set(notFound)].slice(0,30).join(' | '));
 }
 
 // ════════════════════════════════════════════════════════════════════════
