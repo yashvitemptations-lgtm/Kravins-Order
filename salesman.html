@@ -1123,9 +1123,10 @@ async function getNextOID(){
   const nums=localOids.map(o=>parseInt(o.replace(prefix,''))||0);
   return prefix+String(Math.max(...nums)+1).padStart(3,'0');
 }
-function nextBID(){const buyers=getBuyers();
-  const n=buyers.map(b=>parseInt(b.id.replace('B',''))||0);
-  return 'B'+String(Math.max(...n)+1).padStart(3,'0');}
+function nextBID(){
+  // Generate temp ID using timestamp — always replaced by server ID after save
+  return 'BTMP' + Date.now().toString().slice(-6);
+}
 
 // ═══ INIT ═════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async ()=>{
