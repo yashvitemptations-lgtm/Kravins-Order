@@ -1066,23 +1066,10 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
 </div>
 
 <!-- ══ PARTY EDIT MODAL (Admin full edit) ══ -->
-<div class="ov" id="partyEditOv" onclick="if(event.target===this)closePartyEdit()">
-  <div class="mo" style="max-height:90dvh">
-    <div class="mh"></div>
-    <div class="mt" id="partyEditTitle">Edit Party</div>
-    <div id="partyEditBody"></div>
-  </div>
-</div>
+<!-- partyEditOv moved to body -->
 
 <!-- ══ EDIT REQUESTS MODAL ══ -->
-<div class="ov" id="editReqOv" onclick="if(event.target===this)document.getElementById('editReqOv').classList.remove('on')">
-  <div class="mo" style="max-height:90dvh">
-    <div class="mh"></div>
-    <div class="mt">📝 Pending Edit Requests</div>
-    <div id="editReqBody"></div>
-    <button class="bs cl" style="width:100%;padding:11px;margin-top:10px" onclick="document.getElementById('editReqOv').classList.remove('on')">Close</button>
-  </div>
-</div>
+<!-- editReqOv moved to body -->
 
 
 <!-- ══ VISITS TAB ══ -->
@@ -1182,74 +1169,16 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
 </div>
 
 <!-- ══ ORDER MODAL ══ -->
-<div class="ov" id="orderOv" onclick="if(event.target===this)closeModal('orderOv')">
-  <div class="mo">
-    <div class="mh"></div>
-    <div class="mt" id="omTitle"></div>
-    <div id="omBody"></div>
-    <div id="editSec" style="display:none;margin-top:10px">
-      <div style="font-size:10px;color:var(--mut);margin-bottom:5px;text-transform:uppercase">Update Status</div>
-      <select id="editStatus" class="fi" style="width:100%;margin-bottom:8px">
-        <option>Pending</option><option>Accepted</option><option>Dispatched</option><option>Cancelled</option>
-      </select>
-      <div style="font-size:10px;color:var(--mut);margin-bottom:4px;text-transform:uppercase">Notes</div>
-      <textarea id="editNotes" class="fi" style="width:100%;resize:none;min-height:58px"></textarea>
-      <div style="display:flex;gap:7px;margin-top:9px">
-        <button class="maction save" onclick="saveEdit()">💾 Save</button>
-        <button class="maction cancel" style="flex:.5" onclick="document.getElementById('editSec').style.display='none'">✕</button>
-      </div>
-    </div>
-    <div id="cancelSec" style="display:none;margin-top:10px">
-      <div style="font-size:10px;color:var(--red);margin-bottom:4px;text-transform:uppercase">Cancel Reason</div>
-      <textarea id="cancelReason" class="fi" placeholder="Reason..." style="width:100%;resize:none;min-height:55px"></textarea>
-      <div style="display:flex;gap:7px;margin-top:9px">
-        <button class="maction cancel" onclick="confirmCancel()">⛔ Confirm Cancel</button>
-        <button class="maction edit" style="flex:.5" onclick="document.getElementById('cancelSec').style.display='none'">Back</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">
-      <button class="maction edit" onclick="document.getElementById('editSec').style.display='block';document.getElementById('cancelSec').style.display='none'">✏️ Edit</button>
-      <button class="maction cancel" id="cancelBtn" onclick="document.getElementById('cancelSec').style.display='block';document.getElementById('editSec').style.display='none'">⛔ Cancel</button>
-      <button class="bs cl" style="flex:1;padding:11px" onclick="closeModal('orderOv')">Close</button>
-    </div>
-  </div>
-</div>
+<!-- orderOv moved to body -->
 
 <!-- ══ KPI MODAL ══ -->
-<div class="ov" id="kpiOv" onclick="if(event.target===this)closeModal('kpiOv')">
-  <div class="mo">
-    <div class="mh"></div>
-    <div class="mt" id="kpiTitle"></div>
-    <div id="kpiBody"></div>
-    <button class="bs cl" style="width:100%;padding:11px;margin-top:12px" onclick="closeModal('kpiOv')">Close</button>
-  </div>
-</div>
+<!-- kpiOv moved to body -->
 
 <!-- ══ NEW: SM DETAIL OVERLAY ══ -->
-<div class="det-ov" id="smDetOv" onclick="if(event.target===this)closeSmDet()">
-  <div class="det-sheet">
-    <div class="det-drag"></div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-      <div><div style="font-size:17px;font-weight:800" id="smd-name">—</div><div style="font-size:11px;font-family:var(--m);color:var(--a2);margin-top:2px" id="smd-id">—</div></div>
-      <span id="smd-badge"></span>
-    </div>
-    <div id="smd-body"></div>
-    <button class="mbtn sec" onclick="closeSmDet()" style="margin-top:12px">Close</button>
-  </div>
-</div>
+<!-- smDetOv moved to body -->
 
 <!-- ══ NEW: DIST DETAIL OVERLAY ══ -->
-<div class="det-ov" id="distDetOv" onclick="if(event.target===this)closeDistDet()">
-  <div class="det-sheet">
-    <div class="det-drag"></div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-      <div><div style="font-size:17px;font-weight:800" id="dd-name">—</div><div style="font-size:11px;font-family:var(--m);color:var(--pur);margin-top:2px" id="dd-id">—</div></div>
-      <span id="dd-badge"></span>
-    </div>
-    <div id="dd-body"></div>
-    <button class="mbtn sec" onclick="closeDistDet()" style="margin-top:12px">Close</button>
-  </div>
-</div>
+<!-- distDetOv moved to body -->
 
 <script>
 // ═══════════════════════════════════════════════════════
@@ -4322,5 +4251,84 @@ function openVisitPartyDetail(partyId){
     background:var(--s2);border:1px solid var(--bdr);border-radius:12px;padding:11px 20px;
     font-size:13px;font-weight:600;color:var(--txt);z-index:99999;opacity:0;
     transition:all .25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center"></div>
+
+<!-- OVERLAYS — direct children of body for correct z-index stacking -->
+<div class="ov" id="partyEditOv" onclick="if(event.target===this)closePartyEdit()">
+  <div class="mo" style="max-height:90dvh">
+    <div class="mh"></div>
+    <div class="mt" id="partyEditTitle">Edit Party</div>
+    <div id="partyEditBody"></div>
+  </div>
+</div>
+<div class="ov" id="editReqOv" onclick="if(event.target===this)document.getElementById('editReqOv').classList.remove('on')">
+  <div class="mo" style="max-height:90dvh">
+    <div class="mh"></div>
+    <div class="mt">📝 Pending Edit Requests</div>
+    <div id="editReqBody"></div>
+    <button class="bs cl" style="width:100%;padding:11px;margin-top:10px" onclick="document.getElementById('editReqOv').classList.remove('on')">Close</button>
+  </div>
+</div>
+<div class="ov" id="orderOv" onclick="if(event.target===this)closeModal('orderOv')">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mt" id="omTitle"></div>
+    <div id="omBody"></div>
+    <div id="editSec" style="display:none;margin-top:10px">
+      <div style="font-size:10px;color:var(--mut);margin-bottom:5px;text-transform:uppercase">Update Status</div>
+      <select id="editStatus" class="fi" style="width:100%;margin-bottom:8px">
+        <option>Pending</option><option>Accepted</option><option>Dispatched</option><option>Cancelled</option>
+      </select>
+      <div style="font-size:10px;color:var(--mut);margin-bottom:4px;text-transform:uppercase">Notes</div>
+      <textarea id="editNotes" class="fi" style="width:100%;resize:none;min-height:58px"></textarea>
+      <div style="display:flex;gap:7px;margin-top:9px">
+        <button class="maction save" onclick="saveEdit()">💾 Save</button>
+        <button class="maction cancel" style="flex:.5" onclick="document.getElementById('editSec').style.display='none'">✕</button>
+      </div>
+    </div>
+    <div id="cancelSec" style="display:none;margin-top:10px">
+      <div style="font-size:10px;color:var(--red);margin-bottom:4px;text-transform:uppercase">Cancel Reason</div>
+      <textarea id="cancelReason" class="fi" placeholder="Reason..." style="width:100%;resize:none;min-height:55px"></textarea>
+      <div style="display:flex;gap:7px;margin-top:9px">
+        <button class="maction cancel" onclick="confirmCancel()">⛔ Confirm Cancel</button>
+        <button class="maction edit" style="flex:.5" onclick="document.getElementById('cancelSec').style.display='none'">Back</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">
+      <button class="maction edit" onclick="document.getElementById('editSec').style.display='block';document.getElementById('cancelSec').style.display='none'">✏️ Edit</button>
+      <button class="maction cancel" id="cancelBtn" onclick="document.getElementById('cancelSec').style.display='block';document.getElementById('editSec').style.display='none'">⛔ Cancel</button>
+      <button class="bs cl" style="flex:1;padding:11px" onclick="closeModal('orderOv')">Close</button>
+    </div>
+  </div>
+</div>
+<div class="ov" id="kpiOv" onclick="if(event.target===this)closeModal('kpiOv')">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mt" id="kpiTitle"></div>
+    <div id="kpiBody"></div>
+    <button class="bs cl" style="width:100%;padding:11px;margin-top:12px" onclick="closeModal('kpiOv')">Close</button>
+  </div>
+</div>
+<div class="det-ov" id="smDetOv" onclick="if(event.target===this)closeSmDet()">
+  <div class="det-sheet">
+    <div class="det-drag"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+      <div><div style="font-size:17px;font-weight:800" id="smd-name">—</div><div style="font-size:11px;font-family:var(--m);color:var(--a2);margin-top:2px" id="smd-id">—</div></div>
+      <span id="smd-badge"></span>
+    </div>
+    <div id="smd-body"></div>
+    <button class="mbtn sec" onclick="closeSmDet()" style="margin-top:12px">Close</button>
+  </div>
+</div>
+<div class="det-ov" id="distDetOv" onclick="if(event.target===this)closeDistDet()">
+  <div class="det-sheet">
+    <div class="det-drag"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+      <div><div style="font-size:17px;font-weight:800" id="dd-name">—</div><div style="font-size:11px;font-family:var(--m);color:var(--pur);margin-top:2px" id="dd-id">—</div></div>
+      <span id="dd-badge"></span>
+    </div>
+    <div id="dd-body"></div>
+    <button class="mbtn sec" onclick="closeDistDet()" style="margin-top:12px">Close</button>
+  </div>
+</div>
 </body>
 </html>
