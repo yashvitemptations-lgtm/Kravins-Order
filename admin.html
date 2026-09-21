@@ -314,6 +314,25 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
 
   <div class="sec">
     <div class="sl">Month to Date — <span id="mtdLabel"></span></div>
+    <!-- Date range selector -->
+    <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;gap:4px;align-items:center;flex:1;min-width:200px">
+        <div style="font-size:10px;color:var(--mut);white-space:nowrap">FROM</div>
+        <input type="date" id="ov-date-from" style="flex:1;background:var(--s2);border:1px solid var(--bdr);
+          border-radius:6px;padding:5px 8px;font-family:var(--f);font-size:11px;color:var(--txt)">
+        <div style="font-size:10px;color:var(--mut)">TO</div>
+        <input type="date" id="ov-date-to" style="flex:1;background:var(--s2);border:1px solid var(--bdr);
+          border-radius:6px;padding:5px 8px;font-family:var(--f);font-size:11px;color:var(--txt)">
+      </div>
+      <button onclick="applyOvDateRange()" style="padding:6px 14px;background:var(--acc);border:none;
+        border-radius:6px;font-family:var(--f);font-size:11px;font-weight:700;color:#fff;cursor:pointer">
+        🔍 Filter
+      </button>
+      <button onclick="resetOvDateRange()" style="padding:6px 10px;background:var(--s2);border:1px solid var(--bdr);
+        border-radius:6px;font-family:var(--f);font-size:11px;color:var(--mut);cursor:pointer">
+        ✕ Reset
+      </button>
+    </div>
     <div class="kg2">
       <div class="pcard" style="cursor:pointer" onclick="showKpiModal('mtdSales')">
         <div class="ptop"><div class="plbl">MTD Sales ▸</div><div class="ppct hi" id="k-mtdPct">0%</div></div>
@@ -1461,6 +1480,32 @@ function refresh(){ toast('🔄 Refreshing...','in'); loadAll(); }
 // ═══════════════════════════════════════════════════════
 // OVERVIEW
 // ═══════════════════════════════════════════════════════
+// Date range filter state for overview
+let _ovDateFrom = '';
+let _ovDateTo = '';
+
+function applyOvDateRange(){
+  const from = document.getElementById('ov-date-from')?.value;
+  const to   = document.getElementById('ov-date-to')?.value;
+  if(!from || !to){ toast('⚠️ Select both From and To dates','er'); return; }
+  if(from > to){ toast('⚠️ From date must be before To date','er'); return; }
+  _ovDateFrom = from;
+  _ovDateTo   = to;
+  renderOverview();
+  toast(`✅ Showing ${from} → ${to}`,'ok');
+}
+
+function resetOvDateRange(){
+  _ovDateFrom = '';
+  _ovDateTo   = '';
+  const f = document.getElementById('ov-date-from');
+  const t = document.getElementById('ov-date-to');
+  if(f) f.value = '';
+  if(t) t.value = '';
+  renderOverview();
+  toast('✅ Reset to current month','ok');
+}
+
 function renderOverview(){
   const today=getToday();
   const {m:curM,y:curY}=getCurMY();
@@ -1472,7 +1517,10 @@ function renderOverview(){
   document.getElementById('k-todayOrders').textContent=todayOrd.length;
   document.getElementById('k-todayShops').textContent=todayShops;
 
-  const mtdOrd=active.filter(o=>isMTD(o.date));
+  // Use custom date range if set, otherwise use current month
+  const mtdOrd = _ovDateFrom && _ovDateTo
+    ? active.filter(o=>o.date>=_ovDateFrom && o.date<=_ovDateTo)
+    : active.filter(o=>isMTD(o.date));
   const mtdSales=mtdOrd.reduce((s,o)=>s+(o.gt||0),0);
   const mtdShops=new Set(mtdOrd.map(o=>o.bid)).size;
   const totalTgt=allSalesmen.reduce((s,sm)=>s+(sm.target||50000),0);
@@ -1486,7 +1534,9 @@ function renderOverview(){
   document.getElementById('k-mtdBar').style.width=Math.min(mtdPct,100)+'%';
   document.getElementById('k-mtdOrderCount').textContent=mtdOrd.length+' orders';
   document.getElementById('k-mtdSalesmenActive').textContent=smActive+' salesmen active this month';
-  document.getElementById('mtdLabel').textContent=MONTHS[curM-1]+' '+curY;
+  document.getElementById('mtdLabel').textContent = _ovDateFrom && _ovDateTo
+    ? (_ovDateFrom===_ovDateTo ? _ovDateFrom : _ovDateFrom+' → '+_ovDateTo)
+    : MONTHS[curM-1]+' '+curY;
 
   const ytdOrd=active.filter(o=>isYTD(o.date));
   const ytdSales=ytdOrd.reduce((s,o)=>s+(o.gt||0),0);
@@ -2063,8 +2113,10 @@ function showKpiModal(type, mm, mode){
     const map={};
     ord.forEach(o=>{if(!map[o.smId])map[o.smId]={name:o.smName,sales:0,orders:0};map[o.smId].sales+=(o.gt||0);map[o.smId].orders++;});
     body=Object.values(map).sort((a,b)=>b.sales-a.sales).map(s=>`
-      <div class="kmod-row"><span>👤 ${s.name}<br><span style="font-size:10px;color:var(--mut)">${s.orders} orders</span></span>
-      <b style="font-family:var(--m);color:var(--a2)">${fi(s.sales)}</b></div>`).join('')
+      <div class="kmod-row" style="cursor:pointer" onclick="showKpiModal('mtdSmDetail','${s.id}')">
+        <span>👤 ${s.name}<br><span style="font-size:10px;color:var(--mut)">${s.orders} orders</span></span>
+        <b style="font-family:var(--m);color:var(--a2)">${fi(s.sales)} ▸</b>
+      </div>`).join('')
       ||'<div style="text-align:center;padding:24px;color:var(--mut)">No MTD sales</div>';
     body+=`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:700"><span>${ord.length} total orders</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
   }else if(type==='mtdShops'){
@@ -2087,6 +2139,36 @@ function showKpiModal(type, mm, mode){
     const ord=active.filter(o=>isYTD(o.date)&&o.date&&o.date.slice(5,7)===mm);
     title=`${mode==='sales'?'📈':'🏬'} ${MONTHS[parseInt(mm)-1]} ${curY} — ${mode==='sales'?'Orders':'Shops'}`;
     body=mode==='sales'?monthOrderRows(ord):monthShopRows(ord);
+  }
+  }else if(type==='mtdSmDetail'){
+    const smId2=mm;
+    const sm=allSalesmen.find(x=>x.id===smId2)||{name:smId2,target:50000};
+    const dateLabel = _ovDateFrom && _ovDateTo
+      ? (_ovDateFrom===_ovDateTo ? _ovDateFrom : _ovDateFrom+' → '+_ovDateTo)
+      : MONTHS[curM-1]+' '+curY;
+    title=`👤 ${sm.name} — ${dateLabel}`;
+    const smOrd = _ovDateFrom && _ovDateTo
+      ? active.filter(o=>o.smId===smId2 && o.date>=_ovDateFrom && o.date<=_ovDateTo)
+      : active.filter(o=>o.smId===smId2 && isMTD(o.date));
+    const smTotal=smOrd.reduce((s,o)=>s+(o.gt||0),0);
+    const smShops=new Set(smOrd.map(o=>o.bid)).size;
+    body=`<div style="padding:4px 0 10px;font-size:12px;color:var(--mut)">
+      ${smOrd.length} orders · ${smShops} shops · Target: ${fi(sm.target||50000)}</div>`;
+    // Group by party
+    const shopMap={};
+    smOrd.forEach(o=>{
+      if(!shopMap[o.bid])shopMap[o.bid]={name:o.bname,total:0,orders:0,date:o.date};
+      shopMap[o.bid].total+=(o.gt||0);shopMap[o.bid].orders++;
+    });
+    body+=Object.values(shopMap).sort((a,b)=>b.total-a.total)
+      .map(s=>`<div class="kmod-row">
+        <span><div style="font-weight:600">${s.name}</div>
+        <div style="font-size:10px;color:var(--mut)">${s.orders} orders · ${s.date}</div></span>
+        <span style="font-family:var(--m);color:var(--a2)">${fi(s.total)}</span>
+      </div>`).join('') || '<div style="text-align:center;padding:24px;color:var(--mut)">No orders</div>';
+    body+=`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:700">
+      <span>${smOrd.length} orders · ${smShops} shops</span>
+      <span style="font-family:var(--m);color:var(--a2)">${fi(smTotal)}</span></div>`;
   }
   openKpiModal(title, body);
 }
