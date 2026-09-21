@@ -55,7 +55,7 @@ function doGet(e) {
   var p = e.parameter;
   var r;
   try {
-    if      (p.action === 'dashboard')    r = getDashboard(p.smId, p.month, p.year);
+    if      (p.action === 'dashboard')    r = getDashboard(p.smId, p.month, p.year, p.dateFrom, p.dateTo);
     else if (p.action === 'orders')       r = getOrders(p.smId, p.distId);
     else if (p.action === 'products')     r = getProducts();
     else if (p.action === 'salesmen')     r = getSalesmen();
