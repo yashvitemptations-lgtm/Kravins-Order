@@ -416,6 +416,23 @@ textarea{resize:none;line-height:1.5;min-height:58px}
         <div class="pbar" style="margin-top:8px">
           <div class="pfill bl" id="mtdBar" style="width:0%"></div>
         </div>
+        <!-- Period selector -->
+        <div onclick="event.stopPropagation()" style="display:flex;gap:6px;margin-top:8px">
+          <select id="dashMonth" onchange="changeDashPeriod()"
+            style="flex:1;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;
+            padding:4px 6px;font-family:var(--f);font-size:10px;color:var(--txt)">
+            <option value="1">January</option><option value="2">February</option>
+            <option value="3">March</option><option value="4">April</option>
+            <option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option>
+            <option value="9">September</option><option value="10">October</option>
+            <option value="11">November</option><option value="12">December</option>
+          </select>
+          <select id="dashYear" onchange="changeDashPeriod()"
+            style="width:72px;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;
+            padding:4px 6px;font-family:var(--f);font-size:10px;color:var(--txt)">
+          </select>
+        </div>
       </div>
       <div class="pcard" onclick="showKpiModal('ytd')" style="cursor:pointer">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -1287,7 +1304,7 @@ async function initApp(){
   await loadBuyers();
   addLine();
   loadProducts();
-  loadDashboard();
+  loadDashboard(); initDashPeriodSelector();
   autoSyncPending();
 }
 
@@ -1371,13 +1388,47 @@ function go(tab){
 
 // ═══ DASHBOARD LOADING ════════════════════════════════════════════════
 let prodChart, prodChartYtd;
-async function loadDashboard(){
+function changeDashPeriod(){
+  const m = document.getElementById('dashMonth')?.value;
+  const y = document.getElementById('dashYear')?.value;
+  if(m && y) loadDashboard(parseInt(m), parseInt(y));
+}
+
+function initDashPeriodSelector(){
+  const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const curM = now.getMonth()+1;
+  const curY = now.getFullYear();
+  const mSel = document.getElementById('dashMonth');
+  const ySel = document.getElementById('dashYear');
+  if(mSel) mSel.value = curM;
+  if(ySel){
+    ySel.innerHTML = '';
+    for(let y=curY; y>=curY-2; y--){
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      if(y===curY) opt.selected = true;
+      ySel.appendChild(opt);
+    }
+  }
+}
+
+async function loadDashboard(selMonth, selYear){
   const now = new Date();
   try{
-    const r=await fetch(`${SCRIPT_URL}?action=dashboard&smId=${SID}&t=${Date.now()}`);
+    const now2=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+    const _m=selMonth||now2.getMonth()+1;
+    const _y=selYear||now2.getFullYear();
+    const r=await fetch(`${SCRIPT_URL}?action=dashboard&smId=${SID}&month=${_m}&year=${_y}&t=${Date.now()}`);
     const data=await r.json();
     if(!data.ok)throw new Error(data.error||'Failed to load');
     lastDashData = data; // Store for KPI modals
+    window._allOrders = data.recentOrders||[];
+    // Also load all orders for visit report matching
+    try{
+      const ro=await fetch(`${SCRIPT_URL}?action=orders&smId=${encodeURIComponent(SID)}&t=${Date.now()}`);
+      const dor=await ro.json();
+      if(dor.ok) window._allOrders=dor.orders||[];
+    }catch(e){}
     
     const s=data.summary;
     const fi=n=>'₹'+Number(n||0).toLocaleString('en-IN');
@@ -3157,9 +3208,13 @@ async function renderVisitTab(){
     const r = await fetch(`${SCRIPT_URL}?action=visits&smId=${encodeURIComponent(SID)}&from=${today}&to=${today}&t=${Date.now()}`);
     const d = await r.json();
     visitTodayLog = (d.ok && d.visits ? d.visits : []).map(v=>({
-      partyId:v.partyId, partyName:v.partyName,
-      outcome:v.outcome, notes:v.notes||''
-    }));
+      partyId:String(v.partyId||v.party_id||'').trim(),
+      partyName:String(v.partyName||v.party_name||'').trim(),
+      outcome:String(v.outcome||'').trim(),
+      notes:String(v.notes||'').trim(),
+      date:String(v.date||'').trim(),
+      time:String(v.time||'').trim()
+    })).filter(v=>v.partyId||v.partyName);
     renderVisitTodayList();
   }catch(e){ renderVisitTodayList(); }
 }
@@ -3526,7 +3581,10 @@ async function loadSmVisitReport(period){
 
 function buildVisitRow(v,i,moFilter,fi,oc,oi){
   var pOrds=(window._smReportOrders||[]).filter(function(o){
-    return o.bid===v.partyId&&o.status!=='Cancelled'&&(!moFilter||(o.date||'').slice(0,7)===moFilter);
+    var bidMatch = o.bid===v.partyId;
+    var nameMatch = (o.bname||'').toLowerCase()===(v.partyName||'').toLowerCase();
+    var dateMatch = !moFilter||(o.date||'').slice(0,7)===moFilter;
+    return (bidMatch||nameMatch)&&o.status!=='Cancelled'&&dateMatch;
   });
   var ordHtml=pOrds.length?pOrds.map(function(o){
     var itemHtml=(o.items||o.lines||[]).map(function(it){
@@ -3557,9 +3615,77 @@ function buildVisitRow(v,i,moFilter,fi,oc,oi){
 
 
 // Open party detail from visit today log (salesman side)
-function openVisitedPartyDetail(partyId){
-  // Reuse the existing party detail modal
-  openPartyDetail(partyId);
+function openVisitedPartyDetail(partyId, visitDate){
+  // Open party detail modal and highlight orders from visit date
+  openPartyDetail(partyId, visitDate);
+}
+
+function openVisitReportParty(partyId, partyName, visitDate, outcome){
+  // Show orders placed on visitDate for this party
+  const orders = (window._allOrders||[]).filter(o=>
+    o.bid===partyId && o.date===visitDate && o.status!=='Cancelled'
+  );
+  const party = getBuyers().find(b=>b.id===partyId)||{name:partyName};
+  
+  let html = `<div style="padding:16px">`;
+  html += `<div style="font-size:14px;font-weight:700;margin-bottom:4px">🏪 ${party.name||partyName}</div>`;
+  html += `<div style="font-size:11px;color:var(--mut);margin-bottom:12px">📅 ${visitDate} · ${outcome}</div>`;
+  
+  if(orders.length===0){
+    // Try matching by party name if ID doesn't match
+    const byName = (window._allOrders||[]).filter(o=>
+      (o.bname||'').toLowerCase()===(partyName||'').toLowerCase() &&
+      o.date===visitDate && o.status!=='Cancelled'
+    );
+    if(byName.length>0){
+      html += renderOrdersInVisit(byName);
+    } else {
+      html += `<div style="color:var(--mut);font-size:12px;text-align:center;padding:20px">No orders found for this visit.<br><span style="font-size:10px">Party may have placed order on different date.</span></div>`;
+    }
+  } else {
+    html += renderOrdersInVisit(orders);
+  }
+  html += `</div>`;
+  
+  // Show in a simple modal
+  let modal = document.getElementById('visitOrderModal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'visitOrderModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:8000;display:flex;align-items:flex-end;justify-content:center';
+    modal.onclick = e=>{ if(e.target===modal) modal.remove(); };
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `<div style="background:var(--s1);border-radius:18px 18px 0 0;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px 8px;border-bottom:1px solid var(--bdr)">
+      <div style="font-size:12px;font-weight:700">Visit Details</div>
+      <button onclick="document.getElementById('visitOrderModal').remove()" 
+        style="background:none;border:none;color:var(--mut);font-size:18px;cursor:pointer">✕</button>
+    </div>
+    ${html}
+  </div>`;
+  modal.style.display = 'flex';
+}
+
+function renderOrdersInVisit(orders){
+  if(!orders.length) return '';
+  let html = `<div style="font-size:11px;font-weight:700;color:var(--mut);margin-bottom:8px">ORDERS (${orders.length})</div>`;
+  orders.forEach(o=>{
+    const total = o.gt || o.items?.reduce((s,i)=>s+(i.total||0),0) || 0;
+    html += `<div style="background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:8px">`;
+    html += `<div style="display:flex;justify-content:space-between;margin-bottom:6px">`;
+    html += `<div style="font-size:12px;font-weight:700">${o.oid}</div>`;
+    html += `<div style="font-size:12px;font-weight:800;color:var(--grn)">₹${total.toLocaleString('en-IN')}</div>`;
+    html += `</div>`;
+    if(o.items?.length){
+      o.items.forEach(it=>{
+        html += `<div style="font-size:10px;color:var(--mut);display:flex;justify-content:space-between">`;
+        html += `<span>${it.name||it.code}</span><span>${it.qty} × ₹${it.price} = ₹${it.total||0}</span></div>`;
+      });
+    }
+    html += `</div>`;
+  });
+  return html;
 }
 
 
