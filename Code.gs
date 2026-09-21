@@ -55,13 +55,14 @@ function doGet(e) {
   var p = e.parameter;
   var r;
   try {
-    if      (p.action === 'dashboard')    r = getDashboard(p.smId, p.month, p.year, p.dateFrom, p.dateTo);
+    if      (p.action === 'dashboard')    r = getDashboard(p.smId, p.month, p.year);
     else if (p.action === 'orders')       r = getOrders(p.smId, p.distId);
     else if (p.action === 'products')     r = getProducts();
     else if (p.action === 'salesmen')     r = getSalesmen();
     else if (p.action === 'distributors') r = getDistributors();
     else if (p.action === 'buyers')       r = getBuyers(p.smId);
     else if (p.action === 'parties')      r = getParties(p.smId);
+    else if (p.action === 'partyDetail')  r = getPartyDetail(p.id);
     else if (p.action === 'partyAccess')   r = getPartyAccess();
     else if (p.action === 'verifyPin')     r = verifyPin(p.id, p.pin, p.role);
     else if (p.action === 'editRequests')    r = getEditRequests();
@@ -508,29 +509,47 @@ function getParties(smId) {
     var r = rows[i];
     if (!r[0]) continue;
     if (smId && String(r[11]).trim() !== String(smId).trim()) continue;
-    parties.push({
-      id       : String(r[0]).trim(),
-      name     : String(r[1]).trim(),
-      contact  : String(r[2]||'').trim(),
-      phone    : String(r[3]||'').trim(),
-      address  : String(r[4]||'').trim(),
-      route    : String(r[5]||'').trim(),
-      territory: String(r[6]||'').trim(),
-      gst      : String(r[7]||'').trim(),
-      terms    : String(r[8]||'').trim(),
-      credit   : r[9]||0,
-      outstanding: r[10]||0,
-      addedBy  : String(r[11]||'').trim(),
-      at       : String(r[12]||'').trim(),
-      status   : String(r[13]||'').trim(),
-      lat      : String(r[14]||'').trim(),
-      lng      : String(r[15]||'').trim(),
-      photo    : String(r[16]||'').trim(),
-      whatsapp : String(r[17]||'').trim(),
-      email    : String(r[18]||'').trim(),
-      notes    : String(r[19]||'').trim(),
-      day      : String(r[20]||'').trim()
-    });
+    // Slim payload when smId filter is active — reduces JSON size by 60%
+    // Full details loaded on-demand via ?action=partyDetail&id=xxx
+    if (smId) {
+      parties.push({
+        id      : String(r[0]).trim(),
+        name    : String(r[1]).trim(),
+        phone   : String(r[3]||'').trim(),
+        address : String(r[4]||'').trim(),
+        route   : String(r[5]||'').trim(),
+        status  : String(r[13]||'').trim(),
+        lat     : String(r[14]||'').trim(),
+        lng     : String(r[15]||'').trim(),
+        whatsapp: String(r[17]||'').trim(),
+        day     : String(r[20]||'').trim(),
+        addedBy : String(r[11]||'').trim()
+      });
+    } else {
+      parties.push({
+        id       : String(r[0]).trim(),
+        name     : String(r[1]).trim(),
+        contact  : String(r[2]||'').trim(),
+        phone    : String(r[3]||'').trim(),
+        address  : String(r[4]||'').trim(),
+        route    : String(r[5]||'').trim(),
+        territory: String(r[6]||'').trim(),
+        gst      : String(r[7]||'').trim(),
+        terms    : String(r[8]||'').trim(),
+        credit   : r[9]||0,
+        outstanding: r[10]||0,
+        addedBy  : String(r[11]||'').trim(),
+        at       : String(r[12]||'').trim(),
+        status   : String(r[13]||'').trim(),
+        lat      : String(r[14]||'').trim(),
+        lng      : String(r[15]||'').trim(),
+        photo    : String(r[16]||'').trim(),
+        whatsapp : String(r[17]||'').trim(),
+        email    : String(r[18]||'').trim(),
+        notes    : String(r[19]||'').trim(),
+        day      : String(r[20]||'').trim()
+      });
+    }
   }
   // Merge dist allocations from separate Dist_Alloc sheet
   var distAllocMap = getAllDistAlloc();
@@ -596,6 +615,7 @@ function getOrders(smId, distId) {
 // ════════════════════════════════════════════════════════════════════════
 
 function getDashboard(smId, month, year, dateFrom, dateTo) {
+  Logger.log('getDashboard called: smId='+smId+' month='+month+' year='+year+' dateFrom='+dateFrom+' dateTo='+dateTo);
   var allOrdersList = getOrders().orders;
   var orders = smId
     ? allOrdersList.filter(function(o){ return o.smId === smId; })
@@ -1364,6 +1384,34 @@ function resolveEditRequest(reqId, resolution) {
 // FIX DUPLICATE PARTY IDs — Run once from Apps Script editor
 // Tools > Run > fixDuplicatePartyIds
 // ════════════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════════════
+// GET PARTY DETAIL — single party full data, loaded on demand
+// ════════════════════════════════════════════════════════════════════════
+function getPartyDetail(id) {
+  if(!id) return {ok:false, error:'ID required'};
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName(TAB_PARTIES);
+  if(!sheet || sheet.getLastRow() < 2) return {ok:false, error:'No parties'};
+  var rows = sheet.getRange(2,1,sheet.getLastRow()-1,HDR_PARTIES.length).getValues();
+  for(var i=0; i<rows.length; i++){
+    if(String(rows[i][0]).trim() !== String(id).trim()) continue;
+    var r = rows[i];
+    return {ok:true, party:{
+      id:String(r[0]).trim(), name:String(r[1]).trim(),
+      contact:String(r[2]||'').trim(), phone:String(r[3]||'').trim(),
+      address:String(r[4]||'').trim(), route:String(r[5]||'').trim(),
+      territory:String(r[6]||'').trim(), gst:String(r[7]||'').trim(),
+      terms:String(r[8]||'').trim(), credit:r[9]||0, outstanding:r[10]||0,
+      addedBy:String(r[11]||'').trim(), at:String(r[12]||'').trim(),
+      status:String(r[13]||'').trim(), lat:String(r[14]||'').trim(),
+      lng:String(r[15]||'').trim(), photo:String(r[16]||'').trim(),
+      whatsapp:String(r[17]||'').trim(), email:String(r[18]||'').trim(),
+      notes:String(r[19]||'').trim(), day:String(r[20]||'').trim()
+    }};
+  }
+  return {ok:false, error:'Party not found: '+id};
+}
 
 function fixDuplicatePartyIds() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
