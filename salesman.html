@@ -1454,14 +1454,73 @@ function changeDashPeriod(){
   if(_dashMode === 'day'){
     const dtFrom = document.getElementById('dashDateFrom')?.value;
     const dtTo   = document.getElementById('dashDateTo')?.value;
-    if(!dtFrom || !dtTo) return;
+    if(!dtFrom || !dtTo){ toast('⚠️ Select both From and To dates','er'); return; }
     if(dtFrom > dtTo){ toast('⚠️ From date must be before To date','er'); return; }
-    const d = new Date(dtFrom);
-    loadDashboard(d.getMonth()+1, d.getFullYear(), dtFrom, dtTo);
+    showDateRangeStats(dtFrom, dtTo);
   } else {
     const m = document.getElementById('dashMonth')?.value;
     const y = document.getElementById('dashYear')?.value;
     if(m && y) loadDashboard(parseInt(m), parseInt(y));
+  }
+}
+
+async function showDateRangeStats(dtFrom, dtTo){
+  const fi = n=>'₹'+Number(n||0).toLocaleString('en-IN');
+  const lbl = document.getElementById('mtdPeriodLabel');
+  const amt = document.getElementById('mtdAmt');
+  const pct = document.getElementById('mtdPct');
+  const bar = document.getElementById('mtdBar');
+  if(lbl) lbl.textContent = dtFrom===dtTo ? dtFrom : dtFrom+' → '+dtTo;
+  if(amt) amt.textContent = '⏳';
+
+  try{
+    // Fetch orders directly and filter by date range client-side
+    const r = await fetch(`${SCRIPT_URL}?action=orders&smId=${encodeURIComponent(SID)}&t=${Date.now()}`);
+    const d = await r.json();
+    const orders = (d.ok ? d.orders : window._allOrders||[])
+      .filter(o=> o.status!=='Cancelled' && o.date>=dtFrom && o.date<=dtTo);
+
+    const total = orders.reduce((s,o)=>s+(o.gt||0),0);
+    const shops = new Set(orders.map(o=>o.bid)).size;
+    const ordCount = orders.length;
+
+    if(amt) amt.textContent = fi(total);
+    if(pct) pct.textContent = ordCount+' orders · '+shops+' shops';
+    if(bar) { bar.style.width='100%'; bar.style.background='var(--grn)'; }
+
+    // Show order list below
+    let detailEl = document.getElementById('mtdDateDetail');
+    if(!detailEl){
+      detailEl = document.createElement('div');
+      detailEl.id = 'mtdDateDetail';
+      detailEl.style.cssText = 'margin-top:8px;max-height:300px;overflow-y:auto';
+      // Insert after the period selector
+      const periodSel = document.getElementById('dashDayPicker')?.closest('div[style*="border"]');
+      if(periodSel) periodSel.after(detailEl);
+    }
+
+    if(orders.length===0){
+      detailEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--mut);font-size:12px">No orders found for this period</div>';
+    } else {
+      detailEl.innerHTML = orders.map(o=>`
+        <div style="background:var(--s1);border:1px solid var(--bdr);border-radius:10px;
+          padding:10px 12px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <div style="font-size:11px;font-weight:700">${o.bname}</div>
+            <div style="font-size:12px;font-weight:800;color:var(--grn)">${fi(o.gt||0)}</div>
+          </div>
+          <div style="font-size:10px;color:var(--mut)">${o.oid} · ${o.date}</div>
+          ${(o.items||[]).map(it=>`<div style="font-size:10px;color:var(--mut);
+            display:flex;justify-content:space-between;margin-top:2px">
+            <span>${it.name||it.code}</span>
+            <span>${it.qty}×₹${it.price}=₹${it.total||0}</span>
+          </div>`).join('')}
+        </div>`).join('');
+    }
+    toast(`✅ ${dtFrom===dtTo?dtFrom:dtFrom+' to '+dtTo}: ${fi(total)} · ${ordCount} orders`,'ok');
+  }catch(e){
+    if(amt) amt.textContent = '❌';
+    toast('❌ Error loading orders','er');
   }
 }
 
