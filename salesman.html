@@ -405,6 +405,7 @@ textarea{resize:none;line-height:1.5;min-height:58px}
           <div style="flex:1">
             <div class="ptop">
               <div class="plbl">MTD Sales ▸</div>
+              <div id="mtdPeriodLabel" style="font-size:9px;color:var(--a2);margin-top:1px"></div>
               <div class="ppct" id="mtdPct">0%</div>
             </div>
             <div class="pamt" id="mtdAmt">₹0</div>
@@ -1478,6 +1479,7 @@ async function loadDashboard(selMonth, selYear, dateFrom, dateTo){
     const _y=selYear||now2.getFullYear();
     let dashUrl = `${SCRIPT_URL}?action=dashboard&smId=${SID}&month=${_m}&year=${_y}&t=${Date.now()}`;
     if(dateFrom) dashUrl += `&dateFrom=${dateFrom}&dateTo=${dateTo||dateFrom}`;
+    console.log('Dashboard URL:', dashUrl);
     const r=await fetch(dashUrl);
     const data=await r.json();
     if(!data.ok)throw new Error(data.error||'Failed to load');
@@ -1504,6 +1506,16 @@ async function loadDashboard(selMonth, selYear, dateFrom, dateTo){
     
     // MTD
     document.getElementById('mtdAmt').textContent=fi(s.mtdSales);
+    // Update MTD label to show selected period
+    const mtdLbl = document.getElementById('mtdPeriodLabel');
+    if(mtdLbl){
+      if(dateFrom && dateTo){
+        mtdLbl.textContent = dateFrom===dateTo ? dateFrom : dateFrom+' to '+dateTo;
+      } else {
+        const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        mtdLbl.textContent = mn[(_m-1)]+' '+_y;
+      }
+    }
     document.getElementById('mtdPct').textContent=s.mtdPct+'%';
     document.getElementById('mtdTgt').textContent=fi(s.target);
     document.getElementById('mtdBar').style.width=Math.min(s.mtdPct,100)+'%';
