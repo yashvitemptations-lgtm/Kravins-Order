@@ -431,9 +431,21 @@ textarea{resize:none;line-height:1.5;min-height:58px}
             background:var(--s2);color:var(--mut)">📆 Month</button>
         </div>
         <div id="dashDayPicker">
-          <input type="date" id="dashDate" onchange="changeDashPeriod()"
-            style="width:100%;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
-            padding:7px 10px;font-family:var(--f);font-size:12px;color:var(--txt)">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="flex:1">
+              <div style="font-size:9px;color:var(--mut);margin-bottom:3px">FROM</div>
+              <input type="date" id="dashDateFrom" onchange="changeDashPeriod()"
+                style="width:100%;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
+                padding:7px 8px;font-family:var(--f);font-size:11px;color:var(--txt)">
+            </div>
+            <div style="color:var(--mut);font-size:12px;margin-top:12px">→</div>
+            <div style="flex:1">
+              <div style="font-size:9px;color:var(--mut);margin-bottom:3px">TO</div>
+              <input type="date" id="dashDateTo" onchange="changeDashPeriod()"
+                style="width:100%;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
+                padding:7px 8px;font-family:var(--f);font-size:11px;color:var(--txt)">
+            </div>
+          </div>
         </div>
         <div id="dashMonthPicker" style="display:none">
           <div style="display:flex;gap:6px">
@@ -1429,10 +1441,12 @@ function setDashMode(mode){
 
 function changeDashPeriod(){
   if(_dashMode === 'day'){
-    const dt = document.getElementById('dashDate')?.value;
-    if(!dt) return;
-    const d = new Date(dt);
-    loadDashboard(d.getMonth()+1, d.getFullYear(), dt, dt);
+    const dtFrom = document.getElementById('dashDateFrom')?.value;
+    const dtTo   = document.getElementById('dashDateTo')?.value;
+    if(!dtFrom || !dtTo) return;
+    if(dtFrom > dtTo){ toast('⚠️ From date must be before To date','er'); return; }
+    const d = new Date(dtFrom);
+    loadDashboard(d.getMonth()+1, d.getFullYear(), dtFrom, dtTo);
   } else {
     const m = document.getElementById('dashMonth')?.value;
     const y = document.getElementById('dashYear')?.value;
@@ -1447,10 +1461,13 @@ function initDashPeriodSelector(){
   const today = now.toISOString().slice(0,10);
   const mSel = document.getElementById('dashMonth');
   const ySel = document.getElementById('dashYear');
-  const dateSel = document.getElementById('dashDate');
+  // dashDate replaced by dashDateFrom/dashDateTo
   if(mSel) mSel.value = String(curM);
   if(ySel) ySel.value = String(curY);
-  if(dateSel) dateSel.value = today;
+  const dateFromSel = document.getElementById('dashDateFrom');
+  const dateToSel   = document.getElementById('dashDateTo');
+  if(dateFromSel) dateFromSel.value = today;
+  if(dateToSel)   dateToSel.value   = today;
 }
 
 async function loadDashboard(selMonth, selYear, dateFrom, dateTo){
