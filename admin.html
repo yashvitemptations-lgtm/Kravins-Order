@@ -153,8 +153,8 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   font-size:12px;font-weight:600;color:var(--mut);cursor:pointer;margin-bottom:12px;transition:all .15s}
 .back:hover{border-color:var(--acc);color:var(--a2)}
 /* ── Modal ── */
-.ov{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
-  z-index:10000;display:none;align-items:flex-end}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
+  z-index:500;display:none;align-items:flex-end}
 .ov.on{display:flex}
 .mo{background:var(--s1);border-radius:18px 18px 0 0;border-top:1px solid var(--bdr);
   padding:16px 15px max(env(safe-area-inset-bottom,22px),22px);width:100%;
@@ -206,7 +206,7 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
 .badge-on{background:rgba(34,197,94,.12);color:var(--grn);border:1px solid rgba(34,197,94,.25);padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700}
 .badge-off{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700}
 .dtag{background:rgba(168,85,247,.12);color:var(--pur);border:1px solid rgba(168,85,247,.25);padding:1px 6px;border-radius:8px;font-size:9px;font-weight:700;display:inline-block;margin-top:2px}
-.det-ov{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);z-index:10000;display:none;align-items:flex-end}
+.det-ov{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);z-index:600;display:none;align-items:flex-end}
 .det-ov.on{display:flex}
 .det-sheet{background:var(--s1);border-radius:20px 20px 0 0;width:100%;max-height:92dvh;overflow-y:auto;padding:18px 16px 40px;border-top:1.5px solid var(--bdr)}
 .det-drag{width:38px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 14px}
@@ -231,7 +231,7 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
 <!-- HEADER -->
 <!-- ADMIN LOGIN -->
 <div id="adminLogin" style="display:none;position:fixed;inset:0;background:#050a14;
-  z-index:100;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px">
+  z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px">
   <div style="width:100%;max-width:360px">
     <div style="text-align:center;margin-bottom:32px">
       <div style="width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#7c3aed,#4f46e5);
@@ -1066,10 +1066,23 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
 </div>
 
 <!-- ══ PARTY EDIT MODAL (Admin full edit) ══ -->
-<!-- partyEditOv moved to body -->
+<div class="ov" id="partyEditOv" onclick="if(event.target===this)closePartyEdit()">
+  <div class="mo" style="max-height:90dvh">
+    <div class="mh"></div>
+    <div class="mt" id="partyEditTitle">Edit Party</div>
+    <div id="partyEditBody"></div>
+  </div>
+</div>
 
 <!-- ══ EDIT REQUESTS MODAL ══ -->
-<!-- editReqOv moved to body -->
+<div class="ov" id="editReqOv" onclick="if(event.target===this)document.getElementById('editReqOv').classList.remove('on')">
+  <div class="mo" style="max-height:90dvh">
+    <div class="mh"></div>
+    <div class="mt">📝 Pending Edit Requests</div>
+    <div id="editReqBody"></div>
+    <button class="bs cl" style="width:100%;padding:11px;margin-top:10px" onclick="document.getElementById('editReqOv').classList.remove('on')">Close</button>
+  </div>
+</div>
 
 
 <!-- ══ VISITS TAB ══ -->
@@ -1169,16 +1182,74 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
 </div>
 
 <!-- ══ ORDER MODAL ══ -->
-<!-- orderOv moved to body -->
+<div class="ov" id="orderOv" onclick="if(event.target===this)closeModal('orderOv')">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mt" id="omTitle"></div>
+    <div id="omBody"></div>
+    <div id="editSec" style="display:none;margin-top:10px">
+      <div style="font-size:10px;color:var(--mut);margin-bottom:5px;text-transform:uppercase">Update Status</div>
+      <select id="editStatus" class="fi" style="width:100%;margin-bottom:8px">
+        <option>Pending</option><option>Accepted</option><option>Dispatched</option><option>Cancelled</option>
+      </select>
+      <div style="font-size:10px;color:var(--mut);margin-bottom:4px;text-transform:uppercase">Notes</div>
+      <textarea id="editNotes" class="fi" style="width:100%;resize:none;min-height:58px"></textarea>
+      <div style="display:flex;gap:7px;margin-top:9px">
+        <button class="maction save" onclick="saveEdit()">💾 Save</button>
+        <button class="maction cancel" style="flex:.5" onclick="document.getElementById('editSec').style.display='none'">✕</button>
+      </div>
+    </div>
+    <div id="cancelSec" style="display:none;margin-top:10px">
+      <div style="font-size:10px;color:var(--red);margin-bottom:4px;text-transform:uppercase">Cancel Reason</div>
+      <textarea id="cancelReason" class="fi" placeholder="Reason..." style="width:100%;resize:none;min-height:55px"></textarea>
+      <div style="display:flex;gap:7px;margin-top:9px">
+        <button class="maction cancel" onclick="confirmCancel()">⛔ Confirm Cancel</button>
+        <button class="maction edit" style="flex:.5" onclick="document.getElementById('cancelSec').style.display='none'">Back</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">
+      <button class="maction edit" onclick="document.getElementById('editSec').style.display='block';document.getElementById('cancelSec').style.display='none'">✏️ Edit</button>
+      <button class="maction cancel" id="cancelBtn" onclick="document.getElementById('cancelSec').style.display='block';document.getElementById('editSec').style.display='none'">⛔ Cancel</button>
+      <button class="bs cl" style="flex:1;padding:11px" onclick="closeModal('orderOv')">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ KPI MODAL ══ -->
-<!-- kpiOv moved to body -->
+<div class="ov" id="kpiOv" onclick="if(event.target===this)closeModal('kpiOv')">
+  <div class="mo">
+    <div class="mh"></div>
+    <div class="mt" id="kpiTitle"></div>
+    <div id="kpiBody"></div>
+    <button class="bs cl" style="width:100%;padding:11px;margin-top:12px" onclick="closeModal('kpiOv')">Close</button>
+  </div>
+</div>
 
 <!-- ══ NEW: SM DETAIL OVERLAY ══ -->
-<!-- smDetOv moved to body -->
+<div class="det-ov" id="smDetOv" onclick="if(event.target===this)closeSmDet()">
+  <div class="det-sheet">
+    <div class="det-drag"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+      <div><div style="font-size:17px;font-weight:800" id="smd-name">—</div><div style="font-size:11px;font-family:var(--m);color:var(--a2);margin-top:2px" id="smd-id">—</div></div>
+      <span id="smd-badge"></span>
+    </div>
+    <div id="smd-body"></div>
+    <button class="mbtn sec" onclick="closeSmDet()" style="margin-top:12px">Close</button>
+  </div>
+</div>
 
 <!-- ══ NEW: DIST DETAIL OVERLAY ══ -->
-<!-- distDetOv moved to body -->
+<div class="det-ov" id="distDetOv" onclick="if(event.target===this)closeDistDet()">
+  <div class="det-sheet">
+    <div class="det-drag"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+      <div><div style="font-size:17px;font-weight:800" id="dd-name">—</div><div style="font-size:11px;font-family:var(--m);color:var(--pur);margin-top:2px" id="dd-id">—</div></div>
+      <span id="dd-badge"></span>
+    </div>
+    <div id="dd-body"></div>
+    <button class="mbtn sec" onclick="closeDistDet()" style="margin-top:12px">Close</button>
+  </div>
+</div>
 
 <script>
 // ═══════════════════════════════════════════════════════
@@ -1343,23 +1414,8 @@ function goDistInd(distId){
 // ═══════════════════════════════════════════════════════
 // LOAD DATA
 // ═══════════════════════════════════════════════════════
-let _partiesLoaded = false;
-let _partiesLoading = false;
-
-async function loadPartiesIfNeeded(){
-  if(_partiesLoaded || _partiesLoading) return;
-  _partiesLoading = true;
-  try{
-    const r = await fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`);
-    const d = await r.json();
-    if(d.ok){ allParties = d.parties||[]; _partiesLoaded = true; }
-  }catch(e){ console.error('loadParties error:',e); }
-  _partiesLoading = false;
-}
-
 async function loadAll(){
   try{
-    // Load core data — each independently so one failure doesn't crash all
     const [r1,r2,r3,r4] = await Promise.all([
       fetch(`${SCRIPT_URL}?action=orders&t=${Date.now()}`),
       fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`),
@@ -1371,12 +1427,6 @@ async function loadAll(){
     if(sd.ok) allSalesmen=sd.salesmen||[];
     if(dd.ok) allDistributors=dd.distributors||[];
     if(pd.ok) allParties=pd.parties||[];
-    // Products loaded separately on demand to avoid crashing main load
-    try{
-      const rp=await fetch(`${SCRIPT_URL}?action=products&t=${Date.now()}`);
-      const dp=await rp.json();
-      if(dp.ok) allProducts=dp.products||[];
-    }catch(e){ console.warn('Products load failed:',e.message); }
     if(od.ok) allOrders=(od.orders||[]).map(o=>{
       const sm = allSalesmen.find(s=>s.id===o.smId);
       return {...o, date:normDate(o.date), smName: sm ? sm.name : (o.smName||o.smId||'')};
@@ -1509,7 +1559,7 @@ function renderLeaderboard(mtdOrd){
 function renderAllSalesmen(){
   const today=getToday();
   const active=allOrders.filter(o=>o.status!=='Cancelled');
-  const q=(document.getElementById('sm-search')?.value||'').toLowerCase();
+  const q=(document.getElementById('smm-search')?.value||'').toLowerCase();
   const stF=document.getElementById('sm-status-filter')?.value||'';
   const filtered=allSalesmen.filter(sm=>{
     const mq=!q||sm.name.toLowerCase().includes(q)||(sm.id||'').toLowerCase().includes(q);
@@ -2132,7 +2182,7 @@ function populateDistDropdown(){
 }
 
 function renderSmMaster(){
-  const q=(document.getElementById('smm-search')?.value||'').toLowerCase();
+  const q=(document.getElementById('sm-search')?.value||'').toLowerCase();
   const list=allSalesmen.filter(s=>!q||s.name.toLowerCase().includes(q)||s.id.toLowerCase().includes(q));
   const el=document.getElementById('sm-master-list'); if(!el) return;
   if(!list.length){el.innerHTML='<div class="empty">No salesmen found</div>';return;}
@@ -4251,5 +4301,5 @@ function openVisitPartyDetail(partyId){
     background:var(--s2);border:1px solid var(--bdr);border-radius:12px;padding:11px 20px;
     font-size:13px;font-weight:600;color:var(--txt);z-index:99999;opacity:0;
     transition:all .25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center"></div>
-
-<!-- OVERLAYS — direct children of body for correct z-index stacking -->
+</body>
+</html>
