@@ -1477,8 +1477,24 @@ async function showDateRangeStats(dtFrom, dtTo){
     // Fetch orders directly and filter by date range client-side
     const r = await fetch(`${SCRIPT_URL}?action=orders&smId=${encodeURIComponent(SID)}&t=${Date.now()}`);
     const d = await r.json();
-    const orders = (d.ok ? d.orders : window._allOrders||[])
-      .filter(o=> o.status!=='Cancelled' && o.date>=dtFrom && o.date<=dtTo);
+    const allOrds = d.ok ? d.orders : window._allOrders||[];
+    // Normalise date to YYYY-MM-DD for comparison
+    const normDate = dt => {
+      if(!dt) return '';
+      const s = String(dt).trim();
+      // Already YYYY-MM-DD
+      if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+      // DD/MM/YYYY
+      if(/^\d{2}\/\d{2}\/\d{4}/.test(s)){ const p=s.split('/'); return p[2]+'-'+p[1]+'-'+p[0]; }
+      // Try Date parse
+      try{ return new Date(s).toISOString().slice(0,10); }catch(e){ return s; }
+    };
+    console.log('Sample order dates:', allOrds.slice(0,3).map(o=>o.date+' → '+normDate(o.date)));
+    const orders = allOrds.filter(o=> {
+      if(o.status==='Cancelled') return false;
+      const od = normDate(o.date);
+      return od>=dtFrom && od<=dtTo;
+    });
 
     const total = orders.reduce((s,o)=>s+(o.gt||0),0);
     const shops = new Set(orders.map(o=>o.bid)).size;
