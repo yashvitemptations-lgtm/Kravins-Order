@@ -2107,18 +2107,40 @@ function showKpiModal(type, mm, mode){
         <span style="font-family:var(--m);color:var(--a2)">${fi(s.total)}</span></div>`).join('')
       ||'<div style="text-align:center;padding:24px;color:var(--mut)">No shops served today</div>';
   }else if(type==='mtdSales'){
-    title=`📅 MTD Sales — ${MONTHS[curM-1]} ${curY}`;
-    const ord=active.filter(o=>isMTD(o.date)).sort((a,b)=>b.gt-a.gt);
+    const dateLabel=_ovDateFrom&&_ovDateTo
+      ?(_ovDateFrom===_ovDateTo?_ovDateFrom:_ovDateFrom+' → '+_ovDateTo)
+      :MONTHS[curM-1]+' '+curY;
+    title=`📅 Sales — ${dateLabel}`;
+    const ord=_ovDateFrom&&_ovDateTo
+      ?active.filter(o=>o.date>=_ovDateFrom&&o.date<=_ovDateTo)
+      :active.filter(o=>isMTD(o.date));
+    ord.sort((a,b)=>a.date<b.date?1:-1);
     const total=ord.reduce((s,o)=>s+(o.gt||0),0);
-    const map={};
-    ord.forEach(o=>{if(!map[o.smId])map[o.smId]={name:o.smName,sales:0,orders:0};map[o.smId].sales+=(o.gt||0);map[o.smId].orders++;});
-    body=Object.values(map).sort((a,b)=>b.sales-a.sales).map(s=>`
-      <div class="kmod-row" style="cursor:pointer" onclick="showKpiModal('mtdSmDetail','${s.id}')">
-        <span>👤 ${s.name}<br><span style="font-size:10px;color:var(--mut)">${s.orders} orders</span></span>
-        <b style="font-family:var(--m);color:var(--a2)">${fi(s.sales)} ▸</b>
+    body=`<div style="padding:4px 0 8px;font-size:12px;color:var(--mut)">${ord.length} orders · ${new Set(ord.map(o=>o.bid)).size} shops · ${fi(total)}</div>`;
+    body+=ord.map(o=>`
+      <div class="kmod-row" style="cursor:pointer;flex-direction:column;align-items:stretch"
+        onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:600;font-size:12px">${o.bname}</div>
+            <div style="font-size:10px;color:var(--mut)">${o.date} · ${o.smName} · ${o.oid}</div>
+          </div>
+          <b style="font-family:var(--m);color:var(--a2);margin-left:8px">${fi(o.gt||0)} ▸</b>
+        </div>
+      </div>
+      <div style="display:none;background:var(--s1);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:6px">
+        <div style="font-size:11px;color:var(--mut);margin-bottom:6px">📍 ${o.baddress||'—'}</div>
+        ${(o.items||[]).map(it=>`
+          <div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--bdr)">
+            <span>${it.name||it.code}</span>
+            <span style="color:var(--mut)">${it.qty} × ${fi(it.price)} = <b style="color:var(--txt)">${fi(it.total||0)}</b></span>
+          </div>`).join('')}
+        <div style="display:flex;justify-content:space-between;padding:6px 0 0;font-weight:700;font-size:12px">
+          <span>${(o.items||[]).length} items</span>
+          <span style="font-family:var(--m);color:var(--a2)">${fi(o.gt||0)}</span>
+        </div>
       </div>`).join('')
-      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No MTD sales</div>';
-    body+=`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:700"><span>${ord.length} total orders</span><span style="font-family:var(--m);color:var(--a2)">${fi(total)}</span></div>`;
+      ||'<div style="text-align:center;padding:24px;color:var(--mut)">No sales in this period</div>';
   }else if(type==='mtdShops'){
     title=`🏪 MTD Shops — ${MONTHS[curM-1]} ${curY}`;
     const ord=active.filter(o=>isMTD(o.date));
