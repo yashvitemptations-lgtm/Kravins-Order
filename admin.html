@@ -2139,7 +2139,6 @@ function showKpiModal(type, mm, mode){
     const ord=active.filter(o=>isYTD(o.date)&&o.date&&o.date.slice(5,7)===mm);
     title=`${mode==='sales'?'📈':'🏬'} ${MONTHS[parseInt(mm)-1]} ${curY} — ${mode==='sales'?'Orders':'Shops'}`;
     body=mode==='sales'?monthOrderRows(ord):monthShopRows(ord);
-  }
   }else if(type==='mtdSmDetail'){
     const smId2=mm;
     const sm=allSalesmen.find(x=>x.id===smId2)||{name:smId2,target:50000};
