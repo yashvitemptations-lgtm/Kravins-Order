@@ -417,24 +417,43 @@ textarea{resize:none;line-height:1.5;min-height:58px}
           <div class="pfill bl" id="mtdBar" style="width:0%"></div>
         </div>
         <!-- Period selector -->
-        <div onclick="event.stopPropagation()" style="display:flex;gap:6px;margin-top:8px">
-          <select id="dashMonth" onchange="changeDashPeriod()"
-            style="flex:1;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;
-            padding:4px 6px;font-family:var(--f);font-size:10px;color:var(--txt)">
-            <option value="1">Jan</option><option value="2">Feb</option>
-            <option value="3">Mar</option><option value="4">Apr</option>
-            <option value="5">May</option><option value="6">Jun</option>
-            <option value="7">Jul</option><option value="8">Aug</option>
-            <option value="9">Sep</option><option value="10">Oct</option>
-            <option value="11">Nov</option><option value="12">Dec</option>
-          </select>
-          <select id="dashYear" onchange="changeDashPeriod()"
-            style="width:68px;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;
-            padding:4px 6px;font-family:var(--f);font-size:10px;color:var(--txt)">
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
-            <option value="2024">2024</option>
-          </select>
+        <div onclick="event.stopPropagation()" style="margin-top:8px">
+          <div style="display:flex;gap:4px;margin-bottom:5px">
+            <button onclick="setDashMode('day')" id="dashModeDay"
+              style="flex:1;padding:4px;font-size:9px;font-weight:700;border-radius:5px;
+              border:1px solid var(--bdr);font-family:var(--f);cursor:pointer;
+              background:var(--acc);color:#fff">Day</button>
+            <button onclick="setDashMode('month')" id="dashModeMonth"
+              style="flex:1;padding:4px;font-size:9px;font-weight:700;border-radius:5px;
+              border:1px solid var(--bdr);font-family:var(--f);cursor:pointer;
+              background:var(--s2);color:var(--mut)">Month</button>
+          </div>
+          <div id="dashDayPicker" style="display:block">
+            <input type="date" id="dashDate" onchange="changeDashPeriod()"
+              style="width:100%;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;
+              padding:5px 8px;font-family:var(--f);font-size:10px;color:var(--txt)">
+          </div>
+          <div id="dashMonthPicker" style="display:none">
+            <div style="display:flex;gap:4px">
+              <select id="dashMonth" onchange="changeDashPeriod()"
+                style="flex:1;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;
+                padding:5px 6px;font-family:var(--f);font-size:10px;color:var(--txt)">
+                <option value="1">January</option><option value="2">February</option>
+                <option value="3">March</option><option value="4">April</option>
+                <option value="5">May</option><option value="6">June</option>
+                <option value="7">July</option><option value="8">August</option>
+                <option value="9">September</option><option value="10">October</option>
+                <option value="11">November</option><option value="12">December</option>
+              </select>
+              <select id="dashYear" onchange="changeDashPeriod()"
+                style="width:68px;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;
+                padding:5px 6px;font-family:var(--f);font-size:10px;color:var(--txt)">
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
       <div class="pcard" onclick="showKpiModal('ytd')" style="cursor:pointer">
@@ -1392,29 +1411,56 @@ function go(tab){
 
 // ═══ DASHBOARD LOADING ════════════════════════════════════════════════
 let prodChart, prodChartYtd;
+let _dashMode = 'day';
+
+function setDashMode(mode){
+  _dashMode = mode;
+  const dayBtn = document.getElementById('dashModeDay');
+  const monBtn = document.getElementById('dashModeMonth');
+  const dayPick = document.getElementById('dashDayPicker');
+  const monPick = document.getElementById('dashMonthPicker');
+  if(dayBtn){ dayBtn.style.background = mode==='day'?'var(--acc)':'var(--s2)'; dayBtn.style.color = mode==='day'?'#fff':'var(--mut)'; }
+  if(monBtn){ monBtn.style.background = mode==='month'?'var(--acc)':'var(--s2)'; monBtn.style.color = mode==='month'?'#fff':'var(--mut)'; }
+  if(dayPick) dayPick.style.display = mode==='day'?'block':'none';
+  if(monPick) monPick.style.display = mode==='month'?'block':'none';
+  changeDashPeriod();
+}
+
 function changeDashPeriod(){
-  const m = document.getElementById('dashMonth')?.value;
-  const y = document.getElementById('dashYear')?.value;
-  if(m && y) loadDashboard(parseInt(m), parseInt(y));
+  if(_dashMode === 'day'){
+    const dt = document.getElementById('dashDate')?.value;
+    if(!dt) return;
+    const d = new Date(dt);
+    loadDashboard(d.getMonth()+1, d.getFullYear(), dt, dt);
+  } else {
+    const m = document.getElementById('dashMonth')?.value;
+    const y = document.getElementById('dashYear')?.value;
+    if(m && y) loadDashboard(parseInt(m), parseInt(y));
+  }
 }
 
 function initDashPeriodSelector(){
   const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
   const curM = now.getMonth()+1;
   const curY = now.getFullYear();
+  const today = now.toISOString().slice(0,10);
   const mSel = document.getElementById('dashMonth');
   const ySel = document.getElementById('dashYear');
+  const dateSel = document.getElementById('dashDate');
   if(mSel) mSel.value = String(curM);
   if(ySel) ySel.value = String(curY);
+  if(dateSel) dateSel.value = today;
 }
 
-async function loadDashboard(selMonth, selYear){
+async function loadDashboard(selMonth, selYear, dateFrom, dateTo){
   const now = new Date();
   try{
     const now2=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
     const _m=selMonth||now2.getMonth()+1;
     const _y=selYear||now2.getFullYear();
-    const r=await fetch(`${SCRIPT_URL}?action=dashboard&smId=${SID}&month=${_m}&year=${_y}&t=${Date.now()}`);
+    let dashUrl = `${SCRIPT_URL}?action=dashboard&smId=${SID}&month=${_m}&year=${_y}&t=${Date.now()}`;
+    if(dateFrom) dashUrl += `&dateFrom=${dateFrom}&dateTo=${dateTo||dateFrom}`;
+    const r=await fetch(dashUrl);
     const data=await r.json();
     if(!data.ok)throw new Error(data.error||'Failed to load');
     lastDashData = data; // Store for KPI modals
@@ -3281,6 +3327,9 @@ function captureVisitGPS(){
 }
 
 async function saveVisitLog(){
+  // Prevent double submission
+  if(window._visitSaving){ toast('⏳ Already saving...','in'); return; }
+  window._visitSaving = true;
   const partyId   = document.getElementById('visitPartyId').value;
   const outcome   = document.getElementById('visitOutcome').value;
   const notes     = document.getElementById('visitNotes').value.trim();
@@ -3328,6 +3377,7 @@ async function saveVisitLog(){
   }catch(e){ toast('❌ Network error','er'); }
 
   btn.disabled=false; btn.textContent='📍 Log Visit';
+  window._visitSaving = false;
 }
 
 function renderVisitTodayList(){
