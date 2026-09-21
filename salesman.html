@@ -399,6 +399,7 @@ textarea{resize:none;line-height:1.5;min-height:58px}
   <div class="sec">
     <div class="sl">Month & Year Performance</div>
     <div class="grid2">
+      <!-- MTD clickable area -->
       <div class="pcard" onclick="showKpiModal('mtd')" style="cursor:pointer">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1">
@@ -416,43 +417,43 @@ textarea{resize:none;line-height:1.5;min-height:58px}
         <div class="pbar" style="margin-top:8px">
           <div class="pfill bl" id="mtdBar" style="width:0%"></div>
         </div>
-        <!-- Period selector -->
-        <div onclick="event.stopPropagation()" style="margin-top:8px">
-          <div style="display:flex;gap:4px;margin-bottom:5px">
-            <button onclick="setDashMode('day')" id="dashModeDay"
-              style="flex:1;padding:4px;font-size:9px;font-weight:700;border-radius:5px;
-              border:1px solid var(--bdr);font-family:var(--f);cursor:pointer;
-              background:var(--acc);color:#fff">Day</button>
-            <button onclick="setDashMode('month')" id="dashModeMonth"
-              style="flex:1;padding:4px;font-size:9px;font-weight:700;border-radius:5px;
-              border:1px solid var(--bdr);font-family:var(--f);cursor:pointer;
-              background:var(--s2);color:var(--mut)">Month</button>
-          </div>
-          <div id="dashDayPicker" style="display:block">
-            <input type="date" id="dashDate" onchange="changeDashPeriod()"
-              style="width:100%;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;
-              padding:5px 8px;font-family:var(--f);font-size:10px;color:var(--txt)">
-          </div>
-          <div id="dashMonthPicker" style="display:none">
-            <div style="display:flex;gap:4px">
-              <select id="dashMonth" onchange="changeDashPeriod()"
-                style="flex:1;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;
-                padding:5px 6px;font-family:var(--f);font-size:10px;color:var(--txt)">
-                <option value="1">January</option><option value="2">February</option>
-                <option value="3">March</option><option value="4">April</option>
-                <option value="5">May</option><option value="6">June</option>
-                <option value="7">July</option><option value="8">August</option>
-                <option value="9">September</option><option value="10">October</option>
-                <option value="11">November</option><option value="12">December</option>
-              </select>
-              <select id="dashYear" onchange="changeDashPeriod()"
-                style="width:68px;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;
-                padding:5px 6px;font-family:var(--f);font-size:10px;color:var(--txt)">
-                <option value="2026">2026</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-              </select>
-            </div>
+      </div>
+      <!-- Period selector — OUTSIDE card so taps don't trigger modal -->
+      <div style="margin-top:6px;background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:8px 10px">
+        <div style="display:flex;gap:4px;margin-bottom:6px">
+          <button onclick="setDashMode('day')" id="dashModeDay"
+            style="flex:1;padding:5px;font-size:10px;font-weight:700;border-radius:6px;
+            border:1px solid var(--bdr);font-family:var(--f);cursor:pointer;
+            background:var(--acc);color:#fff">📅 Day</button>
+          <button onclick="setDashMode('month')" id="dashModeMonth"
+            style="flex:1;padding:5px;font-size:10px;font-weight:700;border-radius:6px;
+            border:1px solid var(--bdr);font-family:var(--f);cursor:pointer;
+            background:var(--s2);color:var(--mut)">📆 Month</button>
+        </div>
+        <div id="dashDayPicker">
+          <input type="date" id="dashDate" onchange="changeDashPeriod()"
+            style="width:100%;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
+            padding:7px 10px;font-family:var(--f);font-size:12px;color:var(--txt)">
+        </div>
+        <div id="dashMonthPicker" style="display:none">
+          <div style="display:flex;gap:6px">
+            <select id="dashMonth" onchange="changeDashPeriod()"
+              style="flex:1;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
+              padding:7px 8px;font-family:var(--f);font-size:11px;color:var(--txt)">
+              <option value="1">January</option><option value="2">February</option>
+              <option value="3">March</option><option value="4">April</option>
+              <option value="5">May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option>
+              <option value="9">September</option><option value="10">October</option>
+              <option value="11">November</option><option value="12">December</option>
+            </select>
+            <select id="dashYear" onchange="changeDashPeriod()"
+              style="width:72px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
+              padding:7px 8px;font-family:var(--f);font-size:11px;color:var(--txt)">
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+            </select>
           </div>
         </div>
       </div>
