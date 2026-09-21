@@ -1477,7 +1477,7 @@ async function showDateRangeStats(dtFrom, dtTo){
     // Use cached orders if available (loaded within last 5 minutes)
     let allOrds = window._allOrders||[];
     const ordAge = Date.now() - (window._allOrdersTime||0);
-    if(!allOrds.length || ordAge > 300000){
+    if(!allOrds.length || ordAge > 600000){
       const r = await fetch(`${SCRIPT_URL}?action=orders&smId=${encodeURIComponent(SID)}&t=${Date.now()}`);
       const d = await r.json();
       if(d.ok){ allOrds = d.orders; window._allOrders=allOrds; window._allOrdersTime=Date.now(); }
@@ -1758,11 +1758,18 @@ async function loadDashboard(selMonth, selYear, dateFrom, dateTo){
 }
 
 // ═══ BUYER ════════════════════════════════════════════════════════════
-async function loadBuyers(){
+let _buyersLoadTime = 0;
+
+async function loadBuyers(forceRefresh){
   try{
-    // Always fetch fresh from server — don't rely on stale mobile cache
-    // Load ALL parties (no smId filter) — filter by allocation client-side
-    const r=await fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`);
+    // Cache parties for 10 minutes — 2500 shops don't change every minute
+    const age = Date.now() - _buyersLoadTime;
+    if(!forceRefresh && age < 600000 && getBuyers().length > 0){
+      fillBuyerSel();
+      return; // use cached
+    }
+    _buyersLoadTime = Date.now();
+    const r=await fetch(`${SCRIPT_URL}?action=parties&smId=${encodeURIComponent(SID)}&t=${Date.now()}`);
     const data=await r.json();
     if(data.ok && data.parties && data.parties.length){
       // STRICT: only show parties explicitly assigned to this SM or their distributor
