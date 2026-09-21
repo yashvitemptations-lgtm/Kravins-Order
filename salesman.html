@@ -1481,13 +1481,16 @@ async function showDateRangeStats(dtFrom, dtTo){
     // Normalise date to YYYY-MM-DD for comparison
     const normDate = dt => {
       if(!dt) return '';
-      const s = String(dt).trim();
-      // Already YYYY-MM-DD
-      if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+      const str = String(dt).trim();
+      // Already YYYY-MM-DD (no time component)
+      if(/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
       // DD/MM/YYYY
-      if(/^\d{2}\/\d{2}\/\d{4}/.test(s)){ const p=s.split('/'); return p[2]+'-'+p[1]+'-'+p[0]; }
-      // Try Date parse
-      try{ return new Date(s).toISOString().slice(0,10); }catch(e){ return s; }
+      if(/^\d{2}\/\d{2}\/\d{4}/.test(str)){ const p=str.split('/'); return p[2]+'-'+p[1]+'-'+p[0]; }
+      // Has time or timezone (e.g. 2026-09-20T18:30:00.000Z) — convert to IST
+      try{
+        const d = new Date(str);
+        return new Date(d.getTime() + 330*60000).toISOString().slice(0,10);
+      }catch(e){ return str.slice(0,10); }
     };
     console.log('Sample order dates:', allOrds.slice(0,3).map(o=>o.date+' → '+normDate(o.date)));
     const orders = allOrds.filter(o=> {
