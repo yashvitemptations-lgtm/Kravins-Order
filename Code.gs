@@ -55,7 +55,7 @@ function doGet(e) {
   var p = e.parameter;
   var r;
   try {
-    if      (p.action === 'dashboard')    r = getDashboard(p.smId, p.month, p.year, p.dateFrom, p.dateTo);
+    if      (p.action === 'dashboard')    r = getDashboard(p.smId, p.month, p.year);
     else if (p.action === 'orders')       r = getOrders(p.smId, p.distId);
     else if (p.action === 'products')     r = getProducts();
     else if (p.action === 'salesmen')     r = getSalesmen();
@@ -596,6 +596,7 @@ function getOrders(smId, distId) {
 // ════════════════════════════════════════════════════════════════════════
 
 function getDashboard(smId, month, year, dateFrom, dateTo) {
+  Logger.log('getDashboard called: smId='+smId+' month='+month+' year='+year+' dateFrom='+dateFrom+' dateTo='+dateTo);
   var allOrdersList = getOrders().orders;
   var orders = smId
     ? allOrdersList.filter(function(o){ return o.smId === smId; })
