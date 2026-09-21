@@ -432,25 +432,30 @@ textarea{resize:none;line-height:1.5;min-height:58px}
             background:var(--s2);color:var(--mut)">📆 Month</button>
         </div>
         <div id="dashDayPicker">
-          <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
             <div style="flex:1">
               <div style="font-size:9px;color:var(--mut);margin-bottom:3px">FROM</div>
-              <input type="date" id="dashDateFrom" onchange="changeDashPeriod()"
+              <input type="date" id="dashDateFrom"
                 style="width:100%;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
                 padding:7px 8px;font-family:var(--f);font-size:11px;color:var(--txt)">
             </div>
             <div style="color:var(--mut);font-size:12px;margin-top:12px">→</div>
             <div style="flex:1">
               <div style="font-size:9px;color:var(--mut);margin-bottom:3px">TO</div>
-              <input type="date" id="dashDateTo" onchange="changeDashPeriod()"
+              <input type="date" id="dashDateTo"
                 style="width:100%;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
                 padding:7px 8px;font-family:var(--f);font-size:11px;color:var(--txt)">
             </div>
           </div>
+          <button onclick="changeDashPeriod()"
+            style="width:100%;padding:8px;background:var(--acc);border:none;border-radius:8px;
+            font-family:var(--f);font-size:12px;font-weight:700;color:#fff;cursor:pointer">
+            🔍 Show Sales
+          </button>
         </div>
         <div id="dashMonthPicker" style="display:none">
-          <div style="display:flex;gap:6px">
-            <select id="dashMonth" onchange="changeDashPeriod()"
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <select id="dashMonth"
               style="flex:1;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
               padding:7px 8px;font-family:var(--f);font-size:11px;color:var(--txt)">
               <option value="1">January</option><option value="2">February</option>
@@ -460,7 +465,7 @@ textarea{resize:none;line-height:1.5;min-height:58px}
               <option value="9">September</option><option value="10">October</option>
               <option value="11">November</option><option value="12">December</option>
             </select>
-            <select id="dashYear" onchange="changeDashPeriod()"
+            <select id="dashYear"
               style="width:72px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
               padding:7px 8px;font-family:var(--f);font-size:11px;color:var(--txt)">
               <option value="2026">2026</option>
@@ -468,6 +473,11 @@ textarea{resize:none;line-height:1.5;min-height:58px}
               <option value="2024">2024</option>
             </select>
           </div>
+          <button onclick="changeDashPeriod()"
+            style="width:100%;padding:8px;background:var(--acc);border:none;border-radius:8px;
+            font-family:var(--f);font-size:12px;font-weight:700;color:#fff;cursor:pointer">
+            🔍 Show Sales
+          </button>
         </div>
       </div>
       <div class="pcard" onclick="showKpiModal('ytd')" style="cursor:pointer">
