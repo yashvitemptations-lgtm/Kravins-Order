@@ -1474,10 +1474,14 @@ async function showDateRangeStats(dtFrom, dtTo){
   if(amt) amt.textContent = '⏳';
 
   try{
-    // Fetch orders directly and filter by date range client-side
-    const r = await fetch(`${SCRIPT_URL}?action=orders&smId=${encodeURIComponent(SID)}&t=${Date.now()}`);
-    const d = await r.json();
-    const allOrds = d.ok ? d.orders : window._allOrders||[];
+    // Use cached orders if available (loaded within last 5 minutes)
+    let allOrds = window._allOrders||[];
+    const ordAge = Date.now() - (window._allOrdersTime||0);
+    if(!allOrds.length || ordAge > 300000){
+      const r = await fetch(`${SCRIPT_URL}?action=orders&smId=${encodeURIComponent(SID)}&t=${Date.now()}`);
+      const d = await r.json();
+      if(d.ok){ allOrds = d.orders; window._allOrders=allOrds; window._allOrdersTime=Date.now(); }
+    }
     // Normalise date to YYYY-MM-DD for comparison
     const normDate = dt => {
       if(!dt) return '';
@@ -3348,9 +3352,9 @@ function closeKpiModal(){document.getElementById('kpiOv').classList.remove('on')
 
 // Auto-refresh dashboard every 30 seconds when on dash page
 setInterval(()=>{
-  const curPage=document.querySelector('.page.on').id;
-  if(curPage==='pg-dash')loadDashboard();
-},30000);
+  const curPage=document.querySelector('.page.on')?.id;
+  if(curPage==='pg-dash' && !_dashMode==='day') loadDashboard();
+},300000); // 5 minutes — avoid overloading server
 
 // ═══ VISIT LOG ════════════════════════════════════════════════════════
 let visitOutcomeSelected = '';
