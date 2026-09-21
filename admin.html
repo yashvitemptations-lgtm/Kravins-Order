@@ -618,7 +618,7 @@ select.finp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3
   </div>
   <div id="sm-list-pane">
     <div class="sec">
-      <input class="fi" type="search" id="sm-search" placeholder="Search salesmen..." oninput="renderSmMaster()" style="width:100%;margin-bottom:10px">
+      <input class="fi" type="search" id="smm-search" placeholder="Search salesmen..." oninput="renderSmMaster()" style="width:100%;margin-bottom:10px">
       <div id="sm-master-list"><div style="text-align:center;padding:30px;color:var(--mut)">Loading...</div></div>
     </div>
   </div>
@@ -2199,7 +2199,7 @@ function populateDistDropdown(){
 }
 
 function renderSmMaster(){
-  const q=(document.getElementById('sm-search')?.value||'').toLowerCase();
+  const q=(document.getElementById('smm-search')?.value||'').toLowerCase();
   const list=allSalesmen.filter(s=>!q||s.name.toLowerCase().includes(q)||s.id.toLowerCase().includes(q));
   const el=document.getElementById('sm-master-list'); if(!el) return;
   if(!list.length){el.innerHTML='<div class="empty">No salesmen found</div>';return;}
