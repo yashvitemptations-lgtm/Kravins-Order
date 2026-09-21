@@ -1857,9 +1857,9 @@ function renderParties(){
       const smLabel   = p.addedBy   ? '👤 '+p.addedBy   : '';
       const distLabel = p.distAlloc ? '🚚 '+p.distAlloc : '';
       const assignedLabel = [smLabel,distLabel].filter(Boolean).join(' · ') || '—';
-      return `<div style="display:grid;grid-template-columns:2fr 1fr 2fr 1.2fr 1fr 1fr 1fr;
+      return `<div onclick="openPartyEdit('${p.id}')" style="display:grid;grid-template-columns:2fr 1fr 2fr 1.2fr 1fr 1fr 1fr;
         gap:0;padding:9px 10px;background:${rowBg};border-bottom:1px solid var(--bdr);
-        align-items:center;${st!=='Active'?'opacity:.7':''}">
+        align-items:center;cursor:pointer;${st!=='Active'?'opacity:.7':''}">
         <!-- Name + ID + status badge -->
         <div style="min-width:0">
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
