@@ -596,7 +596,6 @@ function getOrders(smId, distId) {
 // ════════════════════════════════════════════════════════════════════════
 
 function getDashboard(smId, month, year, dateFrom, dateTo) {
-  Logger.log('getDashboard called: smId='+smId+' month='+month+' year='+year+' dateFrom='+dateFrom+' dateTo='+dateTo);
   var allOrdersList = getOrders().orders;
   var orders = smId
     ? allOrdersList.filter(function(o){ return o.smId === smId; })
