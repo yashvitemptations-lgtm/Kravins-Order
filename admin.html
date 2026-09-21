@@ -1382,14 +1382,14 @@ function goTab(tab){
   if(tab==='salesmen') renderAllSalesmen();
   if(tab==='distributors') renderAllDistributors();
   if(tab==='orders') renderOrders();
-  if(tab==='parties'){ loadPartiesIfNeeded().then(()=>{ renderParties(); loadEditRequests(); }); }
+  if(tab==='parties'){ renderParties(); loadEditRequests(); }
   if(tab==='smmaster'){ closeSmDet(); populateDistDropdown(); renderSmMaster(); populateProdMixTargets(); }
   if(tab==='distmaster') renderDistMaster();
   if(tab==='products') renderProductsMaster();
   if(tab==='access') renderAccessControl();
-  if(tab==='visits') visitSubTab('log');
-  if(tab==='import') loadPartiesIfNeeded().then(()=>renderImportTab());
-  if(tab==='allocate') loadPartiesIfNeeded().then(()=>renderAllocateTab());
+  if(tab==='visits'){ visitSubTab('log'); populateVisitSmFilter(); }
+  if(tab==='import') renderImportTab();
+  if(tab==='allocate') renderAllocateTab();
   window.scrollTo({top:0});
 }
 
@@ -1430,17 +1430,20 @@ async function loadPartiesIfNeeded(){
 
 async function loadAll(){
   try{
-    // Load core data in parallel — skip parties (2500 rows, load on demand)
-    const [r1,r3,r4] = await Promise.all([
+    // Load all core data in parallel
+    const [r1,r2,r3,r4,r5] = await Promise.all([
       fetch(`${SCRIPT_URL}?action=orders&t=${Date.now()}`),
+      fetch(`${SCRIPT_URL}?action=parties&t=${Date.now()}`),
       fetch(`${SCRIPT_URL}?action=salesmen&t=${Date.now()}`),
-      fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`)
+      fetch(`${SCRIPT_URL}?action=distributors&t=${Date.now()}`),
+      fetch(`${SCRIPT_URL}?action=products&t=${Date.now()}`)
     ]);
-    const [od,sd,dd] = await Promise.all([r1.json(),r3.json(),r4.json()]);
+    const [od,pd,sd,dd,prod] = await Promise.all([r1.json(),r2.json(),r3.json(),r4.json(),r5.json()]);
 
     if(sd.ok) allSalesmen=sd.salesmen||[];
     if(dd.ok) allDistributors=dd.distributors||[];
-    // allParties loaded lazily when Parties/Import/Allocate tab opened
+    if(pd.ok) allParties=pd.parties||[];
+    if(prod.ok) allProducts=prod.products||[];
     if(od.ok) allOrders=(od.orders||[]).map(o=>{
       const sm = allSalesmen.find(s=>s.id===o.smId);
       return {...o, date:normDate(o.date), smName: sm ? sm.name : (o.smName||o.smId||'')};
@@ -3868,6 +3871,15 @@ function initVisitsFilters(){
 }
 
 // ── DAILY LOG ──────────────────────────────────────────
+function populateVisitSmFilter(){
+  const sel = document.getElementById('vf-sm');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Salesmen</option>' +
+    allSalesmen.map(s=>`<option value="${s.id}">${s.name} (${s.id})</option>`).join('');
+  if(cur) sel.value = cur;
+}
+
 async function loadVisitLog(){
   initVisitsFilters();
   const smId  = document.getElementById('vf-sm')?.value||'';
