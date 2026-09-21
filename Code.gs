@@ -595,7 +595,7 @@ function getOrders(smId, distId) {
 // Admin (no smId) sees company-wide totals.
 // ════════════════════════════════════════════════════════════════════════
 
-function getDashboard(smId, month, year) {
+function getDashboard(smId, month, year, dateFrom, dateTo) {
   var allOrdersList = getOrders().orders;
   var orders = smId
     ? allOrdersList.filter(function(o){ return o.smId === smId; })
@@ -608,9 +608,13 @@ function getDashboard(smId, month, year) {
   var curMonth = parseInt(month || (now.getMonth() + 1));
   var curYear  = parseInt(year  || now.getFullYear());
 
-  // MTD orders (cancelled excluded)
+  // MTD orders (cancelled excluded) — filter by date range if provided, else by month
   var monthOrders = orders.filter(function(o){
     if (o.status === 'Cancelled') return false;
+    var ds = String(o.date||'').slice(0,10);
+    if (dateFrom && dateTo) {
+      return ds >= dateFrom && ds <= dateTo;
+    }
     var d = parseDate(o.date);
     return d.getMonth()+1 === curMonth && d.getFullYear() === curYear;
   });
@@ -1567,41 +1571,49 @@ function geocodeAllParties() {
 // ════════════════════════════════════════════════════════════════════════
 function fixOrderBuyerIds() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
-  var orderSheet = ss.getSheetByName('Orders');
-  var partySheet = ss.getSheetByName('New_Parties');
-  if (!orderSheet || orderSheet.getLastRow() < 2) { Logger.log('No orders'); return; }
-  if (!partySheet || partySheet.getLastRow() < 2) { Logger.log('No parties'); return; }
-
-  // New_Parties: col1=BuyerID, col2=PartyName
-  var pRows = partySheet.getRange(2,1,partySheet.getLastRow()-1,2).getValues();
+  var orderSheet = ss.getSheetByName(TAB_ORDERS);
+  var partySheet = ss.getSheetByName(TAB_PARTIES);
+  
+  if (!orderSheet || !partySheet) {
+    Logger.log('Sheet not found');
+    return;
+  }
+  
+  // Build name → id map from New_Parties
+  var partyRows = partySheet.getRange(2,1,partySheet.getLastRow()-1,2).getValues();
   var nameToId = {};
-  for (var i=0; i<pRows.length; i++) {
-    var pid = String(pRows[i][0]||'').trim();
-    var pnm = String(pRows[i][1]||'').trim().toLowerCase();
-    if (pid && pnm) nameToId[pnm] = pid;
+  for (var i=0; i<partyRows.length; i++) {
+    var pid = String(partyRows[i][0]||'').trim();
+    var pname = String(partyRows[i][1]||'').trim().toLowerCase();
+    if (pid && pname) nameToId[pname] = pid;
   }
-  Logger.log('Parties loaded: '+Object.keys(nameToId).length);
-
-  // Orders sheet (YOUR layout): col6=BuyerName, col7=BuyerID
-  var oRows = orderSheet.getRange(2,1,orderSheet.getLastRow()-1,7).getValues();
-
-  var fixed = 0, notFound = [];
-  for (var i=0; i<oRows.length; i++) {
-    var bname = String(oRows[i][5]||'').trim();  // col6 = Buyer Name
-    var bid   = String(oRows[i][6]||'').trim();  // col7 = Buyer ID
-    if (!bname) continue;
-
-    var correctId = nameToId[bname.toLowerCase()];
-    if (!correctId) { notFound.push(bname+'['+bid+']'); continue; }
-    if (bid === correctId) continue;
-
-    // Update col7 with correct ID
-    orderSheet.getRange(i+2, 7).setValue(correctId);
-    Logger.log('Row '+(i+2)+': "'+bid+'" to "'+correctId+'" ('+bname+')');
-    fixed++;
+  
+  // Read Orders — col1=OrderID, col6=BuyerID, col7=BuyerName
+  var orderRows = orderSheet.getRange(2,1,orderSheet.getLastRow()-1,7).getValues();
+  var fixed = 0;
+  var notFound = [];
+  
+  for (var i=0; i<orderRows.length; i++) {
+    var bid = String(orderRows[i][5]||'').trim();
+    var bname = String(orderRows[i][6]||'').trim().toLowerCase();
+    
+    // Fix if bid contains Infinity or B- pattern with Infinity
+    if (bid.indexOf('Infinity') > -1 || bid.indexOf('infinity') > -1 || bid === '') {
+      var correctId = nameToId[bname];
+      if (correctId) {
+        orderSheet.getRange(i+2, 6).setValue(correctId);
+        Logger.log('Row '+(i+2)+': '+bid+' → '+correctId+' ('+bname+')');
+        fixed++;
+      } else {
+        notFound.push('Row '+(i+2)+': "'+bname+'" not found in New_Parties');
+      }
+    }
   }
-  Logger.log('Fixed: '+fixed);
-  Logger.log('Not found: '+[...new Set(notFound)].slice(0,30).join(' | '));
+  
+  Logger.log('Fixed: '+fixed+' rows');
+  Logger.log('Not found: '+notFound.length);
+  notFound.forEach(function(n){ Logger.log(n); });
+  Logger.log('Done. Check View > Logs for details.');
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -1671,59 +1683,4 @@ function fixOrderBuyerIds() {
 
   Logger.log('Fixed: '+fixed+' order buyer IDs');
   Logger.log('Not matched: '+[...new Set(notFound)].slice(0,30).join(' | '));
-}
-
-
-function repairOrderBuyers() {
-  var ss = SpreadsheetApp.openById('174sQJSqaTZDcJFZWVtVMe6Df4D1f0Lg0h1RRkGc397c');
-  var oSheet = ss.getSheetByName('Orders');
-  var pSheet = ss.getSheetByName('New_Parties');
-  
-  // Load party name→id map
-  var pData = pSheet.getRange(2,1,pSheet.getLastRow()-1,2).getValues();
-  var nameMap = {};
-  for (var i=0; i<pData.length; i++) {
-    var id = String(pData[i][0]||'').trim();
-    var nm = String(pData[i][1]||'').trim().toLowerCase();
-    if (id && nm) nameMap[nm] = id;
-  }
-  Logger.log('Parties: '+Object.keys(nameMap).length);
-  
-  // Read all order rows
-  var oData = oSheet.getRange(2,1,oSheet.getLastRow()-1,21).getValues();
-  
-  // Log first non-empty row
-  for (var i=0; i<oData.length; i++) {
-    if (oData[i][0]) {
-      Logger.log('First data row: '+JSON.stringify(oData[i].slice(0,8)));
-      break;
-    }
-  }
-  
-  var fixed = 0, notFound = [];
-  for (var i=0; i<oData.length; i++) {
-    if (!oData[i][0]) continue; // skip empty rows
-    // Try col6 as name, col7 as id
-    var nm6 = String(oData[i][5]||'').trim();
-    var id7 = String(oData[i][6]||'').trim();
-    // Try col7 as name, col6 as id  
-    var nm7 = String(oData[i][6]||'').trim();
-    var id6 = String(oData[i][5]||'').trim();
-    
-    var correctId = nameMap[nm6.toLowerCase()] || nameMap[nm7.toLowerCase()];
-    if (!correctId) { if(nm6||nm7) notFound.push((nm6||nm7)+'['+id6+'/'+id7+']'); continue; }
-    
-    // Determine which col has the wrong id and fix it
-    if (nameMap[nm6.toLowerCase()] && id7 !== correctId) {
-      oSheet.getRange(i+2, 7).setValue(correctId);
-      Logger.log('Fix row '+(i+2)+' col7: '+id7+' -> '+correctId+' ('+nm6+')');
-      fixed++;
-    } else if (nameMap[nm7.toLowerCase()] && id6 !== correctId) {
-      oSheet.getRange(i+2, 6).setValue(correctId);
-      Logger.log('Fix row '+(i+2)+' col6: '+id6+' -> '+correctId+' ('+nm7+')');
-      fixed++;
-    }
-  }
-  Logger.log('Fixed: '+fixed);
-  Logger.log('Not found: '+[...new Set(notFound)].slice(0,20).join(' | '));
 }
