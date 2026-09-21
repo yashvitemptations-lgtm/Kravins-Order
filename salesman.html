@@ -1779,7 +1779,10 @@ async function loadBuyers(){
     }
   }catch(e){ console.error('loadBuyers error:',e); }
   fillBuyerSel();
-  toast(`✅ ${newB.name} added as ${newB.id}`,'ok');
+}
+
+// ─── post-add return handled in addParty ───
+function _afterAddParty(newB){
   if(window._returnToVisitAfterAdd){
     window._returnToVisitAfterAdd=false;
     setTimeout(()=>{
